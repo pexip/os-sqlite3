@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Open A BLOB For Incremental I/O</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(../images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(../images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(../images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(../images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="../about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,8 +125,7 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 <a href="intro.html"><h2>SQLite C Interface</h2></a><h2>Open A BLOB For Incremental I/O</h2><blockquote><pre>int sqlite3_blob_open(
@@ -147,8 +158,8 @@ appears after the AS keyword when the database is connected using <a href="../la
 For the main database file, the database name is "main".
 For TEMP tables, the database name is "temp".</p>
 
-<p>On success, <a href="../c3ref/c_abort.html">SQLITE_OK</a> is returned and the new <a href="../c3ref/blob.html">BLOB handle</a> is written
-to *ppBlob. Otherwise an <a href="../c3ref/c_abort.html">error code</a> is returned and *ppBlob is set
+<p>On success, <a href="../rescode.html#ok">SQLITE_OK</a> is returned and the new <a href="../c3ref/blob.html">BLOB handle</a> is written
+to *ppBlob. Otherwise an <a href="../rescode.html">error code</a> is returned and *ppBlob is set
 to be a null pointer.
 This function sets the <a href="../c3ref/sqlite3.html">database connection</a> error code and message
 accessible via <a href="../c3ref/errcode.html">sqlite3_errcode()</a> and <a href="../c3ref/errcode.html">sqlite3_errmsg()</a> and related
@@ -162,7 +173,7 @@ then the BLOB handle is marked as "expired".
 This is true if any column of the row is changed, even a column
 other than the one the BLOB handle is open on.
 Calls to <a href="../c3ref/blob_read.html">sqlite3_blob_read()</a> and <a href="../c3ref/blob_write.html">sqlite3_blob_write()</a> for
-an expired BLOB handle fail with a return code of <a href="../c3ref/c_abort.html">SQLITE_ABORT</a>.
+an expired BLOB handle fail with a return code of <a href="../rescode.html#abort">SQLITE_ABORT</a>.
 Changes written into a BLOB prior to the BLOB expiring are not
 rolled back by the expiration of the BLOB.  Such changes will eventually
 commit if the transaction continues to completion.</p>
@@ -171,6 +182,9 @@ commit if the transaction continues to completion.</p>
 the opened blob.  The size of a blob may not be changed by this
 interface.  Use the <a href="../lang_update.html">UPDATE</a> SQL command to change the size of a
 blob.</p>
+
+<p>The <a href="../c3ref/blob_open.html">sqlite3_blob_open()</a> interface will fail for a <a href="../withoutrowid.html">WITHOUT ROWID</a>
+table.  Incremental BLOB I/O is not possible on <a href="../withoutrowid.html">WITHOUT ROWID</a> tables.</p>
 
 <p>The <a href="../c3ref/bind_blob.html">sqlite3_bind_zeroblob()</a> and <a href="../c3ref/result_blob.html">sqlite3_result_zeroblob()</a> interfaces
 and the built-in <a href="../lang_corefunc.html#zeroblob">zeroblob</a> SQL function can be used, if desired,

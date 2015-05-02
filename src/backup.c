@@ -15,12 +15,6 @@
 #include "sqliteInt.h"
 #include "btreeInt.h"
 
-/* Macro to find the minimum of two numeric values.
-*/
-#ifndef MIN
-# define MIN(x,y) ((x)<(y)?(x):(y))
-#endif
-
 /*
 ** Structure allocated for each backup operation.
 */
@@ -93,15 +87,16 @@ static Btree *findBtree(sqlite3 *pErrorDb, sqlite3 *pDb, const char *zDb){
     int rc = 0;
     pParse = sqlite3StackAllocZero(pErrorDb, sizeof(*pParse));
     if( pParse==0 ){
-      sqlite3Error(pErrorDb, SQLITE_NOMEM, "out of memory");
+      sqlite3ErrorWithMsg(pErrorDb, SQLITE_NOMEM, "out of memory");
       rc = SQLITE_NOMEM;
     }else{
       pParse->db = pDb;
       if( sqlite3OpenTempDatabase(pParse) ){
-        sqlite3Error(pErrorDb, pParse->rc, "%s", pParse->zErrMsg);
+        sqlite3ErrorWithMsg(pErrorDb, pParse->rc, "%s", pParse->zErrMsg);
         rc = SQLITE_ERROR;
       }
       sqlite3DbFree(pErrorDb, pParse->zErrMsg);
+      sqlite3ParserReset(pParse);
       sqlite3StackFree(pErrorDb, pParse);
     }
     if( rc ){
@@ -110,7 +105,7 @@ static Btree *findBtree(sqlite3 *pErrorDb, sqlite3 *pDb, const char *zDb){
   }
 
   if( i<0 ){
-    sqlite3Error(pErrorDb, SQLITE_ERROR, "unknown database %s", zDb);
+    sqlite3ErrorWithMsg(pErrorDb, SQLITE_ERROR, "unknown database %s", zDb);
     return 0;
   }
 
@@ -155,7 +150,7 @@ sqlite3_backup *sqlite3_backup_init(
   sqlite3_mutex_enter(pDestDb->mutex);
 
   if( pSrcDb==pDestDb ){
-    sqlite3Error(
+    sqlite3ErrorWithMsg(
         pDestDb, SQLITE_ERROR, "source and destination must be distinct"
     );
     p = 0;
@@ -164,15 +159,14 @@ sqlite3_backup *sqlite3_backup_init(
     ** EVIDENCE-OF: R-64852-21591 The sqlite3_backup object is created by a
     ** call to sqlite3_backup_init() and is destroyed by a call to
     ** sqlite3_backup_finish(). */
-    p = (sqlite3_backup *)sqlite3_malloc(sizeof(sqlite3_backup));
+    p = (sqlite3_backup *)sqlite3MallocZero(sizeof(sqlite3_backup));
     if( !p ){
-      sqlite3Error(pDestDb, SQLITE_NOMEM, 0);
+      sqlite3Error(pDestDb, SQLITE_NOMEM);
     }
   }
 
   /* If the allocation succeeded, populate the new object. */
   if( p ){
-    memset(p, 0, sizeof(sqlite3_backup));
     p->pSrc = findBtree(pDestDb, pSrcDb, zSrcDb);
     p->pDest = findBtree(pDestDb, pDestDb, zDestDb);
     p->pDestDb = pDestDb;
@@ -213,20 +207,28 @@ static int isFatalError(int rc){
 ** page iSrcPg from the source database. Copy this data into the 
 ** destination database.
 */
-static int backupOnePage(sqlite3_backup *p, Pgno iSrcPg, const u8 *zSrcData){
+static int backupOnePage(
+  sqlite3_backup *p,              /* Backup handle */
+  Pgno iSrcPg,                    /* Source database page to backup */
+  const u8 *zSrcData,             /* Source database page data */
+  int bUpdate                     /* True for an update, false otherwise */
+){
   Pager * const pDestPager = sqlite3BtreePager(p->pDest);
   const int nSrcPgsz = sqlite3BtreeGetPageSize(p->pSrc);
   int nDestPgsz = sqlite3BtreeGetPageSize(p->pDest);
   const int nCopy = MIN(nSrcPgsz, nDestPgsz);
   const i64 iEnd = (i64)iSrcPg*(i64)nSrcPgsz;
 #ifdef SQLITE_HAS_CODEC
-  int nSrcReserve = sqlite3BtreeGetReserve(p->pSrc);
+  /* Use BtreeGetReserveNoMutex() for the source b-tree, as although it is
+  ** guaranteed that the shared-mutex is held by this thread, handle
+  ** p->pSrc may not actually be the owner.  */
+  int nSrcReserve = sqlite3BtreeGetReserveNoMutex(p->pSrc);
   int nDestReserve = sqlite3BtreeGetReserve(p->pDest);
 #endif
-
   int rc = SQLITE_OK;
   i64 iOff;
 
+  assert( sqlite3BtreeGetReserveNoMutex(p->pSrc)>=0 );
   assert( p->bDestLocked );
   assert( !isFatalError(p->rc) );
   assert( iSrcPg!=PENDING_BYTE_PAGE(p->pSrc->pBt) );
@@ -283,6 +285,9 @@ static int backupOnePage(sqlite3_backup *p, Pgno iSrcPg, const u8 *zSrcData){
       */
       memcpy(zOut, zIn, nCopy);
       ((u8 *)sqlite3PagerGetExtra(pDestPg))[0] = 0;
+      if( iOff==0 && bUpdate==0 ){
+        sqlite3Put4byte(&zOut[28], sqlite3BtreeLastPage(p->pSrc));
+      }
     }
     sqlite3PagerUnref(pDestPg);
   }
@@ -387,9 +392,10 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
       const Pgno iSrcPg = p->iNext;                 /* Source page number */
       if( iSrcPg!=PENDING_BYTE_PAGE(p->pSrc->pBt) ){
         DbPage *pSrcPg;                             /* Source page object */
-        rc = sqlite3PagerGet(pSrcPager, iSrcPg, &pSrcPg);
+        rc = sqlite3PagerAcquire(pSrcPager, iSrcPg, &pSrcPg,
+                                 PAGER_GET_READONLY);
         if( rc==SQLITE_OK ){
-          rc = backupOnePage(p, iSrcPg, sqlite3PagerGetData(pSrcPg));
+          rc = backupOnePage(p, iSrcPg, sqlite3PagerGetData(pSrcPg), 0);
           sqlite3PagerUnref(pSrcPg);
         }
       }
@@ -411,10 +417,16 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
     ** same schema version.
     */
     if( rc==SQLITE_DONE ){
-      rc = sqlite3BtreeUpdateMeta(p->pDest,1,p->iDestSchema+1);
+      if( nSrcPage==0 ){
+        rc = sqlite3BtreeNewDb(p->pDest);
+        nSrcPage = 1;
+      }
+      if( rc==SQLITE_OK || rc==SQLITE_DONE ){
+        rc = sqlite3BtreeUpdateMeta(p->pDest,1,p->iDestSchema+1);
+      }
       if( rc==SQLITE_OK ){
         if( p->pDestDb ){
-          sqlite3ResetInternalSchema(p->pDestDb, -1);
+          sqlite3ResetAllSchemasOfConnection(p->pDestDb);
         }
         if( destMode==PAGER_JOURNALMODE_WAL ){
           rc = sqlite3BtreeSetVersion(p->pDest, 2);
@@ -445,7 +457,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
         }else{
           nDestTruncate = nSrcPage * (pgszSrc/pgszDest);
         }
-        sqlite3PagerTruncateImage(pDestPager, nDestTruncate);
+        assert( nDestTruncate>0 );
 
         if( pgszSrc<pgszDest ){
           /* If the source page-size is smaller than the destination page-size,
@@ -459,22 +471,38 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           */
           const i64 iSize = (i64)pgszSrc * (i64)nSrcPage;
           sqlite3_file * const pFile = sqlite3PagerFile(pDestPager);
+          Pgno iPg;
+          int nDstPage;
           i64 iOff;
           i64 iEnd;
 
           assert( pFile );
-          assert( (i64)nDestTruncate*(i64)pgszDest >= iSize || (
+          assert( nDestTruncate==0 
+              || (i64)nDestTruncate*(i64)pgszDest >= iSize || (
                 nDestTruncate==(int)(PENDING_BYTE_PAGE(p->pDest->pBt)-1)
              && iSize>=PENDING_BYTE && iSize<=PENDING_BYTE+pgszDest
           ));
 
-          /* This call ensures that all data required to recreate the original
+          /* This block ensures that all data required to recreate the original
           ** database has been stored in the journal for pDestPager and the
           ** journal synced to disk. So at this point we may safely modify
           ** the database file in any way, knowing that if a power failure
           ** occurs, the original database will be reconstructed from the 
           ** journal file.  */
-          rc = sqlite3PagerCommitPhaseOne(pDestPager, 0, 1);
+          sqlite3PagerPagecount(pDestPager, &nDstPage);
+          for(iPg=nDestTruncate; rc==SQLITE_OK && iPg<=(Pgno)nDstPage; iPg++){
+            if( iPg!=PENDING_BYTE_PAGE(p->pDest->pBt) ){
+              DbPage *pPg;
+              rc = sqlite3PagerGet(pDestPager, iPg, &pPg);
+              if( rc==SQLITE_OK ){
+                rc = sqlite3PagerWrite(pPg);
+                sqlite3PagerUnref(pPg);
+              }
+            }
+          }
+          if( rc==SQLITE_OK ){
+            rc = sqlite3PagerCommitPhaseOne(pDestPager, 0, 1);
+          }
 
           /* Write the extra pages and truncate the database file as required */
           iEnd = MIN(PENDING_BYTE + pgszDest, iSize);
@@ -498,9 +526,10 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
 
           /* Sync the database file to disk. */
           if( rc==SQLITE_OK ){
-            rc = sqlite3PagerSync(pDestPager);
+            rc = sqlite3PagerSync(pDestPager, 0);
           }
         }else{
+          sqlite3PagerTruncateImage(pDestPager, nDestTruncate);
           rc = sqlite3PagerCommitPhaseOne(pDestPager, 0, 0);
         }
     
@@ -543,14 +572,14 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
 */
 int sqlite3_backup_finish(sqlite3_backup *p){
   sqlite3_backup **pp;                 /* Ptr to head of pagers backup list */
-  MUTEX_LOGIC( sqlite3_mutex *mutex; ) /* Mutex to protect source database */
+  sqlite3 *pSrcDb;                     /* Source database connection */
   int rc;                              /* Value to return */
 
   /* Enter the mutexes */
   if( p==0 ) return SQLITE_OK;
-  sqlite3_mutex_enter(p->pSrcDb->mutex);
+  pSrcDb = p->pSrcDb;
+  sqlite3_mutex_enter(pSrcDb->mutex);
   sqlite3BtreeEnter(p->pSrc);
-  MUTEX_LOGIC( mutex = p->pSrcDb->mutex; )
   if( p->pDestDb ){
     sqlite3_mutex_enter(p->pDestDb->mutex);
   }
@@ -568,15 +597,15 @@ int sqlite3_backup_finish(sqlite3_backup *p){
   }
 
   /* If a transaction is still open on the Btree, roll it back. */
-  sqlite3BtreeRollback(p->pDest);
+  sqlite3BtreeRollback(p->pDest, SQLITE_OK);
 
   /* Set the error code of the destination database handle. */
   rc = (p->rc==SQLITE_DONE) ? SQLITE_OK : p->rc;
-  sqlite3Error(p->pDestDb, rc, 0);
-
-  /* Exit the mutexes and free the backup context structure. */
   if( p->pDestDb ){
-    sqlite3_mutex_leave(p->pDestDb->mutex);
+    sqlite3Error(p->pDestDb, rc);
+
+    /* Exit the mutexes and free the backup context structure. */
+    sqlite3LeaveMutexAndCloseZombie(p->pDestDb);
   }
   sqlite3BtreeLeave(p->pSrc);
   if( p->pDestDb ){
@@ -585,7 +614,7 @@ int sqlite3_backup_finish(sqlite3_backup *p){
     ** sqlite3_backup_finish(). */
     sqlite3_free(p);
   }
-  sqlite3_mutex_leave(mutex);
+  sqlite3LeaveMutexAndCloseZombie(pSrcDb);
   return rc;
 }
 
@@ -629,7 +658,7 @@ void sqlite3BackupUpdate(sqlite3_backup *pBackup, Pgno iPage, const u8 *aData){
       int rc;
       assert( p->pDestDb );
       sqlite3_mutex_enter(p->pDestDb->mutex);
-      rc = backupOnePage(p, iPage, aData);
+      rc = backupOnePage(p, iPage, aData, 1);
       sqlite3_mutex_leave(p->pDestDb->mutex);
       assert( rc!=SQLITE_BUSY && rc!=SQLITE_LOCKED );
       if( rc!=SQLITE_OK ){
@@ -678,7 +707,9 @@ int sqlite3BtreeCopyFile(Btree *pTo, Btree *pFrom){
   pFd = sqlite3PagerFile(sqlite3BtreePager(pTo));
   if( pFd->pMethods ){
     i64 nByte = sqlite3BtreeGetPageSize(pFrom)*(i64)sqlite3BtreeLastPage(pFrom);
-    sqlite3OsFileControl(pFd, SQLITE_FCNTL_OVERWRITE, &nByte);
+    rc = sqlite3OsFileControl(pFd, SQLITE_FCNTL_OVERWRITE, &nByte);
+    if( rc==SQLITE_NOTFOUND ) rc = SQLITE_OK;
+    if( rc ) goto copy_finished;
   }
 
   /* Set up an sqlite3_backup object. sqlite3_backup.pDestDb must be set
@@ -703,12 +734,13 @@ int sqlite3BtreeCopyFile(Btree *pTo, Btree *pFrom){
   assert( b.rc!=SQLITE_OK );
   rc = sqlite3_backup_finish(&b);
   if( rc==SQLITE_OK ){
-    pTo->pBt->pageSizeFixed = 0;
+    pTo->pBt->btsFlags &= ~BTS_PAGESIZE_FIXED;
   }else{
     sqlite3PagerClearCache(sqlite3BtreePager(b.pDest));
   }
 
   assert( sqlite3BtreeIsInTrans(pTo)==0 );
+copy_finished:
   sqlite3BtreeLeave(pFrom);
   sqlite3BtreeLeave(pTo);
   return rc;

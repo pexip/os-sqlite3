@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>SQLite Backup API</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,8 +125,7 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 
@@ -269,13 +280,13 @@ int loadOrSaveDb(<a href="c3ref/sqlite3.html">sqlite3</a> *pInMemory, const char
 
 <p>
   If an error occurs in any of the three main backup API routines
-  then the <a href="c3ref/c_abort.html">error code</a> and <a href="c3ref/errcode.html">message</a> are attached to
+  then the <a href="rescode.html">error code</a> and <a href="c3ref/errcode.html">message</a> are attached to
   the destination <a href="c3ref/sqlite3.html">database connection</a>.
   Additionally, if
-  <a href="c3ref/backup_finish.html#sqlite3backupstep">sqlite3_backup_step()</a> encounters an error, then the <a href="c3ref/c_abort.html">error code</a> is returned
+  <a href="c3ref/backup_finish.html#sqlite3backupstep">sqlite3_backup_step()</a> encounters an error, then the <a href="rescode.html">error code</a> is returned
   by both the <a href="c3ref/backup_finish.html#sqlite3backupstep">sqlite3_backup_step()</a> call itself, and by the subsequent call
   to <a href="c3ref/backup_finish.html#sqlite3backupfinish">sqlite3_backup_finish()</a>. So a call to <a href="c3ref/backup_finish.html#sqlite3backupfinish">sqlite3_backup_finish()</a>
-  does not overwrite an <a href="c3ref/c_abort.html">error code</a> stored in the destination
+  does not overwrite an <a href="rescode.html">error code</a> stored in the destination
   <a href="c3ref/sqlite3.html">database connection</a> by <a href="c3ref/backup_finish.html#sqlite3backupstep">sqlite3_backup_step()</a>.  This feature
   is used in the example code to reduce amount of error handling required.
   The return values of the <a href="c3ref/backup_finish.html#sqlite3backupstep">sqlite3_backup_step()</a> and <a href="c3ref/backup_finish.html#sqlite3backupfinish">sqlite3_backup_finish()</a>
@@ -289,7 +300,7 @@ int loadOrSaveDb(<a href="c3ref/sqlite3.html">sqlite3</a> *pInMemory, const char
   The implementation of this function could be enhanced in at least two ways:
 
   <ol>
-    <li> Failing to obtain the lock on database file zFilename (an <a href="c3ref/c_abort.html">SQLITE_BUSY</a>
+    <li> Failing to obtain the lock on database file zFilename (an <a href="rescode.html#busy">SQLITE_BUSY</a>
          error) could be handled, and
     <li> Cases where the page-sizes of database pInMemory and zFilename are
          different could be handled better.

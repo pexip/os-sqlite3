@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Binding Values To Prepared Statements</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(../images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(../images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(../images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(../images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="../about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,17 +125,20 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 <a href="intro.html"><h2>SQLite C Interface</h2></a><h2>Binding Values To Prepared Statements</h2><blockquote><pre>int sqlite3_bind_blob(sqlite3_stmt*, int, const void*, int n, void(*)(void*));
+int sqlite3_bind_blob64(sqlite3_stmt*, int, const void*, sqlite3_uint64,
+                        void(*)(void*));
 int sqlite3_bind_double(sqlite3_stmt*, int, double);
 int sqlite3_bind_int(sqlite3_stmt*, int, int);
 int sqlite3_bind_int64(sqlite3_stmt*, int, sqlite3_int64);
 int sqlite3_bind_null(sqlite3_stmt*, int);
-int sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void(*)(void*));
+int sqlite3_bind_text(sqlite3_stmt*,int,const char*,int,void(*)(void*));
 int sqlite3_bind_text16(sqlite3_stmt*, int, const void*, int, void(*)(void*));
+int sqlite3_bind_text64(sqlite3_stmt*, int, const char*, sqlite3_uint64,
+                         void(*)(void*), unsigned char encoding);
 int sqlite3_bind_value(sqlite3_stmt*, int, const sqlite3_value*);
 int sqlite3_bind_zeroblob(sqlite3_stmt*, int, int n);
 </pre></blockquote><p>
@@ -158,32 +173,46 @@ for "?NNN" parameters is the value of NNN.
 The NNN value must be between 1 and the <a href="../c3ref/limit.html">sqlite3_limit()</a>
 parameter <a href="../c3ref/c_limit_attached.html#sqlitelimitvariablenumber">SQLITE_LIMIT_VARIABLE_NUMBER</a> (default value: 999).</p>
 
-<p>The third argument is the value to bind to the parameter.</p>
+<p>The third argument is the value to bind to the parameter.
+If the third parameter to sqlite3_bind_text() or sqlite3_bind_text16()
+or sqlite3_bind_blob() is a NULL pointer then the fourth parameter
+is ignored and the end result is the same as sqlite3_bind_null().</p>
 
 <p>In those routines that have a fourth argument, its value is the
 number of bytes in the parameter.  To be clear: the value is the
 number of <u>bytes</u> in the value, not the number of characters.
-If the fourth parameter is negative, the length of the string is
+If the fourth parameter to sqlite3_bind_text() or sqlite3_bind_text16()
+is negative, then the length of the string is
 the number of bytes up to the first zero terminator.
+If the fourth parameter to sqlite3_bind_blob() is negative, then
+the behavior is undefined.
 If a non-negative fourth parameter is provided to sqlite3_bind_text()
-or sqlite3_bind_text16() then that parameter must be the byte offset
+or sqlite3_bind_text16() or sqlite3_bind_text64() then
+that parameter must be the byte offset
 where the NUL terminator would occur assuming the string were NUL
 terminated.  If any NUL characters occur at byte offsets less than
 the value of the fourth parameter then the resulting string value will
 contain embedded NULs.  The result of expressions involving strings
 with embedded NULs is undefined.</p>
 
-<p>The fifth argument to sqlite3_bind_blob(), sqlite3_bind_text(), and
-sqlite3_bind_text16() is a destructor used to dispose of the BLOB or
+<p>The fifth argument to the BLOB and string binding interfaces
+is a destructor used to dispose of the BLOB or
 string after SQLite has finished with it.  The destructor is called
-to dispose of the BLOB or string even if the call to sqlite3_bind_blob(),
-sqlite3_bind_text(), or sqlite3_bind_text16() fails.
+to dispose of the BLOB or string even if the call to bind API fails.
 If the fifth argument is
 the special value <a href="../c3ref/c_static.html">SQLITE_STATIC</a>, then SQLite assumes that the
 information is in static, unmanaged space and does not need to be freed.
 If the fifth argument has the value <a href="../c3ref/c_static.html">SQLITE_TRANSIENT</a>, then
 SQLite makes its own private copy of the data immediately, before
 the sqlite3_bind_*() routine returns.</p>
+
+<p>The sixth argument to sqlite3_bind_text64() must be one of
+<a href="../c3ref/c_any.html">SQLITE_UTF8</a>, <a href="../c3ref/c_any.html">SQLITE_UTF16</a>, <a href="../c3ref/c_any.html">SQLITE_UTF16BE</a>, or <a href="../c3ref/c_any.html">SQLITE_UTF16LE</a>
+to specify the encoding of the text in the third parameter.  If
+the sixth argument to sqlite3_bind_text64() is not one of the
+allowed values shown above, or if the text encoding is different
+from the encoding specified by the sixth parameter, then the behavior
+is undefined.</p>
 
 <p>The sqlite3_bind_zeroblob() routine binds a BLOB of length N that
 is filled with zeroes.  A zeroblob uses a fixed amount of memory
@@ -196,17 +225,20 @@ A negative value for the zeroblob results in a zero-length BLOB.</p>
 <p>If any of the sqlite3_bind_*() routines are called with a NULL pointer
 for the <a href="../c3ref/stmt.html">prepared statement</a> or with a prepared statement for which
 <a href="../c3ref/step.html">sqlite3_step()</a> has been called more recently than <a href="../c3ref/reset.html">sqlite3_reset()</a>,
-then the call will return <a href="../c3ref/c_abort.html">SQLITE_MISUSE</a>.  If any sqlite3_bind_()
+then the call will return <a href="../rescode.html#misuse">SQLITE_MISUSE</a>.  If any sqlite3_bind_()
 routine is passed a <a href="../c3ref/stmt.html">prepared statement</a> that has been finalized, the
 result is undefined and probably harmful.</p>
 
 <p>Bindings are not cleared by the <a href="../c3ref/reset.html">sqlite3_reset()</a> routine.
 Unbound parameters are interpreted as NULL.</p>
 
-<p>The sqlite3_bind_* routines return <a href="../c3ref/c_abort.html">SQLITE_OK</a> on success or an
-<a href="../c3ref/c_abort.html">error code</a> if anything goes wrong.
-<a href="../c3ref/c_abort.html">SQLITE_RANGE</a> is returned if the parameter
-index is out of range.  <a href="../c3ref/c_abort.html">SQLITE_NOMEM</a> is returned if malloc() fails.</p>
+<p>The sqlite3_bind_* routines return <a href="../rescode.html#ok">SQLITE_OK</a> on success or an
+<a href="../rescode.html">error code</a> if anything goes wrong.
+<a href="../rescode.html#toobig">SQLITE_TOOBIG</a> might be returned if the size of a string or BLOB
+exceeds limits imposed by <a href="../c3ref/limit.html">sqlite3_limit</a>(<a href="../c3ref/c_limit_attached.html#sqlitelimitlength">SQLITE_LIMIT_LENGTH</a>) or
+<a href="../limits.html#max_length">SQLITE_MAX_LENGTH</a>.
+<a href="../rescode.html#range">SQLITE_RANGE</a> is returned if the parameter
+index is out of range.  <a href="../rescode.html#nomem">SQLITE_NOMEM</a> is returned if malloc() fails.</p>
 
 <p>See also: <a href="../c3ref/bind_parameter_count.html">sqlite3_bind_parameter_count()</a>,
 <a href="../c3ref/bind_parameter_name.html">sqlite3_bind_parameter_name()</a>, and <a href="../c3ref/bind_parameter_index.html">sqlite3_bind_parameter_index()</a>.

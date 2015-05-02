@@ -1,41 +1,276 @@
-sqlite3 (3.7.9-2ubuntu1.2) precise-security; urgency=medium
+sqlite3 (3.8.7.1-1+deb8u1) jessie-security; urgency=high
 
-  * SECURITY UPDATE: improper large integers handling in printf function
-    - debian/patches/CVE-2015-3416.patch: handle large integers in
-      src/printf.c, added tests to test/printf.test, added macros to
-      src/sqliteInt.h, added regexp support to test/tester.tcl.
-    - CVE-2015-3416
+  * Fix CVE-2015-3414 , use of uninitialized memory when parsing collation
+    sequences.
+  * Fix CVE-2015-3415 , properly implement comparison operators in
+    sqlite3VdbeExec() .
+  * Fix CVE-2015-3416 , properly handle precision and width values during
+    floating-point conversions in sqlite3VXPrintf() .
 
- -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 14 Jul 2015 13:59:21 -0400
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 02 May 2015 07:59:48 +0000
 
-sqlite3 (3.7.9-2ubuntu1.1) precise-proposed; urgency=low
+sqlite3 (3.8.7.1-1) unstable; urgency=medium
 
-  * debian/patches/upstream_incorrect_sql.patch:
-    - upstream patch for "Incorrect result from LEFT JOIN with OR in 
-      the WHERE clause status still"
-      (lp: #1021044)
+  * New upstream bugfix release.
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 02 Aug 2012 18:06:53 +0200
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 06 Nov 2014 16:24:21 +0000
 
-sqlite3 (3.7.9-2ubuntu1) precise; urgency=low
+sqlite3 (3.8.7-1) unstable; urgency=medium
 
-  * Resynchronise with Debian.  Remaining changes:
-    - Build for multiarch.
+  * New upstream release.
+  * Register with doc-base (closes: #691596).
+  * Update Standards-Version to 3.9.6 .
 
- -- Colin Watson <cjwatson@ubuntu.com>  Sun, 27 Nov 2011 15:31:48 +0000
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 17 Oct 2014 15:09:56 +0000
+
+sqlite3 (3.8.6-1) unstable; urgency=low
+
+  * New upstream release.
+  * Update 20-hurd-locking-style.patch to match this release.
+  * Merge with Ubuntu.
+
+  [ Matthias Klose <doko@ubuntu.com> ]
+  * Fix i386 cross builds.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 23 Aug 2014 07:37:16 +0000
+
+sqlite3 (3.8.5-2) unstable; urgency=low
+
+  * Fix FTBFS on x86 architectures (closes: #751878).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 17 Jun 2014 19:37:58 +0000
+
+sqlite3 (3.8.5-1) unstable; urgency=low
+
+  * New upstream release, adjust patches.
+  * Correct multi-arch paths (closes: #738507).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 15 Jun 2014 09:20:53 +0000
+
+sqlite3 (3.8.4.3-3) unstable; urgency=medium
+
+  * Add upstream fix of Nautilus crash as 40-sqlite-bug1075889.patch
+    (closes: #746521).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 04 May 2014 19:26:01 +0200
+
+sqlite3 (3.8.4.3-2) unstable; urgency=low
+
+  * Make lemon look for the packaged lempar.c and make it working again
+    (closes: #576272).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 26 Apr 2014 19:36:37 +0200
+
+sqlite3 (3.8.4.3-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 10 Apr 2014 22:26:12 +0200
+
+sqlite3 (3.8.4.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 22 Mar 2014 14:47:04 +0100
+
+sqlite3 (3.8.3.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 12 Feb 2014 18:35:01 +0100
+
+sqlite3 (3.8.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Disable 02-lemon-snprintf.patch , upstream completely reworked sprintf
+    variants.
+  * Remove 11-update-manpage.patch , upstream merged it.
+  * Update Standards-Version to 3.9.5 .
+  * Sync with Ubuntu.
+
+  [ Matthias Klose <doko@ubuntu.com> ]
+  * Build for Tcl 8.6.
+  * Build using dh-autoreconf and autotools-dev.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 10 Feb 2014 20:27:38 +0100
+
+sqlite3 (3.8.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 08 Dec 2013 10:48:05 +0100
+
+sqlite3 (3.8.1-2) unstable; urgency=low
+
+  * Backport upstream checkin 9aac4e588c to fix transitive WHERE-clause
+    constraints on LEFT JOINs (closes: #730174).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 02 Dec 2013 13:06:04 +0100
+
+sqlite3 (3.8.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Update 10-520478-squash-bad-deps.patch .
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 24 Oct 2013 21:47:57 +0200
+
+sqlite3 (3.8.0.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Build with hardening enabled.
+  * Update watch file.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 07 Sep 2013 08:04:44 +0200
+
+sqlite3 (3.8.0.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Update patches to apply clean.
+  * Increase SQLITE_MAX_VARIABLE_NUMBER compile time variable to 250000
+    (closes: #717900).
+
+  [ Colin Watson <cjwatson@ubuntu.com> ]
+  * Use dh_autotools-dev, bringing config.guess and config.sub up to date
+    enough to handle arm64 (closes: #712037).
+
+  [ Eleanor Chen <chenyueg@gmail.com> ]
+  * Don't generate pkgIndex.tcl on cross builds (closes: #720713).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 30 Aug 2013 01:35:59 +0200
+
+sqlite3 (3.7.17-1) unstable; urgency=medium
+
+  * New upstream release. Urgency due to fix a potential database corruption.
+  * Update patches to apply clean.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 21 May 2013 21:56:39 +0200
+
+sqlite3 (3.7.16.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 19 Apr 2013 21:40:10 +0200
+
+sqlite3 (3.7.16.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Fri, 29 Mar 2013 19:40:04 +0100
+
+sqlite3 (3.7.16-1) unstable; urgency=low
+
+  * New upstream release, fixes umask handling (closes: #703465).
+  * Update Standards-Version to 3.9.4 .
+  * Make libsqlite3-dev package multi-arch: same (closes: #683588).
+  * Include HTML documentation for lemon (closes: #698636).
+  * Update patches to apply clean.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Tue, 19 Mar 2013 23:33:43 +0100
+
+sqlite3 (3.7.15.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Tue, 15 Jan 2013 18:36:34 +0100
+
+sqlite3 (3.7.15.1-1) unstable; urgency=low
+
+  * New upstream release, update patches.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Tue, 25 Dec 2012 14:03:18 +0100
+
+sqlite3 (3.7.15-1) unstable; urgency=low
+
+  * New upstream release, update patches.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Fri, 14 Dec 2012 20:42:02 +0100
+
+sqlite3 (3.7.14.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Sat, 06 Oct 2012 16:19:41 +0200
+
+sqlite3 (3.7.14-1) unstable; urgency=low
+
+  * New upstream release, update patches to match it.
+  * Update watch file to match website change.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Thu, 13 Sep 2012 09:30:13 +0000
+
+sqlite3 (3.7.13-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 13 Jun 2012 21:43:48 +0200
+
+sqlite3 (3.7.12.1-1) unstable; urgency=low
+
+  * New upstream release (closes: #674078).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 23 May 2012 00:22:02 +0200
+
+sqlite3 (3.7.12-1) unstable; urgency=low
+
+  * New upstream release, adjust patches to apply clean.
+  * Increase MAX_DEFAULT_PAGE_SIZE and SQLITE_MAX_SCHEMA_RETRY for Firefox and
+    Iceweasel (closes: #672573).
+  * Remove double -ldl entry from Libs.private in sqlite3.pc
+    (closes: #653170).
+  * Drop hardening-wrapper build dependency (closes: #672575), adjust
+    debian/rules to still build with hardening enabled.
+
+  [ Mike Hommey ]
+  * Make the package backportable without changes other than a changelog
+    entry (closes: #672663).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Tue, 15 May 2012 09:17:23 +0000
+
+sqlite3 (3.7.11-3) unstable; urgency=low
+
+  * Disable the usage of malloc_usable_size() (closes: #663691, #665363),
+    thanks to Steven Chamberlain <steven@pyro.eu.org> for the patch.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Mon, 30 Apr 2012 10:56:57 +0200
+
+sqlite3 (3.7.11-2) unstable; urgency=low
+
+  * Fix pkgIndex.tcl generation for multi-arch.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Thu, 22 Mar 2012 02:06:39 +0100
+
+sqlite3 (3.7.11-1) unstable; urgency=low
+
+  * New upstream release.
+  * Update packaging bits.
+  * Make the package multi-arch and enable hardening compilation.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 21 Mar 2012 10:38:59 +0000
+
+sqlite3 (3.7.10-1) unstable; urgency=low
+
+  * New upstream release (closes: #659443).
+  * Fix pkgIndex.tcl problem, thanks to Mike Hommey <mh@glandium.org>
+    (closes: #654662).
+  * Update patches and symbols file to match this release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Fri, 20 Jan 2012 14:39:11 +0000
+
+sqlite3 (3.7.9-3) unstable; urgency=low
+
+  * Correct flock locking on Hurd (closes: #653937), thanks to Pino Toscano
+    <pino@debian.org> .
+  * Add self test if pkgIndex.tcl is correctly generated (closes: #650961).
+  * Enable LIMIT support for UPDATE and DELETE commands (closes: #649169).
+  * Update packaging bits.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Tue, 03 Jan 2012 19:00:51 +0100
 
 sqlite3 (3.7.9-2) unstable; urgency=low
 
   * Export CFLAGS as dpkg-buildpackage no longer does it (closes: #647842).
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Mon, 07 Nov 2011 19:12:18 +0100
-
-sqlite3 (3.7.9-1ubuntu1) precise; urgency=low
-
-  * Resynchronise with Debian.  Remaining changes:
-    - Build for multiarch.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Mon, 07 Nov 2011 12:39:27 +0000
 
 sqlite3 (3.7.9-1) unstable; urgency=low
 
@@ -56,19 +291,6 @@ sqlite3 (3.7.8-1) unstable; urgency=low
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 21 Sep 2011 19:38:54 +0200
 
-sqlite3 (3.7.7-2ubuntu2) oneiric; urgency=low
-
-  * Make sure to build lemon when cross-compiling.
-
- -- Colin Watson <cjwatson@ubuntu.com>  Tue, 27 Sep 2011 00:09:20 +0100
-
-sqlite3 (3.7.7-2ubuntu1) oneiric; urgency=low
-
-  * Merge from debian unstable. (LP: #814099) Remaining changes:
-    - Build for multiarch.
-
- -- Angel Abad <angelabad@ubuntu.com>  Thu, 21 Jul 2011 15:46:41 +0200
-
 sqlite3 (3.7.7-2) unstable; urgency=low
 
   * Get LIKE function fix from upstream as 31-like-fix.patch (closes: #631736).
@@ -82,13 +304,6 @@ sqlite3 (3.7.7-1) unstable; urgency=low
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Sat, 25 Jun 2011 17:55:22 +0200
 
-sqlite3 (3.7.6.3-1ubuntu1) oneiric; urgency=low
-
-  * Merge from Debian unstable.  Remaining changes:
-    - Build for multiarch.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 04 Jun 2011 04:28:43 +0000
-
 sqlite3 (3.7.6.3-1) unstable; urgency=low
 
   * New upstream release, update patches.
@@ -96,16 +311,6 @@ sqlite3 (3.7.6.3-1) unstable; urgency=low
     Baumann (closes: #624705).
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Sat, 21 May 2011 11:31:14 +0200
-
-sqlite3 (3.7.6.2-1ubuntu1) oneiric; urgency=low
-
-  * Merge from Debian unstable.  Remaining changes:
-    - Build for multiarch.
-  * Dropped changes, merged in Debian:
-    - debian/rules: don't use DEB_OPT_FLAG
-    - build both build host & target lemon compilers when cross building
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 20 May 2011 15:12:39 +0000
 
 sqlite3 (3.7.6.2-1) unstable; urgency=low
 
@@ -124,46 +329,6 @@ sqlite3 (3.7.5-1) unstable; urgency=low
   * Use a symbols file (closes: #588456, #609946).
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.hu>  Wed, 09 Feb 2011 19:01:07 +0100
-
-sqlite3 (3.7.4-2ubuntu5) natty; urgency=low
-
-  * No-change rebuild against fixed pkgbinarymangler, to get correct
-    multiarch-safe changelogs
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Mon, 21 Mar 2011 01:14:09 -0700
-
-sqlite3 (3.7.4-2ubuntu4) natty; urgency=low
-
-  * DEB_CONFIGURE_EXTRA_FLAGS +=, so that we /really/ build for multiarch.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Thu, 17 Mar 2011 05:07:51 +0000
-
-sqlite3 (3.7.4-2ubuntu3) natty; urgency=low
-
-  * Rebuild for final multiarch paths.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 13 Mar 2011 13:48:19 -0700
-
-sqlite3 (3.7.4-2ubuntu2) natty; urgency=low
-
-  * debian/rules: don't use DEB_OPT_FLAG, which seems to have never been
-    officially supported by cdbs and has now gone away; set CFLAGS directly
-    instead.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Thu, 03 Feb 2011 18:56:59 -0800
-
-sqlite3 (3.7.4-2ubuntu1) natty; urgency=low
-
-  [ Peter Pearse ]
-  * Patch to build both build host & target lemon compilers when cross
-    building
-
-  [ Steve Langasek ]
-  * Refine the patch for upstreamability: always use $(BEXE) for build and
-    $(TEXE) for target binaries, and only build a lemon binary for the
-    target upon explicit request.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 01 Feb 2011 08:23:29 -0800
 
 sqlite3 (3.7.4-2) unstable; urgency=low
 
