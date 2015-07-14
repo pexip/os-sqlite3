@@ -5,3 +5,4 @@
 #20-hurd-locking-style.patch
 30-cross.patch
 upstream_incorrect_sql.patch
+CVE-2015-3416.patch
