@@ -1,3 +1,19 @@
+sqlite3 (3.7.9-2ubuntu1.2pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 31 Jul 2015 11:50:32 +0100
+
+sqlite3 (3.7.9-2ubuntu1.2) precise-security; urgency=medium
+
+  * SECURITY UPDATE: improper large integers handling in printf function
+    - debian/patches/CVE-2015-3416.patch: handle large integers in
+      src/printf.c, added tests to test/printf.test, added macros to
+      src/sqliteInt.h, added regexp support to test/tester.tcl.
+    - CVE-2015-3416
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 14 Jul 2015 13:59:21 -0400
+
 sqlite3 (3.7.9-2ubuntu1.1pexip1) pexip; urgency=low
 
   * Prepare Pexip packaging
