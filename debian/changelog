@@ -1,3 +1,9 @@
+sqlite3 (3.7.9-2ubuntu1.2pexip2) pexip; urgency=low
+
+  * Enable ICU extension
+
+ -- John Wright <john.wright@pexip.com>  Tue, 10 May 2016 16:29:20 +0100
+
 sqlite3 (3.7.9-2ubuntu1.2pexip1) pexip; urgency=low
 
   * New upstream release
