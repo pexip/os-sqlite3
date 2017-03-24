@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>SQLite Autoincrement</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,17 +125,43 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 
-<h1>SQLite Autoincrement</h1>
 
+<h1 align=center>Autoincrement In SQLite</h1>
+
+<h2>Summary</h2>
+
+<ol type="1">
+<li><p>
+  The AUTOINCREMENT keyword imposes extra CPU, memory, disk space,
+  and disk I/O overhead and should be avoided if not strictly needed.
+  It is usually not needed.
+<li><p>
+  In SQLite, a column with type INTEGER PRIMARY KEY is an alias for the <a href="lang_createtable.html#rowid">ROWID</a>
+  (except in <a href="withoutrowid.html">WITHOUT ROWID</a> tables) which is always a 64-bit signed integer.
+<li><p>
+  On an <a href="lang_insert.html">INSERT</a>, if the ROWID or INTEGER PRIMARY KEY column is not 
+  explicitly given a value, then it
+  will be filled automatically with an unused integer, usually the
+  one more than the largest ROWID currently in use.
+  This is true regardless of whether or not the AUTOINCREMENT keyword is used.
+<li><p>
+  If the AUTOINCREMENT keyword appears after INTEGER PRIMARY KEY, that
+  changes the automatic ROWID assignment algorithm to prevent
+  the reuse of ROWIDs over the lifetime of the database.  In other words,
+  the purpose of AUTOINCREMENT is to prevent the reuse of ROWIDs from
+  previously deleted rows.
+</ol>
+
+<h2>Background</h2>
 
 <p>
-In SQLite, every row of every table has an 64-bit signed integer <a href="lang_createtable.html#rowid">ROWID</a>.
-The ROWID for each row is unique among all rows in the same table.
+In SQLite, table rows normally have a 64-bit signed integer <a href="lang_createtable.html#rowid">ROWID</a>
+which is unique among all rows in the same table.
+(<a href="withoutrowid.html">WITHOUT ROWID</a> tables are the exception.)
 </p>
 
 <p>
@@ -165,7 +203,7 @@ used.  If the largest ROWID is equal to the largest possible integer
 engine starts picking positive candidate ROWIDs at random until it finds one
 that is not previously used.
 If no unused ROWID can be found after a reasonable number of attempts,
-the insert operation fails with an <a href="c3ref/c_abort.html">SQLITE_FULL</a> error.
+the insert operation fails with an <a href="rescode.html#full">SQLITE_FULL</a> error.
 If no negative ROWID values are inserted explicitly, then automatically 
 generated ROWID values will always be greater than zero.
 </p>
@@ -196,9 +234,10 @@ SQLITE_FULL error.
 
 <p>
 SQLite keeps track of the largest ROWID that a table has ever held using
-the special SQLITE_SEQUENCE table.  The SQLITE_SEQUENCE table is created
+an <a href="fileformat2.html#intschema">internal table</a> named "<a href="fileformat2.html#seqtab">sqlite_sequence</a>".
+The sqlite_sequence table is created
 and initialized automatically whenever a normal table that contains an
-AUTOINCREMENT column is created.  The content of the SQLITE_SEQUENCE table
+AUTOINCREMENT column is created.  The content of the sqlite_sequence table
 can be modified using ordinary UPDATE, INSERT, and DELETE statements.
 But making modifications to this table will likely perturb the AUTOINCREMENT
 key generation algorithm.  Make sure you know what you are doing before
@@ -224,4 +263,10 @@ the failed insertion attempt might not be reused on subsequent inserts,
 resulting in gaps in the ROWID sequence.  AUTOINCREMENT guarantees that
 automatically chosen ROWIDs will be increasing but not that they will be
 sequential.</p>
+
+<p>Because AUTOINCREMENT keyword changes the behavior of the ROWID selection
+algorithm, AUTOINCREMENT is not allowed on <a href="withoutrowid.html">WITHOUT ROWID</a> tables or on any
+table column other than INTEGER PRIMARY KEY.  Any attempt to use 
+AUTOINCREMENT on a <a href="withoutrowid.html">WITHOUT ROWID</a> table or on a column other than the
+INTEGER PRIMARY KEY column results in an error.</p>
 

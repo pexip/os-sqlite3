@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>The Virtual Table Mechanism Of SQLite</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,8 +125,7 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 
@@ -172,7 +183,7 @@ virtual table on demand.
 
 <h3>1.1 Usage</h3>
 
-<p>A virtual table is created using using a <a href="lang_createvtab.html">CREATE VIRTUAL TABLE</a> statement.
+<p>A virtual table is created using a <a href="lang_createvtab.html">CREATE VIRTUAL TABLE</a> statement.
 This statement creates a table with a particular name and associates the
 table with a "module".
 
@@ -450,8 +461,8 @@ routine returns.
 fields of the <a href="c3ref/vtab.html">sqlite3_vtab</a> object.  The SQLite core will take care of 
 that chore.
 
-<p>The xCreate must should return <a href="c3ref/c_abort.html">SQLITE_OK</a> if it is successful in 
-creating the new virtual table, or <a href="c3ref/c_abort.html">SQLITE_ERROR</a> if it is not successful.
+<p>The xCreate should return <a href="rescode.html#ok">SQLITE_OK</a> if it is successful in 
+creating the new virtual table, or <a href="rescode.html#error">SQLITE_ERROR</a> if it is not successful.
 If not successful, the <a href="c3ref/vtab.html">sqlite3_vtab</a> structure must not be allocated. 
 An error message may optionally be returned in *pzErr if unsuccessful.
 Space to hold the error message string must be allocated using
@@ -462,8 +473,8 @@ been reported up to the application.
 
 <p>The xCreate method is required for every virtual table implementation, 
 though the xCreate and <a href="vtab.html#xconnect">xConnect</a> pointers of the <a href="c3ref/module.html">sqlite3_module</a> object
-may point to the same function the virtual table does not need to initialize
-backing store.
+may point to the same function if the virtual table does not need to
+initialize backing store.
 
 <a name="hiddencol"></a>
 
@@ -538,8 +549,8 @@ the dictionary and posting lists for that index. The xConnect method,
 on the other hand, only has to locate and use an existing dictionary 
 and posting lists that were created by a prior xCreate call.
 
-<p>The xConnect method must return <a href="c3ref/c_abort.html">SQLITE_OK</a> if it is successful 
-in creating the new virtual table, or <a href="c3ref/c_abort.html">SQLITE_ERROR</a> if it is not 
+<p>The xConnect method must return <a href="rescode.html#ok">SQLITE_OK</a> if it is successful 
+in creating the new virtual table, or <a href="rescode.html#error">SQLITE_ERROR</a> if it is not 
 successful. If not successful, the <a href="c3ref/vtab.html">sqlite3_vtab</a> structure must not be 
 allocated. An error message may optionally be returned in *pzErr if 
 unsuccessful. 
@@ -551,8 +562,8 @@ been reported up to the application.
 
 <p>The xConnect method is required for every virtual table implementation, 
 though the <a href="vtab.html#xcreate">xCreate</a> and xConnect pointers of the <a href="c3ref/module.html">sqlite3_module</a> object
-may point to the same function the virtual table does not need to initialize
-backing store.
+may point to the same function if the virtual table does not need to
+initialize backing store.
 
 <a name="xbestindex"></a>
 
@@ -598,8 +609,17 @@ forms the reply. The <a href="c3ref/index_info.html">sqlite3_index_info</a> stru
     int needToFreeIdxStr;      /* Free idxStr using sqlite3_free() if true */
     int orderByConsumed;       /* True if output is already ordered */
     double estimatedCost;      /* Estimated cost of using this index */
+    <b>/* Fields below are only available in SQLite 3.8.2 and later */</b>
+    sqlite3_int64 estimatedRows;    /* Estimated number of rows returned */
   };
 </pre></blockquote>
+
+<p>Please note the warning above the "estimatedRows" field. This field was
+added to the structure beginning with SQLite version 3.8.2. This means that any
+extension that reads or writes this field must first check that the version of
+the SQLite library in use is greater than or equal to 3.8.2 - perhaps using
+a call to <a href="c3ref/libversion.html">sqlite3_version()</a>. The results of attempting to access this field
+within a structure created by an older version of SQLite are undefined.
 
 <p>In addition, there are some defined constants:
 
@@ -752,6 +772,11 @@ the virtual table. The SQLite core will often call xBestIndex
 multiple times with different constraints, obtain multiple cost
 estimates, then choose the query plan that gives the lowest estimate.
 
+<p>If the current version of SQLite is 3.8.2 or greater, the estimatedRows
+field may be set to an estimate of the number of rows returned by the
+proposed query plan. If this value is not explicitly set, the default 
+estimate of 25 rows is used.
+
 <p>The aConstraintUsage[] array contains one element for each of 
 the nConstraint constraints in the inputs section of the 
 <a href="c3ref/index_info.html">sqlite3_index_info</a> structure. 
@@ -793,8 +818,8 @@ This method undoes the work of <a href="vtab.html#xconnect">xConnect</a>.
 Contrast this method with <a href="vtab.html#sqlite3_module.xDestroy">xDestroy</a>.  The xDestroy is a destructor
 for the entire virtual table.
 
-<p>The xDestroy method is required for every virtual table implementation,
-though it is acceptable for the <a href="vtab.html#xdisconnect">xDisconnect</a> and xDestroy methods to be
+<p>The xDisconnect method is required for every virtual table implementation,
+though it is acceptable for the xDisconnect and <a href="vtab.html#sqlite3_module.xDestroy">xDestroy</a> methods to be
 the same function if that makes sense for the particular virtual table.
 
 <a name="sqlite3_module.xDestroy"></a>
@@ -813,8 +838,8 @@ table implementation. This method undoes the work of <a href="vtab.html#xcreate"
 that uses a virtual table is closed. The xDestroy method is only 
 called when a <a href="lang_droptable.html">DROP TABLE</a> statement is executed against the virtual table.
 
-<p>The xDisconnect method is required for every virtual table implementation,
-though it is acceptable for the xDisconnect and <a href="vtab.html#sqlite3_module.xDestroy">xDestroy</a> methods to be
+<p>The xDestroy method is required for every virtual table implementation,
+though it is acceptable for the <a href="vtab.html#xdisconnect">xDisconnect</a> and xDestroy methods to be
 the same function if that makes sense for the particular virtual table.
 
 <a name="xopen"></a>
@@ -829,7 +854,7 @@ the same function if that makes sense for the particular virtual table.
 writing) a virtual table.  A successful invocation of this method 
 will allocate the memory for the <a href="c3ref/vtab_cursor.html">sqlite3_vtab_cursor</a> (or a subclass),
 initialize the new object, and make *ppCursor point to the new object.
-The successful call then returns <a href="c3ref/c_abort.html">SQLITE_OK</a>.
+The successful call then returns <a href="rescode.html#ok">SQLITE_OK</a>.
 
 <p>For every successful call to this method, the SQLite core will
 later invoke the <a href="vtab.html#xclose">xClose</a> method to destroy 
@@ -894,7 +919,7 @@ This method is called by the SQL engine immediately after each
 
 <p>This method begins a search of a virtual table. 
 The first argument is a cursor opened by <a href="vtab.html#xopen">xOpen</a>. 
-The next two argument define a particular search index previously 
+The next two arguments define a particular search index previously 
 chosen by <a href="vtab.html#xbestindex">xBestIndex</a>. The specific meanings of idxNum and idxStr 
 are unimportant as long as xFilter and xBestIndex agree on what 
 that meaning is.
@@ -913,8 +938,8 @@ The SQLite engine will use
 the <a href="vtab.html#xcolumn">xColumn</a> and <a href="vtab.html#xrowid">xRowid</a> methods to access that row content.
 The <a href="vtab.html#xnext">xNext</a> method will be used to advance to the next row.
 
-<p>This method must return <a href="c3ref/c_abort.html">SQLITE_OK</a> if successful, or an sqlite 
-<a href="c3ref/c_abort.html">error code</a> if an error occurs.
+<p>This method must return <a href="rescode.html#ok">SQLITE_OK</a> if successful, or an sqlite 
+<a href="rescode.html">error code</a> if an error occurs.
 
 <p>The xFilter method is required for every virtual table implementation.
 
@@ -934,8 +959,8 @@ data and a subsequent call to the <a href="vtab.html#xeof">xEof</a> method must 
 If the cursor is successfully advanced to another row of content, then
 subsequent calls to <a href="vtab.html#xeof">xEof</a> must return false (zero).
 
-<p>This method must return <a href="c3ref/c_abort.html">SQLITE_OK</a> if successful, or an sqlite 
-<a href="c3ref/c_abort.html">error code</a> if an error occurs.
+<p>This method must return <a href="rescode.html#ok">SQLITE_OK</a> if successful, or an sqlite 
+<a href="rescode.html">error code</a> if an error occurs.
 
 <p>The xNext method is required for every virtual table implementation.
 
@@ -973,7 +998,7 @@ then the value of the column defaults to an SQL NULL.
 
 <p>To raise an error, the xColumn method should use one of the result_text() 
 methods to set the error message text, then return an appropriate
-<a href="c3ref/c_abort.html">error code</a>.  The xColumn method must return <a href="c3ref/c_abort.html">SQLITE_OK</a> on success.
+<a href="rescode.html">error code</a>.  The xColumn method must return <a href="rescode.html#ok">SQLITE_OK</a> on success.
 
 <p>The xColumn method is required for every virtual table implementation.
 
@@ -988,8 +1013,8 @@ methods to set the error message text, then return an appropriate
 <p>A successful invocation of this method will cause *pRowid to be
 filled with the <a href="lang_createtable.html#rowid">rowid</a> of row that the
 <a href="c3ref/vtab_cursor.html">virtual table cursor</a> pCur is currently pointing at.
-This method returns <a href="c3ref/c_abort.html">SQLITE_OK</a> on success.
-It returns an appropriate <a href="c3ref/c_abort.html">error code</a> on failure.</p>
+This method returns <a href="rescode.html#ok">SQLITE_OK</a> on success.
+It returns an appropriate <a href="rescode.html">error code</a> on failure.</p>
 
 <p>The xRowid method is required for every virtual table implementation.
 
@@ -1067,9 +1092,9 @@ when an SQL statement updates a rowid, as in the statement:
 </dl>
 </blockquote>
 
-<p>The xUpdate method must return <a href="c3ref/c_abort.html">SQLITE_OK</a> if and only if it is
+<p>The xUpdate method must return <a href="rescode.html#ok">SQLITE_OK</a> if and only if it is
 successful.  If a failure occurs, the xUpdate must return an appropriate
-<a href="c3ref/c_abort.html">error code</a>.  On a failure, the pVTab->zErrMsg element may optionally
+<a href="rescode.html">error code</a>.  On a failure, the pVTab->zErrMsg element may optionally
 be replaced with error message text stored in memory allocated from SQLite 
 using functions such as <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> or <a href="c3ref/free.html">sqlite3_malloc()</a>.
 
@@ -1077,14 +1102,14 @@ using functions such as <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> or <a
 (including, but not limited to, attempting to store a value of the wrong 
 datatype, attempting to store a value that is too
 large or too small, or attempting to change a read-only value) then the
-xUpdate must fail with an appropriate <a href="c3ref/c_abort.html">error code</a>.
+xUpdate must fail with an appropriate <a href="rescode.html">error code</a>.
 
 <p>There might be one or more <a href="c3ref/vtab_cursor.html">sqlite3_vtab_cursor</a> objects open and in use 
 on the virtual table instance and perhaps even on the row of the virtual
 table when the xUpdate method is invoked.  The implementation of
 xUpdate must be prepared for attempts to delete or modify rows of the table
 out from other existing cursors.  If the virtual table cannot accommodate
-such changes, the xUpdate method must return an <a href="c3ref/c_abort.html">error code</a>.
+such changes, the xUpdate method must return an <a href="rescode.html">error code</a>.
 
 <p>The xUpdate method is optional.
 If the xUpdate pointer in the <a href="c3ref/module.html">sqlite3_module</a> for a virtual table
@@ -1208,8 +1233,8 @@ may be NULL.
 
 <p>This method provides notification that the virtual table implementation
 that the virtual table will be given a new name. 
-If this method returns <a href="c3ref/c_abort.html">SQLITE_OK</a> then SQLite renames the table.
-If this method returns an <a href="c3ref/c_abort.html">error code</a> then the renaming is prevented.
+If this method returns <a href="rescode.html#ok">SQLITE_OK</a> then SQLite renames the table.
+If this method returns an <a href="rescode.html">error code</a> then the renaming is prevented.
 
 <p>The xRename method is required for every virtual table implementation.
 

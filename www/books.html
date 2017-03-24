@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>Books About SQLite</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,14 +125,58 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 
 
 
 <h1 align=center>Books About SQLite</h1>
+
+<hr>
+<table border=0><tr><td valign=top><img src="images/books/aditya.jpg">
+<td valign=top>
+<h2>Android SQLite Essentials (2014)</h2>
+
+<p>
+Authors: Sunny Kumar Aditya and Vikash Kumar Karn<br>
+Publisher: <a href="https://www.packtpub.com/application-development/android-sqlite-essentials">
+Packt Publishing</a><br>
+
+<p>
+Android SQLite Essentials focuses on the core concepts behind building
+database-driven applications. This book covers the basic and advanced
+topics with equivalent simplicity and detail, in order to enable
+readers to quickly grasp and implement the concepts to build an
+application database.
+
+<p>This book takes a hands-on, example-based approach to help readers
+understand the core topics of SQLite and Android database-driven
+applications. This book focuses on providing you with latent as well
+as widespread knowledge about practices and approaches towards
+development in an easily understandable manner.
+</table>
+
+<hr>
+<table border=0><tr><td valign=top><img src="images/books/das.jpg">
+<td valign=top>
+<h2>SQLite for Mobile Apps Simplified (2014)</h2>
+
+<p>
+Author: Sribatsa Das<br>
+Publisher: Amazon<br>
+<a href="http://amzn.com/B00M3OVSRK">Amazon</a>
+
+<p>
+SQLite for Mobile Apps Simplified is devoted to presenting approach
+and implementation methodology for using SQLite database in mobile apps.
+It presents step-by-step examples to create schema, execute transactions
+and access data from Android, BlackBerry and iOS applications.
+In addition, it presents ADB Shell and SQLite command-line shell from
+ADB Shell to access the SQLite Database created by the Android apps.
+For BlackBerry and iOS application, the book presents ways to access
+the data using the command line shell. 
+</table>
 
 <hr>
 <table border=0><tr><td valign=top><img src="images/books/owens.jpg">
@@ -136,7 +192,7 @@ Publisher: Apress<br>
 Outside of the world of enterprise computing, there is one database 
 that enables a huge range of software and hardware to flex relational 
 database capabilities, without the baggage and cost of traditional 
-database management systems. That database is SQLite\u2014an embeddable
+database management systems. That database is SQLite - an embeddable
 database with an amazingly small footprint, yet able to handle databases 
 of enormous size. SQLite comes equipped with an array of powerful 
 features available through a host of programming and development 
