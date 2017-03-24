@@ -205,6 +205,7 @@ do_test malloc5-4.1 {
     execsql "INSERT INTO abc VALUES($i, $i, '[string repeat X 100]');"
   }
   execsql {COMMIT;}
+  db cache flush
   sqlite3_release_memory
   sqlite3_memory_highwater 1
   execsql {SELECT * FROM abc}
@@ -213,6 +214,7 @@ do_test malloc5-4.1 {
   expr $nMaxBytes > 1000000
 } {1}
 do_test malloc5-4.2 {
+  db cache flush
   sqlite3_release_memory
   sqlite3_soft_heap_limit 100000
   sqlite3_memory_highwater 1
@@ -352,7 +354,7 @@ do_test malloc5-6.3.1 {
 do_test malloc5-6.3.2 {
   # Try to release 7700 bytes. This should release all the 
   # non-dirty pages held by db2.
-  sqlite3_release_memory [expr 7*1100]
+  sqlite3_release_memory [expr 7*1132]
   list [nPage db] [nPage db2]
 } {10 3}
 do_test malloc5-6.3.3 {
@@ -366,7 +368,7 @@ do_test malloc5-6.3.4 {
   # the rest of the db cache. But the db2 cache remains intact, because
   # SQLite tries to avoid calling sync().
   if {$::tcl_platform(wordSize)==8} {
-    sqlite3_release_memory 10177
+    sqlite3_release_memory 10500
   } else {
     sqlite3_release_memory 9900
   }
