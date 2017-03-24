@@ -1,8 +1,11 @@
-02-lemon-snprintf.patch
+#02-lemon-snprintf.patch
 10-520466-libsqlite3-depends-on-libdl.patch
 10-520478-squash-bad-deps.patch
-11-update-manpage.patch
-#20-hurd-locking-style.patch
+20-hurd-locking-style.patch
 30-cross.patch
-upstream_incorrect_sql.patch
-CVE-2015-3416.patch
+10-665363-disable-malloc-usable-size.patch
+31-increase_SQLITE_MAX_DEFAULT_PAGE_SIZE_to_32k.patch
+02-use-packaged-lempar.c.patch
+40-CVE-2015-3414.patch
+41-CVE-2015-3415.patch
+42-CVE-2015-3416.patch

@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>How SQLite Is Tested</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,8 +125,7 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 
@@ -129,16 +140,15 @@ a:visited { color: #734559 }
 <p>The reliability and robustness of SQLite is achieved in part
 by thorough and careful testing.</p>
 
-<p>As of <a href="releaselog/3_7_8.html">version 3.7.8</a> (all statistics in the report are against that
-release of SQLite),
+<p>As of <a href="releaselog/3_8_6.html">version 3.8.6</a>,
 the SQLite library consists of approximately
-77.6 KSLOC of C code.
+89.9 KSLOC of C code.
 (KSLOC means thousands of "Source Lines Of Code" or, in other words,
 lines of code excluding blank lines and comments.)
 By comparison, the project has
-1177 times as much
+1017 times as much
 test code and test scripts - 
-91392.4 KSLOC.</p>
+91493.0 KSLOC.</p>
 
 <h3>1.1 Executive Summary</h3>
 
@@ -156,7 +166,8 @@ test code and test scripts -
 <li> Malformed database tests
 <li> Extensive use of assert() and run-time checks
 <li> Valgrind analysis
-<li> Signed-integer overflow checks
+<li> Undefined behavior checks
+<li> Checklists
 </ul>
 
 <a name="harnesses"></a>
@@ -179,13 +190,13 @@ SQLite core and like the SQLite core are in the public domain.  The
 TCL tests are the primary tests used during development.
 The TCL tests are written using the 
 <a href="http://www.tcl.tk/">TCL scripting language</a>.
-The TCL test harness itself consists of 21.6 KSLOC 
+The TCL test harness itself consists of 23.1 KSLOC 
 of C code used to create the TCL interface.  The test scripts are contained
-in 661 files totaling 
-9.6MB in size.  There are
-28278 distinct test cases, but many of the test
+in 825 files totaling 
+10.9MB in size.  There are
+33402 distinct test cases, but many of the test
 cases are parameterized and run multiple times (with different parameters)
-so that on a full test run, about 1.7 million 
+so that on a full test run millions of
 separate tests are performed.
 </p>
 </li>
@@ -198,10 +209,10 @@ on embedded and specialized platforms that would not easily support
 TCL or other workstation services.  TH3 tests use only the published 
 SQLite interfaces.  TH3 is free to <a href="consortium.html">SQLite Consortium</a> members 
 and is available by license to others.  TH3 consists of about
-48.9 MB or 650.5 KSLOC
-of C code implementing 33595 distinct test cases.
+53.1 MB or 718.2 KSLOC
+of C code implementing 36618 distinct test cases.
 TH3 tests are heavily parameterized, though, so a full-coverage test runs
-about 0.8 million different test
+about 1.5 million different test
 instances.  The cases that provide 100% branch test coverage constitute
 a subset of the total TH3 test suite.  A soak test
 prior to release does hundreds of millions of tests.
@@ -227,7 +238,7 @@ before each release of SQLite.</p>
 <p>Prior to each check-in to the SQLite source tree, developers
 typically run a subset (called "veryquick") of the Tcl tests
 consisting of about 
-132.2 thousand test cases.
+206.5 thousand test cases.
 The veryquick tests include everything except the anomaly, fuzz, and 
 soak tests.  The idea behind the veryquick tests are that they are
 sufficient to catch most errors, but also run in only a few minutes
@@ -261,7 +272,7 @@ SQLite be able to gracefully handle OOM errors.</p>
 
 <p>OOM testing is accomplished by simulating OOM errors.
 SQLite allows an application to substitute an alternative malloc()
-implementation using the <a href="c3ref/config.html">sqlite3_config</a>(<a href="c3ref/c_config_getmalloc.html#sqliteconfigmalloc">SQLITE_CONFIG_MALLOC</a>,...)
+implementation using the <a href="c3ref/config.html">sqlite3_config</a>(<a href="c3ref/c_config_covering_index_scan.html#sqliteconfigmalloc">SQLITE_CONFIG_MALLOC</a>,...)
 interface.  The TCL and TH3 test harnesses are both capable of
 inserting a modified version of malloc() that can be rigged to fail 
 after a certain number of allocations.  These instrumented mallocs
@@ -384,7 +395,7 @@ resulting prepared statement is run to make sure it gives a reasonable
 result.</p>
 
 <p>The SQL fuzz generator tests are part of the TCL test suite.
-During a full test run, about 102.1 
+During a full test run, about 119.6 
 thousand fuzz SQL statements are
 generated and tested.</p>
 
@@ -403,7 +414,7 @@ no effect on the integrity of the database.
 The interesting cases are when bytes of the file that
 define database structure get changed.  The malformed database tests
 verify that SQLite finds the file format errors and reports them
-using the <a href="c3ref/c_abort.html">SQLITE_CORRUPT</a> return code without overflowing
+using the <a href="rescode.html#corrupt">SQLITE_CORRUPT</a> return code without overflowing
 buffers, dereferencing NULL pointers, or performing other
 unwholesome actions.</p>
 
@@ -424,10 +435,11 @@ have been tested.</p>
 <h2>5.0 Regression Testing</h2>
 
 <p>Whenever a bug is reported against SQLite, that bug is not considered
-fixed until new test cases have been added to the TCL test suite which
-would exhibit the bug in an unpatched version of SQLite.  Over the years,
-this has resulted in thousands and thousands of new tests being added
-to the TCL test suite.  These regression tests ensure that bugs that have
+fixed until new test cases that would exhibit the bug have been added 
+to either the TCL or TH3 test suites.
+Over the years,
+this has resulted in thousands and thousands of new tests.
+These regression tests ensure that bugs that have
 been fixed in the past are not reintroduced into future versions of
 SQLite.</p>
 
@@ -454,10 +466,9 @@ harnesses are zealous to enforce this.</p>
 
 <h2>7.0 Test Coverage</h2>
 
-<p>The SQLite core has 100% branch test coverage under <a href="th3.html">TH3</a> as of
-2009-07-25, in its default configuration as measured by
-<a href="http://gcc.gnu.org/onlinedocs/gcc/Gcov.html">gcov</a>
-utility on SuSE Linux 10.1 on x86 hardware with the GCC 4.0.1 compiler.</p>
+<p>The SQLite core has 100% branch test coverage under <a href="th3.html">TH3</a> in
+its default configuration as measured by
+<a href="http://gcc.gnu.org/onlinedocs/gcc/Gcov.html">gcov</a>.</p>
 
 <p>The "SQLite core" in the previous paragraph excludes the
 operating-system dependent <a href="vfs.html">VFS</a> backends, since it is
@@ -516,8 +527,9 @@ test coverage - 100% branch test coverage.</p>
 
 <h3>7.2 Coverage testing of defensive code</h3>
 
-<p>A well-written C program will typically contain some defensive tests
-which in practice are always true or always false.  This leads to a 
+<p>A well-written C program will typically contain some defensive
+conditionals which in practice are always true or always false.
+This leads to a 
 programming dilemma:  Does one remove defensive code in order to obtain
 100% branch coverage?</p>
 
@@ -606,7 +618,7 @@ switch( op ){
 </pre></blockquote>
 
 <p>For bitmask tests, <tt>testcase()</tt> macros are used to verify that every
-bit of the bitmask affects the test.  For example, in the following block
+bit of the bitmask affects the outcome.  For example, in the following block
 of code, the condition is true if the mask contains either of two bits
 indicating either a MAIN_DB or a TEMP_DB is being opened.  
 The <tt>testcase()</tt>
@@ -618,7 +630,7 @@ testcase( mask & SQLITE_OPEN_TEMP_DB );
 if( (mask & (SQLITE_OPEN_MAIN_DB|SQLITE_OPEN_TEMP_DB))!=0 ){ ... }
 </pre></blockquote>
 
-<p>The SQLite source code contains 669
+<p>The SQLite source code contains 749
 uses of the <tt>testcase()</tt> macro.</p>
 
 <a name="mcdc"></a>
@@ -654,9 +666,44 @@ subsection to make sure that every condition in a bit-vector decision takes
 on every possible outcome.  In this way, SQLite also achieves 100% MC/DC
 in addition to 100% branch coverage.</p>
 
+<h3>7.5 Measuring branch coverage</h3>
+
+<p>Branch coverage in SQLite is currently measured
+using <a href="https://gcc.gnu.org/onlinedocs/gcc/Gcov.html">gcov</a> with the "-b"
+option.  First the test program is compiled using options
+"-g -fprofile-arcs -ftest-coverage" and then the test program is run.
+Then "gcov -b" is run to generate a coverage report.
+The coverage report is verbose and inconvenient to read, 
+so the gcov-generated report is processed using
+some simple scripts to put it into a more human-friendly format.
+This entire process is automated using scripts, of course.
+
+<p>Note that running SQLite using gcov is not a test of SQLite &mdash;
+it is a test of the test suite.  The gcov run does not test SQLite because
+the -fprofile-args and -ftest-coverage options cause the compiler to 
+generate different code.  
+The gcov run merely verifies that the test suite provides 100% branch test
+coverage.  The gcov run is a test of the test - a meta-test.
+
+<p>After gcov has been run to verify 100% branch test coverage,
+then the test program is recompiled using delivery compiler options
+(without the special -fprofile-arcs and -ftest-coverage options)
+and the test program is rerun.
+This second run is the actual test of SQLite.
+
+<p>It is important to verify that both the gcov test run 
+and the second real test run both give the same output.  Any
+differences in output indicate either the use of undefined or
+indeterminate behavior in the SQLite code (and hence a bug), 
+or a bug in the compiler.
+Note that SQLite has, over the previous decade, encountered bugs
+in each of GCC, Clang, and MSVC.  Compiler bugs, while rare, do happen,
+which is why it is so important to test the code in an as-delivered
+configuration.
+
 <a name="thoughts1"></a>
 
-<h3>7.5 Experience with full test coverage</h3>
+<h3>7.6 Experience with full test coverage</h3>
 
 <p>The developers of SQLite have found that full coverage testing is an
 extremely productive method for preventing the introduction of new bugs
@@ -680,7 +727,7 @@ quality of SQLite.</p>
 
 <h3>8.1 Assert</h3>
 
-<p>The SQLite core contains 3432 <tt>assert()</tt>
+<p>The SQLite core contains 3986 <tt>assert()</tt>
 statements that verify function preconditions and postconditions and
 loop invariants.  Assert() is a macro which is a standard part of
 ANSI-C.  The argument is a boolean value that is assumed to always be
@@ -772,27 +819,49 @@ across system crashes and power failures.</p>
 
 <a name="intoverflow"></a>
 
-<h3>8.6 Signed-Integer Overflow Checks</h3>
+<h3>8.6 Undefined Behavior Checks</h3>
 
-<p>The various C language standards say that the signed-integer overflow
-behavior is undefined.  In other words, when you add a value to a signed
-integer such that the result is too large to fit in that integer, the
-value does not necessarily wrap around to a negative number, as most
-programmers expect.  It might do that.  But it might do something completely
-different.  See, for example,
-<a href="http://thiemonagel.de/2010/01/signed-integer-overflow/">here</a>
-and <a href="http://blog.regehr.org/archives/482">here</a>.  Even the
-same compiler might do something different with signed integer overflow
-in different places in the code or at different optimizations settings.</p>
+<p>In in the C programming language, it is very easy to write code that
+has "undefined" or "implementation defined" behavior.
+That means that the code might work during development, but then give
+a different answer on a different system, or when recompiled using different
+compiler options.  
+Examples of undefined and implementation-defined behavior in
+ANSI C include:
+<ul>
+<li>Signed integer overflow.  (Signed integer overflow does <u>not</u>
+necessarily wrap around, as most people expect.)
+<li>Shifting an N-bit integer by more than N bits.
+<li>Shifting by a negative amount.
+<li>Shifting a negative number.
+<li>Using the memcpy() function on overlapping buffers.
+<li>The order of evaluation of function arguments.
+<li>Whether or not "char" variables are signed or unsigned.
+<li>And so forth....
+</ul>
 
-<p>SQLite never overflows a signed integer.
-To verify this, the test suites are run at least once when compiled with
-the -ftrapv option to GCC.  The -ftrapv option causes GCC to generate code
-that will panic() on a signed integer overflow.  In addition, there are
-many test cases the strive to provoke integer overflows
-using boundary value calculations such as
- "<b>SELECT -1*(-9223372036854775808);</b>".
+<p>Since undefined and implementation-defined behavior is non-portable
+and can easily lead to incorrect answers, SQLite works very hard to avoid it.
+For example,
+when adding two integer column values together as part of an SQL statement,
+SQLite does not simple add them together using the C-language "+" operator.
+Instead, it first checks to make sure the
+addition will not overflow, and if it will, it does the addition using
+floating point instead.
 
+<p>To help ensure that SQLite does not make use of undefined or
+implementation defined behavior, the test suites are rerun using
+instrumented builds that try to detect undefined behavior.  For example,
+test suites are run using the "-ftrapv" option of GCC.  And they
+are run again using the "-fsanitize=undefined" option on Clang.  And
+again using the "/RTC1" option in MSVC.  Then the test suites are rerun
+using options like "-funsigned-char" and "-fsigned-char" to make sure
+that implementation differences do not matter either.  Tests are then repeated
+on 32-bit and 64-bit systems and on big-endian and little-endian systems,
+using a variety of CPU architectures.
+Furthermore, the test suites are augmented with many test cases that are
+deliberately designed to provoke undefined behavior.  For example:
+"<b>SELECT -1*(-9223372036854775808);</b>".
 
 <a name="disopttest"></a>
 
@@ -821,38 +890,69 @@ without the optimizations, in order to show that the optimizations do not
 cause malfunctions.</p>
 
 
+<a name="cklist"></a>
+
+<h2>10.0 Checklists</h2>
+
+<p>The SQLite developers use an on-line checklist to coordinate testing
+activity and to verify that all tests pass prior each SQLite release.
+<a href="http://www.sqlite.org/checklists/index.html">Past checklists</a>
+are retained for historical reference.
+(The checklists are read-only for anonymous internet viewers, but
+developers can log in and update checklist items in their web
+browsers.)
+The use of checklists for SQLite testing and other development activities
+is inspired by <i>
+<a href="http://atulgawande.com/book/the-checklist-manifesto/">The Checklist Manifesto</a>
+</i>.</p>
+
+<p>The latest checklists contain approximately 200 items that are
+individually verified for each release.  Some checklist items only take
+a few seconds to verify and mark off.  Others involve test suites
+that run for many hours.</p>
+
+<p>The release checklist is not automated: developers run each item on
+the checklist manually.  We find that it is important to keep a human in
+the loop.  Sometimes problems are found while running a checklist item
+even though the test itself passed.  It is important to have a human
+reviewing the test output at the highest level, and constantly asking
+"Is this really right?"</p>
+
+<p>The release checklist is continuously evolving.  As new problems or
+potential problems are discovered, new checklist items are added to
+make sure those problems do not appear in subsequent releases.  The
+release checklist has proven to be an invaluable tool in helping to
+ensure that nothing is overlooked during the release process.</p>
+
+
 <a name="staticanalysis"></a>
 
-<h2>10.0 Static Analysis</h2>
+<h2>11.0 Static Analysis</h2>
 
 <p>Static analysis means analyzing code at or before compile-time to
 check for correctness.  Static analysis includes looking at compiler
 warning messages and running the code through more in-depth
 analysis engines such as the
 <a href="http://clang-analyzer.llvm.org/">Clang Static Analyzer</a>.
-SQLite is developed primarily using GCC and it does
-compile without warnings on GCC using the -Wall and -Wextra flags.
-The SQLite source code is also run through Clang from time to time 
-as well, though most of the warnings there are false-positives.
-VC++ often will generate a number of warnings from SQLite source code,
-but the experience of SQLite developers is that VC++ warnings are of
-lower quality and can be safely ignored.  Users are encouraged not
-to stress over VC++ warnings.</p>
+SQLite compiles without warnings on GCC and Clang using 
+the -Wall and -Wextra flags on Linux and Mac and on MSVC on Windows.
+No valid warnings are generated by the Clang Static Analyzer tool "scan-build"
+either (though recent versions of clang seem to generate many false-positives.)
+Nevertheless, some warnings might be generated by other
+static analyzers.  Users are encouraged not to stress over these
+warnings and to instead take solace in the intense testing of SQLite
+described above. 
+</p>
 
-<p>Static analysis has not proven to be helpful in finding
-bugs in SQLite.  We cannot call to mind a single problem in SQLite that
-was detected by static analysis that was not first seen by one
-of the other testing methods described above.  On the other hand,
-we have on occasion introduced new bugs in our efforts to get SQLite
-to compile without warnings.</p>
-
-<p>Our experience, then, is that static analysis is not helpful
-to maintaining high code quality and it is therefore deemphasized
-in SQLite development and maintenance.</p>
+<p>Static analysis has not proven to be especially helpful in finding
+bugs in SQLite.  Static analysis has found a few bugs in SQLite, but
+those are the exceptions.  More bugs have been
+introduced into SQLite while trying to get it to compile without 
+warnings than have been found by static analysis.</p>
 
 <a name="summary"></a>
 
-<h2>11.0 Summary</h2>
+<h2>12.0 Summary</h2>
 
 <p>SQLite is open source.  This gives many people the idea that
 it is not well tested as commercial software and is perhaps unreliable.

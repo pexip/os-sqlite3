@@ -1,5 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <title>No Title</title>
 <style type="text/css">
 body {
@@ -21,6 +22,14 @@ a:visited { color: #734559 }
   margin-top:58px;
 }
 
+.menubar {
+  clear: both;
+  border-radius: 8px;
+  background: #044a64;
+  padding: 0px;
+  margin: 0px;
+  cell-spacing: 0px;
+}    
 .toolbar {
   text-align: center;
   line-height: 1.6em;
@@ -35,12 +44,6 @@ a:visited { color: #734559 }
 .content dt { font-weight:bold; }
 .content dd { margin-bottom: 25px; margin-left:20%; }
 .content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* rounded corners */
-.se  { background: url(images/se.gif) 100% 100% no-repeat #044a64}
-.sw  { background: url(images/sw.gif) 0% 100% no-repeat }
-.ne  { background: url(images/ne.gif) 100% 0% no-repeat }
-.nw  { background: url(images/nw.gif) 0% 0% no-repeat }
 
 /* Things for "fancyformat" documents start here. */
 .fancy img+p {font-style:italic}
@@ -62,7 +65,6 @@ a:visited { color: #734559 }
 /* End of "fancyformat" specific rules. */
 
 </style>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
   
 </head>
 <body>
@@ -74,9 +76,7 @@ a:visited { color: #734559 }
 <div><!-- IE hack to prevent disappearing logo--></div>
 <div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
 
-<table width=100% style="clear:both"><tr><td>
-  <div class="se"><div class="sw"><div class="ne"><div class="nw">
-  <table width=100% style="padding:0;margin:0;cell-spacing:0"><tr>
+<table width=100% class="menubar"><tr>
   <td width=100%>
   <div class="toolbar">
     <a href="about.html">About</a>
@@ -103,6 +103,18 @@ a:visited { color: #734559 }
       q.style.fontStyle = "italic"
     }
   }
+  function hideorshow(btn,obj){
+    var x = document.getElementById(obj);
+    var b = document.getElementById(btn);
+    if( x.style.display!='none' ){
+      x.style.display = 'none';
+      b.innerHTML='show';
+    }else{
+      x.style.display = '';
+      b.innerHTML='hide';
+    }
+    return false;
+  }
 </script>
 <td>
     <div style="padding:0 1em 0px 0;white-space:nowrap">
@@ -113,8 +125,7 @@ a:visited { color: #734559 }
     </form>
     </div>
   </table>
-</div></div></div></div>
-</td></tr></table>
+
 <div class=startsearch></div>
   
 <!-- title>SQLite B-Tree Module</title -->
@@ -1151,7 +1162,7 @@ attempt to open a connection to a <a class=defnlink href="#glossary_Persistent_d
       symbols.
 
       <pre class=api>#define BTREE_OMIT_JOURNAL  1  /* Do not create or use a rollback journal */
-#define BTREE_NO_READLOCK   2  /* Omit readlocks on readonly files */</pre>
+</pre>
 
       <p class=req id=H51005><span>If the BTREE_OMIT_JOURNAL bit is set in the flags parameter passed to a 
 successful call to sqlite3BtreeOpen to open a <a class=defnlink href="#glossary_Temporary_database">temporary database</a>, then the
@@ -1240,7 +1251,7 @@ int sqlite3BtreeSetPageSize(Btree *p, int nPagesize, int nReserve, int eFix);</p
 
 
       <pre class=api>int sqlite3BtreeSetCacheSize(Btree*,int);
-int sqlite3BtreeSetSafetyLevel(Btree*,int,int,int);
+
 int sqlite3BtreeMaxPageCount(Btree*,int);</pre>
 
     <p>
@@ -1303,7 +1314,7 @@ void sqlite3BtreeLeaveAll(sqlite3*);
 int sqlite3BtreeCommitPhaseOne(Btree*, const char *zMaster);
 int sqlite3BtreeCommitPhaseTwo(Btree*, int);
 int sqlite3BtreeCommit(Btree*);
-int sqlite3BtreeRollback(Btree*);</pre>
+int sqlite3BtreeRollback(Btree*,int);</pre>
 
       <pre class=api>int sqlite3BtreeBeginStmt(Btree*,int);
 int sqlite3BtreeSavepoint(Btree *, int, int);</pre>
@@ -1346,8 +1357,8 @@ int sqlite3BtreeEof(BtCursor*);</pre>
 
       <pre class=api>int sqlite3BtreeKeySize(BtCursor*, i64 *pSize);
 int sqlite3BtreeKey(BtCursor*, u32 offset, u32 amt, void*);
-const void *sqlite3BtreeKeyFetch(BtCursor*, int *pAmt);
-const void *sqlite3BtreeDataFetch(BtCursor*, int *pAmt);
+const void *sqlite3BtreeKeyFetch(BtCursor*, u32 *pAmt);
+const void *sqlite3BtreeDataFetch(BtCursor*, u32 *pAmt);
 int sqlite3BtreeDataSize(BtCursor*, u32 *pSize);
 int sqlite3BtreeData(BtCursor*, u32 offset, u32 amt, void*);</pre>
 
@@ -1402,19 +1413,23 @@ than that requested, *pRes shall be set to 1.</span></p>
 
       <pre class=api>typedef struct KeyInfo KeyInfo;
 struct KeyInfo {
-  sqlite3 *db;        /* The database connection */
+  u32 nRef;           /* Number of references to this KeyInfo object */
   u8 enc;             /* Text encoding - one of the SQLITE_UTF* values */
-  u16 nField;         /* Number of entries in aColl}; hd_resolve_one {}; hd_puts { */
-  u8 *aSortOrder;     /* Sort order for each column.  May be NULL */
+  u16 nField;         /* Number of key columns in the index */
+  u16 nXField;        /* Number of columns beyond the key columns */
+  sqlite3 *db;        /* The database connection */
+  u8 *aSortOrder;     /* Sort order for each column. */
   CollSeq *aColl}; hd_resolve_one {1}; hd_puts {;  /* Collating sequence for each term of the key */
 };</pre>
       <pre class=api>typedef struct UnpackedRecord UnpackedRecord;
 struct UnpackedRecord {
   KeyInfo *pKeyInfo;  /* Collation and sort-order information */
   u16 nField;         /* Number of entries in apMem}; hd_resolve_one {}; hd_puts { */
-  u16 flags;          /* Boolean settings.  UNPACKED_... below */
-  i64 rowid;          /* Used by UNPACKED_PREFIX_SEARCH */
+  i8 default_rc;      /* Comparison result if keys are equal */
+  u8 errCode;         /* Error detected by xRecordCompare (CORRUPT or NOMEM) */
   Mem *aMem;          /* Values */
+  int r1;             /* Value to return if (lhs > rhs) */
+  int r2;             /* Value to return if (rhs < lhs) */
 };</pre>
 
     <h3 id="section_3_7_2">3.7.2 sqlite3BtreeGetMeta</h3>
@@ -1482,7 +1497,7 @@ sqlite3BtreeGetMeta.</span> (P: <a class=reqlink href=#H50109>H50109</a>)</p>
 
       <h3 id="sqlite3BtreeCursorHasMoved">3.8.4 sqlite3BtreeCursorHasMoved</h3>
 
-      <pre class=api>int sqlite3BtreeCursorHasMoved(BtCursor*, int*);</pre>
+      <pre class=api>int sqlite3BtreeCursorHasMoved(BtCursor*);</pre>
 
       <h3 id="sqlite3BtreePutData">3.8.5 sqlite3BtreePutData</h3>
 
@@ -1715,8 +1730,8 @@ void sqlite3BtreeTripAllCursors(Btree*, int);</pre>
       <p class=todo>
         I know what the following do, but is this mechanism ever used? Or has it been superceded by other tricks in OP_NewRowid?
 
-      <pre class=api>void sqlite3BtreeSetCachedRowid(BtCursor*, sqlite3_int64);
-sqlite3_int64 sqlite3BtreeGetCachedRowid(BtCursor*);</pre>
+      <pre class=api>
+</pre>
 
       <p class=todo>
         Should move to btreeInt.h

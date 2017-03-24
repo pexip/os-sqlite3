@@ -1,7 +1,12 @@
 #!/usr/bin/make -f
 #-*- makefile -*-
 
+# Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
 
 DESTDIR=$(CURDIR)/debian/tmp
 
@@ -16,27 +21,29 @@ export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
-  confflags += --build $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/tcl8.5
+  confflags += --build $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6
   export CROSS_BUILDING=no
 else
-  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/$(DEB_HOST_GNU_TYPE)/lib/tcl8.5 LDFLAGS=-L/usr/$(DEB_HOST_GNU_TYPE)/lib 
+  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6 LDFLAGS=-L/usr/lib/$(DEB_HOST_MULTIARCH)
   export CROSS_BUILDING=yes
 endif
 
-
-#export DEB_CFLAGS_MAINT_APPEND = -O2 -fno-strict-aliasing
 export CFLAGS += -O2 -fno-strict-aliasing \
 	-DSQLITE_SECURE_DELETE -DSQLITE_ENABLE_COLUMN_METADATA \
 	-DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_RTREE=1 -DSQLITE_SOUNDEX=1 \
 	-DSQLITE_ENABLE_UNLOCK_NOTIFY \
 	-DSQLITE_OMIT_LOOKASIDE=1 \
+	-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 \
+	-DSQLITE_MAX_SCHEMA_RETRY=25 \
+	-DSQLITE_MAX_VARIABLE_NUMBER=250000
 	-DSQLITE_ENABLE_ICU=1
 export LIBS += $(shell icu-config --ldflags)
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	autoconf
+	dh_autoreconf
+	dh_autotools-dev_updateconfig
 	./configure --prefix=/usr --mandir="/usr/share/man" \
 	  $(confflags) --enable-threadsafe \
 	  --enable-load-extension \
@@ -45,12 +52,15 @@ configure-stamp:
 	  TCLLIBDIR=/usr/lib/tcltk/sqlite3 \
 	  $(DDEBUG)
 
+	# remove double -ldl from sqlite3.pc
+	sed -i "s/\([-ldl .+]\) -ldl/\1/" sqlite3.pc
+
 	touch $@
 
-build-arch: build
-build-indep: build
+build-arch: build-stamp
+build-indep: build-stamp
 
-build: build-stamp
+build: build-arch build-indep
 build-stamp: configure
 	dh_testdir
 	$(MAKE)
@@ -63,11 +73,13 @@ endif
 clean:
 	dh_testdir
 	dh_testroot
-	echo $(DESTDIR)
 	rm -f configure-stamp build-stamp
 	rm -f config.log config.h pkgIndex.tcl configure
 	[ ! -f Makefile ] || $(MAKE) distclean
 	rm -f config.h
+	rm -f debian/libsqlite3-0.install debian/libsqlite3-dev.install
+	dh_autotools-dev_restoreconfig
+	dh_autoreconf_clean
 	dh_clean
 
 install: build
@@ -83,12 +95,20 @@ install: build
 	install -m 0775 lemon $(DESTDIR)/usr/bin
 
 	# Remove *.la files per policy 3.9.1.0
-#	find $(DESTDIR) -name \*.la | xargs rm -f
 	sed -i "/dependency_libs/ s/'.*'/''/" `find $(DESTDIR) -name '*.la'`
 
 	# Create the pkgIndex.tcl file for the Tcl module. This generated file
 	# actually turns out to be relocatable.
-	echo "pkg_mkIndex -verbose $(DESTDIR)/usr/lib/tcltk/sqlite3" | tclsh8.5
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+	echo "pkg_mkIndex -verbose $(DESTDIR)/usr/lib/tcltk/sqlite3" | \
+		LD_LIBRARY_PATH=$(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH) \
+		tclsh8.6
+	grep -q 'package ifneeded sqlite3' \
+		$(DESTDIR)/usr/lib/tcltk/sqlite3/pkgIndex.tcl || \
+		(echo "pkgIndex.tcl seems to be wrong" && exit 1)
+else
+	echo "" > $(DESTDIR)/usr/lib/tcltk/sqlite3/pkgIndex.tcl
+endif
 
 binary-indep: build install
 	dh_testdir
@@ -108,6 +128,10 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 
+	for file in libsqlite3-0.install libsqlite3-dev.install; do \
+		sed -e"s,\$${DEB_HOST_MULTIARCH},${DEB_HOST_MULTIARCH},g" \
+			debian/$${file}.in > debian/$$file; \
+	done
 	dh_install -a --sourcedir=$(DESTDIR)
 	dh_installman -a
 	dh_installdocs -a
