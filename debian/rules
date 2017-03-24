@@ -21,10 +21,10 @@ export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
-  confflags += --build $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6
+  confflags += --build $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/tcl8.5
   export CROSS_BUILDING=no
 else
-  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6 LDFLAGS=-L/usr/lib/$(DEB_HOST_MULTIARCH)
+  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/tcl8.5 LDFLAGS=-L/usr/lib/$(DEB_HOST_MULTIARCH)
   export CROSS_BUILDING=yes
 endif
 
@@ -102,7 +102,7 @@ install: build
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 	echo "pkg_mkIndex -verbose $(DESTDIR)/usr/lib/tcltk/sqlite3" | \
 		LD_LIBRARY_PATH=$(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH) \
-		tclsh8.6
+		tclsh8.5
 	grep -q 'package ifneeded sqlite3' \
 		$(DESTDIR)/usr/lib/tcltk/sqlite3/pkgIndex.tcl || \
 		(echo "pkgIndex.tcl seems to be wrong" && exit 1)
