@@ -1,3 +1,17 @@
+sqlite3 (3.8.7.1-1+deb8u2pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 12 Apr 2017 01:25:41 +0100
+
+sqlite3 (3.8.7.1-1+deb8u2) jessie; urgency=medium
+
+  * Fix CVE-2016-6153 , Tempdir Selection Vulnerability.
+  * Backport fix for segfault following heavy SAVEPOINT usage
+    (closes: #835205).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 25 Aug 2016 16:10:24 +0000
+
 sqlite3 (3.8.7.1-1+deb8u1pexip1) pexip; urgency=low
 
   * Migrate to Jessie
