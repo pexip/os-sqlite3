@@ -1,133 +1,80 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link href="sqlite.css" rel="stylesheet">
 <title>SQLite As An Application File Format</title>
-<style type="text/css">
-body {
-    margin: auto;
-    font-family: Verdana, sans-serif;
-    padding: 8px 1%;
-}
-
-a { color: #044a64 }
-a:visited { color: #734559 }
-
-.logo { position:absolute; margin:3px; }
-.tagline {
-  float:right;
-  text-align:right;
-  font-style:italic;
-  width:300px;
-  margin:12px;
-  margin-top:58px;
-}
-
-.menubar {
-  clear: both;
-  border-radius: 8px;
-  background: #044a64;
-  padding: 0px;
-  margin: 0px;
-  cell-spacing: 0px;
-}    
-.toolbar {
-  text-align: center;
-  line-height: 1.6em;
-  margin: 0;
-  padding: 0px 8px;
-}
-.toolbar a { color: white; text-decoration: none; padding: 6px 12px; }
-.toolbar a:visited { color: white; }
-.toolbar a:hover { color: #044a64; background: white; }
-
-.content    { margin: 5%; }
-.content dt { font-weight:bold; }
-.content dd { margin-bottom: 25px; margin-left:20%; }
-.content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* Things for "fancyformat" documents start here. */
-.fancy img+p {font-style:italic}
-.fancy .codeblock i { color: darkblue; }
-.fancy h1,.fancy h2,.fancy h3,.fancy h4 {font-weight:normal;color:#044a64}
-.fancy h2 { margin-left: 10px }
-.fancy h3 { margin-left: 20px }
-.fancy h4 { margin-left: 30px }
-.fancy th {white-space:nowrap;text-align:left;border-bottom:solid 1px #444}
-.fancy th, .fancy td {padding: 0.2em 1ex; vertical-align:top}
-.fancy #toc a        { color: darkblue ; text-decoration: none }
-.fancy .todo         { color: #AA3333 ; font-style : italic }
-.fancy .todo:before  { content: 'TODO:' }
-.fancy p.todo        { border: solid #AA3333 1px; padding: 1ex }
-.fancy img { display:block; }
-.fancy :link:hover, .fancy :visited:hover { background: wheat }
-.fancy p,.fancy ul,.fancy ol { margin: 1em 5ex }
-.fancy li p { margin: 1em 0 }
-/* End of "fancyformat" specific rules. */
-
-</style>
-  
 </head>
 <body>
-<div><!-- container div to satisfy validator -->
-
+<div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite Logo"
- border="0"></a>
-<div><!-- IE hack to prevent disappearing logo--></div>
-<div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
-
-<table width=100% class="menubar"><tr>
-  <td width=100%>
-  <div class="toolbar">
-    <a href="about.html">About</a>
-    <a href="sitemap.html">Sitemap</a>
-    <a href="docs.html">Documentation</a>
-    <a href="download.html">Download</a>
-    <a href="copyright.html">License</a>
-    <a href="news.html">News</a>
-    <a href="support.html">Support</a>
-  </div>
+<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+</a>
+<div><!-- IE hack to prevent disappearing logo --></div>
+<div class="tagline desktoponly">
+Small. Fast. Reliable.<br>Choose any three.
+</div>
+<div class="menu mainmenu">
+<ul>
+<li><a href="index.html">Home</a>
+<li class='mobileonly'><a href="javascript:void(0)" onclick='toggle_div("submenu")'>Menu</a>
+<li class='wideonly'><a href='about.html'>About</a>
+<li class='desktoponly'><a href="docs.html">Documentation</a>
+<li class='desktoponly'><a href="download.html">Download</a>
+<li class='wideonly'><a href='copyright.html'>License</a>
+<li class='desktoponly'><a href="support.html">Support</a>
+<li class='desktoponly'><a href="prosupport.html">Purchase</a>
+<li class='search' id='search_menubutton'>
+<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+</ul>
+</div>
+<div class="menu submenu" id="submenu">
+<ul>
+<li><a href='about.html'>About</a>
+<li><a href='docs.html'>Documentation</a>
+<li><a href='download.html'>Download</a>
+<li><a href='support.html'>Support</a>
+<li><a href='prosupport.html'>Purchase</a>
+</ul>
+</div>
+<div class="searchmenu" id="searchmenu">
+<form method="GET" action="search">
+<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<input type="submit" value="Go">
+</form>
+</div>
+</div>
 <script>
-  gMsg = "Search SQLite Docs..."
-  function entersearch() {
-    var q = document.getElementById("q");
-    if( q.value == gMsg ) { q.value = "" }
-    q.style.color = "black"
-    q.style.fontStyle = "normal"
-  }
-  function leavesearch() {
-    var q = document.getElementById("q");
-    if( q.value == "" ) { 
-      q.value = gMsg
-      q.style.color = "#044a64"
-      q.style.fontStyle = "italic"
-    }
-  }
-  function hideorshow(btn,obj){
-    var x = document.getElementById(obj);
-    var b = document.getElementById(btn);
-    if( x.style.display!='none' ){
-      x.style.display = 'none';
-      b.innerHTML='show';
-    }else{
-      x.style.display = '';
-      b.innerHTML='hide';
-    }
-    return false;
-  }
+function toggle_div(nm) {
+var w = document.getElementById(nm);
+if( w.style.display=="block" ){
+w.style.display = "none";
+}else{
+w.style.display = "block";
+}
+}
+function div_off(nm){document.getElementById(nm).style.display="none";}
+window.onbeforeunload = function(e){div_off("submenu");}
+/* Disable the Search feature if we are not operating from CGI, since */
+/* Search is accomplished using CGI and will not work without it. */
+if( !location.origin.match || !location.origin.match(/http/) ){
+document.getElementById("search_menubutton").style.display = "none";
+}
+/* Used by the Hide/Show button beside syntax diagrams, to toggle the */
+function hideorshow(btn,obj){
+var x = document.getElementById(obj);
+var b = document.getElementById(btn);
+if( x.style.display!='none' ){
+x.style.display = 'none';
+b.innerHTML='show';
+}else{
+x.style.display = '';
+b.innerHTML='hide';
+}
+return false;
+}
 </script>
-<td>
-    <div style="padding:0 1em 0px 0;white-space:nowrap">
-    <form name=f method="GET" action="http://www.sqlite.org/search">
-      <input id=q name=q type=text
-       onfocus="entersearch()" onblur="leavesearch()" style="width:24ex;padding:1px 1ex; border:solid white 1px; font-size:0.9em ; font-style:italic;color:#044a64;" value="Search SQLite Docs...">
-      <input type=submit value="Go" style="border:solid white 1px;background-color:#044a64;color:white;font-size:0.9em;padding:0 1ex">
-    </form>
-    </div>
-  </table>
-
-<div class=startsearch></div>
-  
+</div>
 
 
 
@@ -158,7 +105,8 @@ Here are a dozen reasons why this is so:
 
 <p>Each of these points will be described in more detail below,
 after first considering more closely the meaning of
-"application file format".
+"application file format".  See also the <a href="aff_short.html">short version</a> of this
+whitepaper.
 
 <h2>What Is An Application File Format?</h2>
 
@@ -186,7 +134,7 @@ A file format is used to store a single object.  So, for example, a GIF or
 JPEG file stores a single image, and an XHTML file stores text,
 so those are "file formats" and not "application formats".  An EPUB file, 
 in contrast, stores both text and images (as contained XHTML and GIF/JPEG
-files) and so it is considered a "application format".  This article is
+files) and so it is considered an "application format".  This article is
 about "application formats".
 
 <p>The boundary between a file format and an application format is fuzzy.
@@ -274,16 +222,16 @@ like this:
 <blockquote><pre>
 CREATE TABLE files(filename TEXT PRIMARY KEY, content BLOB);
 </pre></blockquote>
-If the content is compressed, then such an SQLite database is only
-slightly larger, and <a href="affcase1.html#smaller">sometimes smaller</a> 
-than an equivalent ZIP archive, and it has the advantage
-of being able to update individual "files" without rewrite
+If the content is compressed, then such an SQLite database is
+<a href="affcase1.html#smaller">the same size</a> (&#177;1%)
+as an equivalent ZIP archive, and it has the advantage
+of being able to update individual "files" without rewriting
 the entire document.
 
 <p>
 But an SQLite database is not limited to a simple key/value structure
 like a pile-of-files database.  An SQLite database can have dozens
-or hundreds or thousands of different of tables, with dozens or
+or hundreds or thousands of different tables, with dozens or
 hundreds or thousands of fields per table, each with different datatypes
 and constraints and particular meanings, all cross-referencing each other,
 appropriately and automatically indexed for rapid retrieval,
@@ -321,9 +269,10 @@ application C code, and SQLite will take care of all of the application
 file I/O.  This can reduce application code size by many thousands of
 lines, with corresponding saving in development and maintenance costs.
 
-<p>SQLite is widely used and stable.  There are literally billions of
-SQLite database files in use daily, on smartphones and gadgets
-and in desktop applications.
+<p>SQLite is one of the
+<a href="mostdeployed.html">most used</a> software libraries in the world.
+There are literally tens of billions of SQLite database files in use 
+daily, on smartphones and gadgets and in desktop applications.
 SQLite is <a href="testing.html">carefully tested</a> and proven reliable.  It is not
 a component that needs much tuning or debugging, allowing developers
 to stay focused on application logic.
@@ -357,7 +306,7 @@ formatting details.
 A key/value database is better than no database at all.
 But without transactions or indices or a high-level query language or
 a proper schema,
-it much harder and more error prone to use a key/value database than
+it is much harder and more error prone to use a key/value database than
 a relational database.
 
 <li><p><b>Accessible Content.</b>
@@ -374,12 +323,11 @@ more powerful and convenient way for examining the content, so the
 inability to use "grep" and "awk" and the like is not seen as a loss.
 
 <p>An SQLite database is a <a href="fileformat2.html">well-defined and well-documented</a>
-file format that is in widespread use by literally hundreds of 
-thousands of applications and
-is backwards compatible to its inception in 2004 and which promises
-to continue to be compatible in years to come.  The longevity of
+file format that is in widespread use by literally millions of applications
+and is backwards compatible to its inception in 2004 and which promises
+to continue to be compatible in decades to come.  The longevity of
 SQLite database files is particularly important to bespoke applications,
-since it allows the document content to be accessed years or decades in the
+since it allows the document content to be accessed far in the
 future, long after all traces of the original application have been lost.
 Data lives longer than code.
 
@@ -425,10 +373,9 @@ usually larger with pile-of-file formats (a single file) than with SQLite
 Instead of collecting changes in memory and then writing
 them to disk only on a File/Save action, changes can be written back to
 the disk as they occur.  This avoids loss of work on a system crash or
-power failure.  The undo/redo stack can also be kept in the on-disk 
-database, meaning that undo/redo can occur across session boundaries.
-Maintenance of the undo/redo stack can often be automated using SQL
-triggers.
+power failure.  An <a href="undoredo.html">automated undo/redo stack</a>, managed using triggers,
+can be kept in the on-disk database, meaning that undo/redo can occur 
+across session boundaries.
 
 <li><p><b>Easily Extensible.</b>
 As an application grows, new features can be added to an

@@ -1,160 +1,103 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link href="sqlite.css" rel="stylesheet">
 <title>File Format Changes in SQLite</title>
-<style type="text/css">
-body {
-    margin: auto;
-    font-family: Verdana, sans-serif;
-    padding: 8px 1%;
-}
-
-a { color: #044a64 }
-a:visited { color: #734559 }
-
-.logo { position:absolute; margin:3px; }
-.tagline {
-  float:right;
-  text-align:right;
-  font-style:italic;
-  width:300px;
-  margin:12px;
-  margin-top:58px;
-}
-
-.menubar {
-  clear: both;
-  border-radius: 8px;
-  background: #044a64;
-  padding: 0px;
-  margin: 0px;
-  cell-spacing: 0px;
-}    
-.toolbar {
-  text-align: center;
-  line-height: 1.6em;
-  margin: 0;
-  padding: 0px 8px;
-}
-.toolbar a { color: white; text-decoration: none; padding: 6px 12px; }
-.toolbar a:visited { color: white; }
-.toolbar a:hover { color: #044a64; background: white; }
-
-.content    { margin: 5%; }
-.content dt { font-weight:bold; }
-.content dd { margin-bottom: 25px; margin-left:20%; }
-.content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* Things for "fancyformat" documents start here. */
-.fancy img+p {font-style:italic}
-.fancy .codeblock i { color: darkblue; }
-.fancy h1,.fancy h2,.fancy h3,.fancy h4 {font-weight:normal;color:#044a64}
-.fancy h2 { margin-left: 10px }
-.fancy h3 { margin-left: 20px }
-.fancy h4 { margin-left: 30px }
-.fancy th {white-space:nowrap;text-align:left;border-bottom:solid 1px #444}
-.fancy th, .fancy td {padding: 0.2em 1ex; vertical-align:top}
-.fancy #toc a        { color: darkblue ; text-decoration: none }
-.fancy .todo         { color: #AA3333 ; font-style : italic }
-.fancy .todo:before  { content: 'TODO:' }
-.fancy p.todo        { border: solid #AA3333 1px; padding: 1ex }
-.fancy img { display:block; }
-.fancy :link:hover, .fancy :visited:hover { background: wheat }
-.fancy p,.fancy ul,.fancy ol { margin: 1em 5ex }
-.fancy li p { margin: 1em 0 }
-/* End of "fancyformat" specific rules. */
-
-</style>
-  
 </head>
 <body>
-<div><!-- container div to satisfy validator -->
-
+<div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite Logo"
- border="0"></a>
-<div><!-- IE hack to prevent disappearing logo--></div>
-<div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
-
-<table width=100% class="menubar"><tr>
-  <td width=100%>
-  <div class="toolbar">
-    <a href="about.html">About</a>
-    <a href="sitemap.html">Sitemap</a>
-    <a href="docs.html">Documentation</a>
-    <a href="download.html">Download</a>
-    <a href="copyright.html">License</a>
-    <a href="news.html">News</a>
-    <a href="support.html">Support</a>
-  </div>
+<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+</a>
+<div><!-- IE hack to prevent disappearing logo --></div>
+<div class="tagline desktoponly">
+Small. Fast. Reliable.<br>Choose any three.
+</div>
+<div class="menu mainmenu">
+<ul>
+<li><a href="index.html">Home</a>
+<li class='mobileonly'><a href="javascript:void(0)" onclick='toggle_div("submenu")'>Menu</a>
+<li class='wideonly'><a href='about.html'>About</a>
+<li class='desktoponly'><a href="docs.html">Documentation</a>
+<li class='desktoponly'><a href="download.html">Download</a>
+<li class='wideonly'><a href='copyright.html'>License</a>
+<li class='desktoponly'><a href="support.html">Support</a>
+<li class='desktoponly'><a href="prosupport.html">Purchase</a>
+<li class='search' id='search_menubutton'>
+<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+</ul>
+</div>
+<div class="menu submenu" id="submenu">
+<ul>
+<li><a href='about.html'>About</a>
+<li><a href='docs.html'>Documentation</a>
+<li><a href='download.html'>Download</a>
+<li><a href='support.html'>Support</a>
+<li><a href='prosupport.html'>Purchase</a>
+</ul>
+</div>
+<div class="searchmenu" id="searchmenu">
+<form method="GET" action="search">
+<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<input type="submit" value="Go">
+</form>
+</div>
+</div>
 <script>
-  gMsg = "Search SQLite Docs..."
-  function entersearch() {
-    var q = document.getElementById("q");
-    if( q.value == gMsg ) { q.value = "" }
-    q.style.color = "black"
-    q.style.fontStyle = "normal"
-  }
-  function leavesearch() {
-    var q = document.getElementById("q");
-    if( q.value == "" ) { 
-      q.value = gMsg
-      q.style.color = "#044a64"
-      q.style.fontStyle = "italic"
-    }
-  }
-  function hideorshow(btn,obj){
-    var x = document.getElementById(obj);
-    var b = document.getElementById(btn);
-    if( x.style.display!='none' ){
-      x.style.display = 'none';
-      b.innerHTML='show';
-    }else{
-      x.style.display = '';
-      b.innerHTML='hide';
-    }
-    return false;
-  }
+function toggle_div(nm) {
+var w = document.getElementById(nm);
+if( w.style.display=="block" ){
+w.style.display = "none";
+}else{
+w.style.display = "block";
+}
+}
+function div_off(nm){document.getElementById(nm).style.display="none";}
+window.onbeforeunload = function(e){div_off("submenu");}
+/* Disable the Search feature if we are not operating from CGI, since */
+/* Search is accomplished using CGI and will not work without it. */
+if( !location.origin.match || !location.origin.match(/http/) ){
+document.getElementById("search_menubutton").style.display = "none";
+}
+/* Used by the Hide/Show button beside syntax diagrams, to toggle the */
+function hideorshow(btn,obj){
+var x = document.getElementById(obj);
+var b = document.getElementById(btn);
+if( x.style.display!='none' ){
+x.style.display = 'none';
+b.innerHTML='show';
+}else{
+x.style.display = '';
+b.innerHTML='hide';
+}
+return false;
+}
 </script>
-<td>
-    <div style="padding:0 1em 0px 0;white-space:nowrap">
-    <form name=f method="GET" action="http://www.sqlite.org/search">
-      <input id=q name=q type=text
-       onfocus="entersearch()" onblur="leavesearch()" style="width:24ex;padding:1px 1ex; border:solid white 1px; font-size:0.9em ; font-style:italic;color:#044a64;" value="Search SQLite Docs...">
-      <input type=submit value="Go" style="border:solid white 1px;background-color:#044a64;color:white;font-size:0.9em;padding:0 1ex">
-    </form>
-    </div>
-  </table>
-
-<div class=startsearch></div>
-  
+</div>
 
 
 <h2>File Format Changes in SQLite</h2>
 
 <p>
-Every effort is made to keep SQLite fully backwards compatible from
-one release to the next.  Rarely, however, some
-enhancements or bug fixes may require a change to
-the underlying file format.  When this happens and you
-must convert the contents of your
-databases into a portable ASCII representation using the old version
-of the library then reload the data using the new version of the
-library.
+The <a href="fileformat2.html">underlying file format</a> for SQLite databases does not
+change in incompatible ways.  There are literally tens of billions of
+SQLite database files in circulation and the SQLite developers are
+committing to supporting those files for decades into the future.
 </p>
 
 <p>
-You can tell if you should reload your databases by comparing the
-version numbers of the old and new libraries.  If the first digit
-of the version number is different, then a reload of the database will
-be required.  If the second digit changes, newer versions of SQLite
-will be able to read and write older database files, but older versions
-of the library may have difficulty reading or writing newer database
-files.
-For example, upgrading from
-version 2.8.14 to 3.0.0 requires a reload.  Going from
-version 3.0.8 to 3.1.0 is backwards compatible but not necessarily
-forwards compatible.
+This document describes incompatibilities that have occurred in
+SQLite prior to 2004.  Since 2004, there have been enhancements to
+SQLite such that newer database files are unreadable by older versions
+of the SQLite library.  But the most recent versions of the SQLite
+library should be able to read and write any older SQLite database
+file without any problems.
+</p>
+
+<p>
+In other words, since 2004 all SQLite releases have been backwards
+compatible, though not necessarily forwards compatible.
 </p>
 
 <p>
@@ -312,111 +255,6 @@ occurred since version 1.0.0:
   version 2 file format.</p>
   </td>
 </tr>
-<tr>
-  <td valign="top">3.0.8 to 3.1.0</td>
-  <td valign="top">2005-Jan-21</td>
-  <td><p>Version 3.1.0 adds support for
-  <a href="pragma.html#pragma_auto_vacuum">autovacuum mode</a>.
-  Prior versions of SQLite will be able to read an autovacuumed
-  database but will not be able to write it.  If autovaccum is disabled
-  (which is the default condition)
-  then databases are fully forwards and backwards compatible.</p>
-  </td>
-</tr>
-<tr>
-  <td valign="top">3.1.6 to 3.2.0</td>
-  <td valign="top">2005-Mar-19</td>
-  <td><p>Version 3.2.0 adds support for the 
-  <a href="lang_altertable.html">ALTER TABLE ADD COLUMN</a>
-  command.  A database that has been modified by this command can
-  not be read by a version of SQLite prior to 3.1.4.  Running 
-  <a href="lang_vacuum.html">VACUUM</a>
-  after the ALTER TABLE
-  restores the database to a format such that it can be read by earlier
-  SQLite versions.</p>
-  </td>
-</tr>
-<tr>
-  <td valign="top">3.2.8 to 3.3.0</td>
-  <td valign="top">2006-Jan-10</td>
-  <td><p>Version 3.3.0 adds support for descending indices and
-  uses a new encoding for boolean values that requires
-  less disk space.  Version 3.3.0 can read and write database
-  files created by prior versions of SQLite.  But prior versions
-  of SQLite will not be able to read or write databases created
-  by Version 3.3.0</p>
-  <p>If you need backwards and forwards compatibility, you can
-  compile with -DSQLITE_DEFAULT_FILE_FORMAT=1.  Or at runtime
-  you can say "PRAGMA legacy_file_format=ON" prior to creating
-  a new database file</p>
-  <p>Once a database file is created, its format is fixed.  So
-  a database file created by SQLite 3.2.8 and merely modified
-  by version 3.3.0 or later will retain the old format.  Except,
-  the VACUUM command recreates the database so running VACUUM
-  on 3.3.0 or later will change the file format to the latest
-  edition.</p>
-  </td>
-</tr>
-<tr>
-  <td valign="top">3.3.6 to 3.3.7</td>
-  <td valign="top">2006-Aug-12</td>
-  <td><p>The previous file format change has caused so much
-  grief that the default behavior has been changed back to 
-  the original file format.  This means that DESC option on
-  indices is ignored by default that the more efficient encoding
-  of boolean values is not used.  In that way, older versions
-  of SQLite can read and write databases created by newer
-  versions.  If the new features are desired, they can be
-  enabled using pragma: "PRAGMA legacy_file_format=OFF".</p>
-  <p>To be clear: both old and new file formats continue to
-  be understood and continue to work.  But the old file format
-  is used by default instead of the new.  This might change
-  again in some future release - we may go back to generating
-  the new file format by default - but probably not until
-  all users have upgraded to a version of SQLite that will
-  understand the new file format.  That might take several
-  years.</p></td>
-</tr>
-<tr>
-  <td valign="top">3.4.2 to 3.5.0</td>
-  <td valign="top">2007-Sep-3</td>
-  <td><p>The design of the OS interface layer was changed for
-  release 3.5.0.  Applications that implemented a custom OS
-  interface will need to be modified in order to upgrade.
-  There are also some subtly different semantics a few obscure
-  APIs.  An <a href="34to35.html">article</a> is available which
-  describing the changes in detail.</p>
-
-  <p>The on-disk file format is unchanged.</p>
-  </td>
-</tr>
-<tr>
-  <td valign="top">3.5.9 to 3.6.0</td>
-  <td valign="top">2008-July-16</td>
-  <td><p>There are minor tweaks to the new OS interface layer that
-  was added in version 3.5.0.
-  Applications that implemented a custom OS
-  interface will need to be adjusted.
-  An <a href="35to36.html">article</a> is available which
-  describing the changes in detail.</p>
-
-  <p>The on-disk file format is unchanged.</p>
-  </td>
-</tr>
 </table>
-</blockquote>
-
-<p>
-To perform a database reload, have ready versions of the
-<b>sqlite</b> command-line utility for both the old and new
-version of SQLite.  Call these two executables "<b>sqlite-old</b>"
-and "<b>sqlite-new</b>".  Suppose the name of your old database
-is "<b>old.db</b>" and you want to create a new database with
-the same information named "<b>new.db</b>".  The command to do
-this is as follows:
-</p>
-
-<blockquote>
-  sqlite-old old.db .dump | sqlite-new new.db
 </blockquote>
 

@@ -1,4 +1,3 @@
-#02-lemon-snprintf.patch
 10-520466-libsqlite3-depends-on-libdl.patch
 10-520478-squash-bad-deps.patch
 20-hurd-locking-style.patch
@@ -6,10 +5,12 @@
 10-665363-disable-malloc-usable-size.patch
 31-increase_SQLITE_MAX_DEFAULT_PAGE_SIZE_to_32k.patch
 02-use-packaged-lempar.c.patch
-40-CVE-2015-3414.patch
-41-CVE-2015-3415.patch
-42-CVE-2015-3416.patch
-45-CVE-2016-6153_part1.patch
-46-CVE-2016-6153_part2.patch
-47-CVE-2016-6153_part3.patch
-50-fix_in-memory_journal.patch
+32-fix_an_uninitialized_variable_in_the_command-line_shell.patch
+35-fix-sqlite3_blob_reopen.patch
+36-OSS-Fuzz.patch
+40-JSON-1.patch
+41-JSON-2_1.patch
+42-JSON-2_2.patch
+43-JSON-3.patch
+50-REPLACE_corruption_fix.patch
+51-CVE-2017-10989.patch

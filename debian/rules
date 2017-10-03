@@ -20,31 +20,44 @@ export DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
+export LDFLAGS += -Wl,--as-needed
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
   confflags += --build $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6
   export CROSS_BUILDING=no
 else
-  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6 LDFLAGS=-L/usr/lib/$(DEB_HOST_MULTIARCH)
+  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE) --with-tcl=/usr/lib/$(DEB_HOST_MULTIARCH)/tcl8.6
+  LDFLAGS += -L/usr/lib/$(DEB_HOST_MULTIARCH)
   export CROSS_BUILDING=yes
 endif
 
 export CFLAGS += -O2 -fno-strict-aliasing \
 	-DSQLITE_SECURE_DELETE -DSQLITE_ENABLE_COLUMN_METADATA \
-	-DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_RTREE=1 -DSQLITE_SOUNDEX=1 \
+	-DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS3_PARENTHESIS \
+	-DSQLITE_ENABLE_RTREE=1 -DSQLITE_SOUNDEX=1 \
 	-DSQLITE_ENABLE_UNLOCK_NOTIFY \
-	-DSQLITE_OMIT_LOOKASIDE=1 \
+	-DSQLITE_OMIT_LOOKASIDE=1 -DSQLITE_ENABLE_DBSTAT_VTAB \
 	-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1 \
+	-DSQLITE_ENABLE_LOAD_EXTENSION \
+	-DSQLITE_ENABLE_JSON1 \
+	-DSQLITE_LIKE_DOESNT_MATCH_BLOBS \
+	-DSQLITE_THREADSAFE=1 \
+	-DSQLITE_ENABLE_FTS3_TOKENIZER=1 \
 	-DSQLITE_MAX_SCHEMA_RETRY=25 \
+	-DSQLITE_ENABLE_PREUPDATE_HOOK \
+	-DSQLITE_ENABLE_SESSION \
 	-DSQLITE_MAX_VARIABLE_NUMBER=250000
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	dh_autoreconf
+	dh_autoreconf --as-needed
 	dh_autotools-dev_updateconfig
 	./configure --prefix=/usr --mandir="/usr/share/man" \
 	  $(confflags) --enable-threadsafe \
 	  --enable-load-extension \
+	  --enable-json1 \
+	  --enable-fts4 \
+	  --enable-fts5 \
 	  --libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
 	  --libexecdir=\$${libdir}/sqlite3 \
 	  TCLLIBDIR=/usr/lib/tcltk/sqlite3 \
@@ -62,6 +75,7 @@ build: build-arch build-indep
 build-stamp: configure
 	dh_testdir
 	$(MAKE)
+	$(MAKE) sqldiff
 ifneq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 	$(MAKE) lemon
 endif
@@ -74,7 +88,7 @@ clean:
 	rm -f configure-stamp build-stamp
 	rm -f config.log config.h pkgIndex.tcl configure
 	[ ! -f Makefile ] || $(MAKE) distclean
-	rm -f config.h
+	rm -f config.h sqlite3session.h
 	rm -f debian/libsqlite3-0.install debian/libsqlite3-dev.install
 	dh_autotools-dev_restoreconfig
 	dh_autoreconf_clean
@@ -90,6 +104,7 @@ install: build
 	install -m 0664 libtclsqlite3.la $(DESTDIR)/usr/lib/tcltk/sqlite3/
 	install -d $(DESTDIR)/usr/share/lemon
 	install -m 0664 tool/lempar.c $(DESTDIR)/usr/share/lemon/
+	install -m 0775 sqldiff $(DESTDIR)/usr/bin
 	install -m 0775 lemon $(DESTDIR)/usr/bin
 
 	# Remove *.la files per policy 3.9.1.0
