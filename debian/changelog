@@ -1,3 +1,9 @@
+sqlite3 (3.8.7.1-1+deb8u2pexip2) pexip; urgency=low
+
+  * Low number fd fix
+
+ -- Vincent Sanders <vince@pexip.com>  Tue, 28 Nov 2017 01:25:41 +0100
+
 sqlite3 (3.8.7.1-1+deb8u2pexip1) pexip; urgency=low
 
   * New upstream release
