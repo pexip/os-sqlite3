@@ -14,3 +14,6 @@
 47-CVE-2016-6153_part3.patch
 50-fix_in-memory_journal.patch
 51-fix-robust-open.patch
+CVE-2017-2518.patch
+CVE-2017-2519.patch
+CVE-2017-2520.patch
