@@ -1,137 +1,124 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Compilation Options For SQLite</title>
-<style type="text/css">
-body {
-    margin: auto;
-    font-family: Verdana, sans-serif;
-    padding: 8px 1%;
-}
-
-a { color: #044a64 }
-a:visited { color: #734559 }
-
-.logo { position:absolute; margin:3px; }
-.tagline {
-  float:right;
-  text-align:right;
-  font-style:italic;
-  width:300px;
-  margin:12px;
-  margin-top:58px;
-}
-
-.menubar {
-  clear: both;
-  border-radius: 8px;
-  background: #044a64;
-  padding: 0px;
-  margin: 0px;
-  cell-spacing: 0px;
-}    
-.toolbar {
-  text-align: center;
-  line-height: 1.6em;
-  margin: 0;
-  padding: 0px 8px;
-}
-.toolbar a { color: white; text-decoration: none; padding: 6px 12px; }
-.toolbar a:visited { color: white; }
-.toolbar a:hover { color: #044a64; background: white; }
-
-.content    { margin: 5%; }
-.content dt { font-weight:bold; }
-.content dd { margin-bottom: 25px; margin-left:20%; }
-.content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* Things for "fancyformat" documents start here. */
-.fancy img+p {font-style:italic}
-.fancy .codeblock i { color: darkblue; }
-.fancy h1,.fancy h2,.fancy h3,.fancy h4 {font-weight:normal;color:#044a64}
-.fancy h2 { margin-left: 10px }
-.fancy h3 { margin-left: 20px }
-.fancy h4 { margin-left: 30px }
-.fancy th {white-space:nowrap;text-align:left;border-bottom:solid 1px #444}
-.fancy th, .fancy td {padding: 0.2em 1ex; vertical-align:top}
-.fancy #toc a        { color: darkblue ; text-decoration: none }
-.fancy .todo         { color: #AA3333 ; font-style : italic }
-.fancy .todo:before  { content: 'TODO:' }
-.fancy p.todo        { border: solid #AA3333 1px; padding: 1ex }
-.fancy img { display:block; }
-.fancy :link:hover, .fancy :visited:hover { background: wheat }
-.fancy p,.fancy ul,.fancy ol { margin: 1em 5ex }
-.fancy li p { margin: 1em 0 }
-/* End of "fancyformat" specific rules. */
-
-</style>
-  
+<link href="sqlite.css" rel="stylesheet">
+<title>Compile-time Options</title>
 </head>
 <body>
-<div><!-- container div to satisfy validator -->
-
+<div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite Logo"
- border="0"></a>
-<div><!-- IE hack to prevent disappearing logo--></div>
-<div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
-
-<table width=100% class="menubar"><tr>
-  <td width=100%>
-  <div class="toolbar">
-    <a href="about.html">About</a>
-    <a href="sitemap.html">Sitemap</a>
-    <a href="docs.html">Documentation</a>
-    <a href="download.html">Download</a>
-    <a href="copyright.html">License</a>
-    <a href="news.html">News</a>
-    <a href="support.html">Support</a>
-  </div>
+<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+</a>
+<div><!-- IE hack to prevent disappearing logo --></div>
+<div class="tagline desktoponly">
+Small. Fast. Reliable.<br>Choose any three.
+</div>
+<div class="menu mainmenu">
+<ul>
+<li><a href="index.html">Home</a>
+<li class='mobileonly'><a href="javascript:void(0)" onclick='toggle_div("submenu")'>Menu</a>
+<li class='wideonly'><a href='about.html'>About</a>
+<li class='desktoponly'><a href="docs.html">Documentation</a>
+<li class='desktoponly'><a href="download.html">Download</a>
+<li class='wideonly'><a href='copyright.html'>License</a>
+<li class='desktoponly'><a href="support.html">Support</a>
+<li class='desktoponly'><a href="prosupport.html">Purchase</a>
+<li class='search' id='search_menubutton'>
+<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+</ul>
+</div>
+<div class="menu submenu" id="submenu">
+<ul>
+<li><a href='about.html'>About</a>
+<li><a href='docs.html'>Documentation</a>
+<li><a href='download.html'>Download</a>
+<li><a href='support.html'>Support</a>
+<li><a href='prosupport.html'>Purchase</a>
+</ul>
+</div>
+<div class="searchmenu" id="searchmenu">
+<form method="GET" action="search">
+<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<input type="submit" value="Go">
+</form>
+</div>
+</div>
 <script>
-  gMsg = "Search SQLite Docs..."
-  function entersearch() {
-    var q = document.getElementById("q");
-    if( q.value == gMsg ) { q.value = "" }
-    q.style.color = "black"
-    q.style.fontStyle = "normal"
-  }
-  function leavesearch() {
-    var q = document.getElementById("q");
-    if( q.value == "" ) { 
-      q.value = gMsg
-      q.style.color = "#044a64"
-      q.style.fontStyle = "italic"
-    }
-  }
-  function hideorshow(btn,obj){
-    var x = document.getElementById(obj);
-    var b = document.getElementById(btn);
-    if( x.style.display!='none' ){
-      x.style.display = 'none';
-      b.innerHTML='show';
-    }else{
-      x.style.display = '';
-      b.innerHTML='hide';
-    }
-    return false;
-  }
+function toggle_div(nm) {
+var w = document.getElementById(nm);
+if( w.style.display=="block" ){
+w.style.display = "none";
+}else{
+w.style.display = "block";
+}
+}
+function div_off(nm){document.getElementById(nm).style.display="none";}
+window.onbeforeunload = function(e){div_off("submenu");}
+/* Disable the Search feature if we are not operating from CGI, since */
+/* Search is accomplished using CGI and will not work without it. */
+if( !location.origin.match || !location.origin.match(/http/) ){
+document.getElementById("search_menubutton").style.display = "none";
+}
+/* Used by the Hide/Show button beside syntax diagrams, to toggle the */
+function hideorshow(btn,obj){
+var x = document.getElementById(obj);
+var b = document.getElementById(btn);
+if( x.style.display!='none' ){
+x.style.display = 'none';
+b.innerHTML='show';
+}else{
+x.style.display = '';
+b.innerHTML='hide';
+}
+return false;
+}
 </script>
-<td>
-    <div style="padding:0 1em 0px 0;white-space:nowrap">
-    <form name=f method="GET" action="http://www.sqlite.org/search">
-      <input id=q name=q type=text
-       onfocus="entersearch()" onblur="leavesearch()" style="width:24ex;padding:1px 1ex; border:solid white 1px; font-size:0.9em ; font-style:italic;color:#044a64;" value="Search SQLite Docs...">
-      <input type=submit value="Go" style="border:solid white 1px;background-color:#044a64;color:white;font-size:0.9em;padding:0 1ex">
-    </form>
-    </div>
-  </table>
+</div>
+<div class=fancy>
+<div class=nosearch>
+<div class="fancy_title">
+Compile-time Options
+</div>
+<div class="fancy_toc">
+<a onclick="toggle_toc()">
+<span class="fancy_toc_mark" id="toc_mk">&#x25ba;</span>
+Table Of Contents
+</a>
+<div id="toc_sub"><div class="fancy-toc1"><a href="#overview">1. Overview</a></div>
+<div class="fancy-toc1"><a href="#recommended_compile_time_options">2. Recommended Compile-time Options</a></div>
+<div class="fancy-toc1"><a href="#_platform_configuration">3.  Platform Configuration</a></div>
+<div class="fancy-toc1"><a href="#_options_to_set_default_parameter_values">4.  Options To Set Default Parameter Values</a></div>
+<div class="fancy-toc1"><a href="#_options_to_set_size_limits">5.  Options To Set Size Limits</a></div>
+<div class="fancy-toc1"><a href="#_options_to_control_operating_characteristics">6.  Options To Control Operating Characteristics</a></div>
+<div class="fancy-toc1"><a href="#_options_to_enable_features_normally_turned_off">7.  Options To Enable Features Normally Turned Off</a></div>
+<div class="fancy-toc1"><a href="#_options_to_disable_features_normally_turned_on">8.  Options To Disable Features Normally Turned On</a></div>
+<div class="fancy-toc1"><a href="#_options_to_omit_features">9.  Options To Omit Features</a></div>
+<div class="fancy-toc1"><a href="#_analysis_and_debugging_options">10.  Analysis and Debugging Options</a></div>
+<div class="fancy-toc1"><a href="#_windows_specific_options">11.  Windows-Specific Options</a></div>
+<div class="fancy-toc1"><a href="#compiler_linkage_control">12. Compiler Linkage Control</a></div>
+</div>
+</div>
+<script>
+function toggle_toc(){
+var sub = document.getElementById("toc_sub")
+var mk = document.getElementById("toc_mk")
+if( sub.style.display!="block" ){
+sub.style.display = "block";
+mk.innerHTML = "&#x25bc;";
+} else {
+sub.style.display = "none";
+mk.innerHTML = "&#x25ba;";
+}
+}
+</script>
+</div>
 
-<div class=startsearch></div>
-  
 
 
 
-<h1>1.0 Compilation Options For SQLite</h1>
+
+<h1 id="overview"><span>1. </span>Overview</h1>
 
 <p>
 For most purposes, SQLite can be built just fine using the default
@@ -149,8 +136,168 @@ Nevertheless, it is strongly recommended that the SQLite test-suite
 be executed to check for errors before using an SQLite library built
 with non-standard compilation options.
 </p>
+
+<a name="rcmd"></a>
+
+
+<h1 id="recommended_compile_time_options"><span>2. </span>Recommended Compile-time Options</h1>
+
+<p>The following compile-time options are recommended for applications that
+are able to use them, in order to minimized the number of CPU cycles and
+the bytes of memory used by SQLite.
+Note all of these compile-time options are usable by every application.
+For example, the SQLITE_THREADSAFE=0 option is only usable by applications
+that never access SQLite from more than one thread at a time.  And the
+SQLITE_OMIT_PROGESS_CALLBACK option is only usable by applications that
+doe not use the <a href="c3ref/progress_handler.html">sqlite3_progress_handler()</a> interface.  And so forth.
+
+</p><p>It is impossible to test every possible combination of compile-time
+options for SQLite.  But the following set of compile-time options is
+one configuration that is always fully tested.
+
+</p><ol>
+<li><p><b><a href="compile.html#threadsafe">SQLITE_THREADSAFE=0</a></b>.
+Setting -DSQLITE_THREADSAFE=0 causes all of the mutex and thread-safety logic
+in SQLite to be omitted.  This is the single compile-time option that makes
+the most difference in optimizing the performance of SQLite.
+
+</p></li><li><p><b><a href="compile.html#default_memstatus">SQLITE_DEFAULT_MEMSTATUS=0</a></b>.
+This setting causes the <a href="c3ref/status.html">sqlite3_status()</a> interfaces that track memory usage
+to be disabled.  This helps the <a href="c3ref/free.html">sqlite3_malloc()</a> routines run much faster,
+and since SQLite uses <a href="c3ref/free.html">sqlite3_malloc()</a> internally, this helps to make the
+entire library faster.
+
+</p></li><li><p><b><a href="compile.html#default_wal_synchronous">SQLITE_DEFAULT_WAL_SYNCHRONOUS=1</a></b>.
+For maximum database safety following a power lose, the setting of
+<a href="pragma.html#pragma_synchronous">PRAGMA synchronous=FULL</a> is recommended.  However, in <a href="wal.html">WAL mode</a>, complete
+database integrity is guaranteed with <a href="pragma.html#pragma_synchronous">PRAGMA synchronous=NORMAL</a>.  With
+<a href="pragma.html#pragma_synchronous">PRAGMA synchronous=NORMAL</a> in <a href="wal.html">WAL mode</a>, recent changes to the database might
+be rolled back by a power loss, but the database will not be corrupted.
+Furthermore, transaction commit is much faster in WAL mode using
+synchronous=NORMAL than with the default synchronous=FULL.  For these
+reasons, it is recommended that the synchronous setting be changed from
+FULL to NORMAL when switching to WAL mode.  This compile-time option will
+accomplish that.
+
+</p></li><li><p><b><a href="compile.html#like_doesnt_match_blobs">SQLITE_LIKE_DOESNT_MATCH_BLOBS</a></b>.
+Historically, SQLite has allowed BLOB operands to the <a href="lang_expr.html#like">LIKE</a> and <a href="lang_expr.html#glob">GLOB</a>
+operators.  But having a BLOB as an operand of <a href="lang_expr.html#like">LIKE</a> or <a href="lang_expr.html#glob">GLOB</a> complicates
+and slows the <a href="optoverview.html#like_opt">LIKE optimization</a>.  When this option is set, it means that
+the LIKE and GLOB operators always return FALSE if either operand is a BLOB.
+That simplifies the implementation of the <a href="optoverview.html#like_opt">LIKE optimization</a> and allows
+queries that use the <a href="optoverview.html#like_opt">LIKE optimization</a> to run faster.
+
+</p></li><li><p><b><a href="limits.html#max_expr_depth">SQLITE_MAX_EXPR_DEPTH=0</a></b>.
+Setting the maximum expression parse-tree depth to zero disables all checking
+of the expression parse-tree depth, which simplifies the code resulting in
+faster execution, and helps the parse tree to use less memory.
+
+</p></li><li><p><b><a href="compile.html#omit_decltype">SQLITE_OMIT_DECLTYPE</a></b>.
+By omitting the (seldom-needed) ability to return the declared type of
+columns from the result set of query, <a href="c3ref/stmt.html">prepared statements</a> can be made
+to consume less memory.
+
+</p></li><li><p><b><a href="compile.html#omit_deprecated">SQLITE_OMIT_DEPRECATED</a></b>.
+Omitting deprecated interfaces and features will not help SQLite to
+run any faster.  It will reduce the library footprint, however.  And
+it is the right thing to do.
+
+</p></li><li><p><b><a href="compile.html#omit_progress_callback">SQLITE_OMIT_PROGRESS_CALLBACK</a></b>.
+The progress handler callback counter must be checked in the inner loop
+of the <a href="opcode.html">bytecode engine</a>.  By omitting this interface, a single conditional
+is removed from the inner loop of the <a href="opcode.html">bytecode engine</a>, helping SQL statements
+to run slightly faster.
+
+</p></li><li><p><b><a href="compile.html#omit_shared_cache">SQLITE_OMIT_SHARED_CACHE</a></b>.
+Omitting the possibility of using <a href="sharedcache.html">shared cache</a> allows many conditionals
+in performance-critical sections of the code to be eliminated.  This can
+give a noticable improvement in performance.
+</p></li></ol>
+
+<p>When all of the recommended compile-time options above are used,
+the SQLite library will be approximately 3% smaller and use about 5% fewer
+CPU cycles.  So these options do not make a huge difference.  But in 
+some design situations, every little bit helps.
+
+<a name="osconfig"></a>
+</p><h1 id="_platform_configuration"><span>3. </span> Platform Configuration</h1>
+
+<a name="sqlite_config_h"></a>
+<p><b>_HAVE_SQLITE_CONFIG_H</b></p><blockquote><p>
+  If the _HAVE_SQLITE_CONFIG_H macro is defined
+  then the SQLite source code will attempt to #include a file named "config.h".
+  The "config.h" file usually contains other configuration options, especially
+  "HAVE_<i>INTERFACE</i>" type options generated by autoconf scripts.
+</p></blockquote><a name="fdatasync"></a>
+<p><b>HAVE_FDATASYNC</b></p><blockquote><p>
+  If the HAVE_FDATASYNC compile-time option is true, then the default <a href="vfs.html">VFS</a>
+  for unix systems will attempt to use fdatasync() instead of fsync() where
+  appropriate.  If this flag is missing or false, then fsync() is always used.
+</p></blockquote><a name="gmtime_r"></a>
+<p><b>HAVE_GMTIME_R</b></p><blockquote><p>
+  If the HAVE_GMTIME_R option is true and if <a href="compile.html#omit_datetime_funcs">SQLITE_OMIT_DATETIME_FUNCS</a> is true,
+  then the CURRENT_TIME, CURRENT_DATE, and CURRENT_TIMESTAMP keywords will use
+  the threadsafe "gmtime_r()" interface rather than "gmtime()".  In the usual case
+  where <a href="compile.html#omit_datetime_funcs">SQLITE_OMIT_DATETIME_FUNCS</a> is not defined or is false, then the
+  built-in <a href="lang_datefunc.html">date and time functions</a> are used to implement the CURRENT_TIME,
+  CURRENT_DATE, and CURRENT_TIMESTAMP keywords and neither gmtime_r() nor
+  gmtime() is ever called.
+</p></blockquote><a name="isnan"></a>
+<p><b>HAVE_ISNAN</b></p><blockquote><p>
+  If the HAVE_ISNAN option is true, then SQLite invokes the system library isnan()
+  function to determine if a double-precision floating point value is a NaN.
+  If HAVE_ISNAN is undefined or false, then SQLite substitutes its own home-grown
+  implementation of isnan().
+</p></blockquote><a name="localtime_r"></a>
+<p><b>HAVE_LOCALTIME_R</b></p><blockquote><p>
+  If the HAVE_LOCALTIME_R option is true, then SQLite uses the threadsafe
+  localtime_r() library routine instead of localtime()
+  to help implement the <a href="lang_datefunc.html#localtime">localtime modifier</a>
+  to the built-in <a href="lang_datefunc.html">date and time functions</a>.
+</p></blockquote><a name="localtime_s"></a>
+<p><b>HAVE_LOCALTIME_S</b></p><blockquote><p>
+  If the HAVE_LOCALTIME_S option is true, then SQLite uses the threadsafe
+  localtime_s() library routine instead of localtime()
+  to help implement the <a href="lang_datefunc.html#localtime">localtime modifier</a>
+  to the built-in <a href="lang_datefunc.html">date and time functions</a>.
+</p></blockquote><a name="malloc_usable_size"></a>
+<p><b>HAVE_MALLOC_USABLE_SIZE</b></p><blockquote><p>
+  If the HAVE_MALLOC_USABLE_SIZE option is true, then SQLite tries uses the
+  malloc_usable_size() interface to find the size of a memory allocation obtained
+  from the standard-library malloc() or realloc() routines.  This option is only
+  applicable if the standard-library malloc() is used.  On Apple systems,
+  "zone malloc" is used instead, and so this option is not applicable.  And, of
+  course, if the application supplies its own malloc implementation using
+  <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigmalloc">SQLITE_CONFIG_MALLOC</a> then this option has no effect.
+  <p>
+  If the HAVE_MALLOC_USABLE_SIZE option is omitted or is false, then SQLite 
+  uses a wrapper around system malloc() and realloc() that enlarges each allocation
+  by 8 bytes and writes the size of the allocation in the initial 8 bytes, and
+  then SQLite also implements its own home-grown version of malloc_usable_size()
+  that consults that 8-byte prefix to find the allocation size.  This approach
+  works but it is suboptimal.  Applications are encouraged to use
+  HAVE_MALLOC_USABLE_SIZE whenever possible.
+</p></blockquote><a name="strchrnul"></a>
+<p><b>HAVE_STRCHRNUL</b></p><blockquote><p>
+  If the HAVE_STRCHRNUL option is true, then SQLite uses the strchrnul() library
+  function.  If this option is missing or false, then SQLite substitutes its own
+  home-grown implementation of strchrnul().
+</p></blockquote><a name="usleep"></a>
+<p><b>HAVE_USLEEP</b></p><blockquote><p>
+  If the HAVE_USLEEP option is true, then the default unix VFS uses the
+  usleep() system call to implement the xSleep method.  If this option is
+  undefined or false, then xSleep on unix is implemented using sleep() which
+  means that <a href="c3ref/sleep.html">sqlite3_sleep()</a> will have a minimum wait interval of 1000
+  milliseconds regardless of its argument.  
+</p></blockquote><a name="utime"></a>
+<p><b>HAVE_UTIME</b></p><blockquote><p>
+  If the HAVE_UTIME option is true, then the built-in but non-standard
+  "unix-dotfile" VFS will use the utime() system call, instead of utimes(),
+  to set the last access time on the lock file.
+</p></blockquote>
+
 <a name="defaults"></a>
-<h2>1.1 Options To Set Default Parameter Values</h2>
+<h1 id="_options_to_set_default_parameter_values"><span>4. </span> Options To Set Default Parameter Values</h1>
 
 <a name="default_automatic_index"></a>
 <p><b>SQLITE_DEFAULT_AUTOMATIC_INDEX=<i>&lt;0 or 1&gt;</i></b></p><blockquote><p>
@@ -170,10 +317,13 @@ with non-standard compilation options.
   In any case the compile-time default may be overridden by the 
   <a href="pragma.html#pragma_auto_vacuum">PRAGMA auto_vacuum</a> command.
 </p></blockquote><a name="default_cache_size"></a>
-<p><b>SQLITE_DEFAULT_CACHE_SIZE=<i>&lt;pages&gt;</i></b></p><blockquote><p>
-  This macro sets the default size of the page-cache for each attached
-  database, in pages. This can be overridden by the 
-  <a href="pragma.html#pragma_cache_size">PRAGMA cache_size</a> command. The default value is 2000.
+<p><b>SQLITE_DEFAULT_CACHE_SIZE=<i>&lt;N&gt;</i></b></p><blockquote><p>
+  This macro sets the default maximum size of the page-cache for each attached
+  database.  A positive value means that the limit is N page.  If N is negative
+  that means to limit the cache size to -N*1024 bytes.
+  The suggested maximum cache size can be overridden by the 
+  <a href="pragma.html#pragma_cache_size">PRAGMA cache_size</a> command. The default value is -2000, which translates
+  into a maximum of 2048000 bytes per cache.
 </p></blockquote><a name="default_file_format"></a>
 <p><b>SQLITE_DEFAULT_FILE_FORMAT=<i>&lt;1 or 4&gt;</i></b></p><blockquote><p>
   The default <a href="fileformat2.html#schemaformat">schema format number</a> used by SQLite when creating
@@ -188,7 +338,8 @@ with non-standard compilation options.
   read formats greater than 1.  So that older versions of SQLite will
   be able to read and write database files created by newer versions
   of SQLite, the default schema format was set to 1 for SQLite versions
-  through 3.7.9 (2011-11-01).  Beginning with version 3.7.10, the default
+  through 3.7.9 (2011-11-01).  Beginning with 
+  <a href="releaselog/3_7_10.html">version 3.7.10</a> (2012-01-16), the default
   schema format is 4.</p>
 
 <p>  The schema format number for a new database can be set at runtime using
@@ -241,15 +392,30 @@ with non-standard compilation options.
 <p><b>SQLITE_DEFAULT_PAGE_SIZE=<i>&lt;bytes&gt;</i></b></p><blockquote><p>
   This macro is used to set the default page-size used when a
   database is created. The value assigned must be a power of 2. The
-  default value is 1024. The compile-time default may be overridden at 
+  default value is 4096. The compile-time default may be overridden at 
   runtime by the <a href="pragma.html#pragma_page_size">PRAGMA page_size</a> command.
-</p></blockquote><a name="default_temp_cache_size"></a>
-<p><b>SQLITE_DEFAULT_TEMP_CACHE_SIZE=<i>&lt;pages&gt;</i></b></p><blockquote><p>
-  This macro sets the default size of the page-cache for temporary files
-  created by SQLite to store intermediate results, in pages. It does
-  not affect the page-cache for the temp database, where tables created
-  using <a href="lang_createtable.html">CREATE TEMP TABLE</a> are stored. The default value
-  is 500.
+</p></blockquote><a name="default_synchronous"></a>
+<p><b>SQLITE_DEFAULT_SYNCHRONOUS=<i>&lt;0-3&gt;</i></b></p><blockquote><p>
+  This macro determines the default value of the
+  <a href="pragma.html#pragma_synchronous">PRAGMA synchronous</a> setting.  If not overridden at compile-time,
+  the default setting is 2 (FULL).
+</p></blockquote><a name="default_wal_synchronous"></a>
+<p><b>SQLITE_DEFAULT_WAL_SYNCHRONOUS=<i>&lt;0-3&gt;</i></b></p><blockquote><p>
+  This macro determines the default value of the
+  <a href="pragma.html#pragma_synchronous">PRAGMA synchronous</a> setting for database files that open in
+  <a href="wal.html">WAL mode</a>.  If not overridden at compile-time, this value is the
+  same as <a href="compile.html#default_synchronous">SQLITE_DEFAULT_SYNCHRONOUS</a>.
+  <p>
+  If SQLITE_DEFAULT_WAL_SYNCHRONOUS differs from SQLITE_DEFAULT_SYNCHRONOUS,
+  and if the application has not modified the synchronous setting for
+  the database file using the <a href="pragma.html#pragma_synchronous">PRAGMA synchronous</a> statement, then
+  the synchronous setting is changed to value defined by
+  SQLITE_DEFAULT_WAL_SYNCHRONOUS when the database connection switches
+  into WAL mode for the first time.
+  If the SQLITE_DEFAULT_WAL_SYNCHRONOUS value is not overridden at
+  compile-time, then it will always be the same as
+  <a href="compile.html#default_synchronous">SQLITE_DEFAULT_SYNCHRONOUS</a> and so no automatic synchronous setting
+  changes will ever occur.
 </p></blockquote><a name="default_wal_autocheckpoint"></a>
 <p><b>SQLITE_DEFAULT_WAL_AUTOCHECKPOINT=<i>&lt;pages&gt;</i></b></p><blockquote><p>
   This macro sets the default page count for the <a href="wal.html">WAL</a>
@@ -263,6 +429,12 @@ with non-standard compilation options.
   <a href="c3ref/stmt.html">prepared statement</a> will launch to assist it with a query.  If not specified,
   the default maximum is 0.
   The value set here cannot be more than <a href="compile.html#max_worker_threads">SQLITE_MAX_WORKER_THREADS</a>.
+</p></blockquote><a name="extra_durable"></a>
+<p><b>SQLITE_EXTRA_DURABLE</b></p><blockquote><p>
+  The SQLITE_EXTRA_DURABLE compile-time option that used to cause the default
+  <a href="pragma.html#pragma_synchronous">PRAGMA synchronous</a> setting to be EXTRA, rather than FULL.  This option
+  is no longer supported.  Use
+  <a href="compile.html#default_synchronous">SQLITE_DEFAULT_SYNCHRONOUS=3</a> instead.
 </p></blockquote><a name="fts3_max_expr_depth"></a>
 <p><b>SQLITE_FTS3_MAX_EXPR_DEPTH=<i>N</i></b></p><blockquote><p>
   This macro sets the maximum depth of the search tree that corresponds to
@@ -280,6 +452,24 @@ with non-standard compilation options.
   So the default depth limit of 12 is sufficient for up to 4095 ordinary
   terms on a MATCH, it is only sufficient for 11 or 12 phrase or NEAR
   terms.  Even so, the default is more than enough for most application.
+</p></blockquote><a name="like_doesnt_match_blobs"></a>
+<p><b>SQLITE_LIKE_DOESNT_MATCH_BLOBS</b></p><blockquote><p>
+  This compile-time option causes the <a href="lang_expr.html#like">LIKE</a> operator to always return 
+  False if either operand is a BLOB.  The default behavior of <a href="lang_expr.html#like">LIKE</a> 
+  is that BLOB operands are cast to TEXT before the comparison is done.
+  <p>
+  This compile-time option makes SQLite run more efficiently when processing
+  queries that use the <a href="lang_expr.html#like">LIKE</a> operator, at the expense of breaking backwards
+  compatibility.  However, the backwards compatibility break may be only
+  a technicality.  There was a long-standing bug in the <a href="lang_expr.html#like">LIKE</a> processing logic
+  (see <a href="https://www.sqlite.org/src/info/05f43be8fdda9f">https://www.sqlite.org/src/info/05f43be8fdda9f</a>) that caused it to
+  misbehavior for BLOB operands and nobody observed that bug in nearly
+  10 years of active use.  So for more users, it is probably safe to
+  enable this compile-time option and thereby save a little CPU time
+  on LIKE queries.
+  <p>
+  This compile-time option affects the SQL <a href="lang_expr.html#like">LIKE</a> operator only and has
+  no impact on the <a href="c3ref/strlike.html">sqlite3_strlike()</a> C-language interface.
 </p></blockquote><a name="max_mmap_size"></a>
 <p><b>SQLITE_MAX_MMAP_SIZE=<i>N</i></b></p><blockquote><p>
   This macro sets a hard upper bound on the amount of address space that
@@ -333,6 +523,30 @@ with non-standard compilation options.
   With SQLITE_POWERSAFE_OVERWRITE set to 0, SQLite assumes that other
   bytes in the same sector with a written byte might be changed or 
   damaged by a power loss.
+</p></blockquote><a name="reverse_unordered_selects"></a>
+<p><b>SQLITE_REVERSE_UNORDERED_SELECTS</b></p><blockquote><p>
+  This option causes the <a href="pragma.html#pragma_reverse_unordered_selects">PRAGMA reverse_unordered_selects</a> setting to be
+  enabled by default.  When enabled, <a href="lang_select.html">SELECT</a> statements that lack an
+  ORDER BY clause will run in reverse order.<p>
+  This option is useful for detecting when applications (incorrectly)
+  assume that the order of rows in a SELECT without an ORDER BY clause
+  will always be the same.
+</p></blockquote><a name="sorter_pmasz"></a>
+<p><b>SQLITE_SORTER_PMASZ=<i>N</i></b></p><blockquote><p>
+  If multi-threaded processing is enabled via the
+  <a href="pragma.html#pragma_threads">PRAGMA threads</a> setting, then sort operations will
+  attempt to start helper threads when the amount of content
+  to be sorted exceeds the minimum of the <a href="pragma.html#pragma_cache_size">cache_size</a> and PMA Size
+  determined by the <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigpmasz">SQLITE_CONFIG_PMASZ</a> start-time option.
+  This compile-time option sets the default value for the
+  <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigpmasz">SQLITE_CONFIG_PMASZ</a> start-time option.
+  The default value is 250.
+</p></blockquote><a name="stmtjrnl_spill"></a>
+<p><b>SQLITE_STMTJRNL_SPILL=<i>N</i></b></p><blockquote><p>
+  The SQLITE_STMTJRNL_SPILL compile-time option determines the
+  default setting of the <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigstmtjrnlspill">SQLITE_CONFIG_STMTJRNL_SPILL</a> start-time
+  setting.  That setting determines the size threshold above which
+  <a href="tempfiles.html#stmtjrnl">statement journals</a> are moved from memory to disk.
 </p></blockquote><a name="win32_malloc"></a>
 <p><b>SQLITE_WIN32_MALLOC</b></p><blockquote><p>
   This option enables the use of the Windows Heap API functions for memory
@@ -348,7 +562,7 @@ with non-standard compilation options.
   the ability of any human to comprehend.
 </p></blockquote>
 
-<h2>1.2 Options To Set Size Limits</h2>
+<h1 id="_options_to_set_size_limits"><span>5. </span> Options To Set Size Limits</h1>
 
 <p>There are compile-time options that will set upper bounds
 on the sizes of various structures in SQLite.  The compile-time
@@ -374,7 +588,7 @@ the available settings:</p>
 </ul>
 
 <a name="controlfeatures"></a>
-<h2>1.3 Options To Control Operating Characteristics</h2>
+<h1 id="_options_to_control_operating_characteristics"><span>6. </span> Options To Control Operating Characteristics</h1>
 
 <a name="4_byte_aligned_malloc"></a>
 <p><b>SQLITE_4_BYTE_ALIGNED_MALLOC</b></p><blockquote><p>
@@ -397,10 +611,8 @@ the available settings:</p>
 </p></blockquote><a name="have_isnan"></a>
 <p><b>SQLITE_HAVE_ISNAN</b></p><blockquote><p>
   If this option is present, then SQLite will use the isnan() function from
-  the system math library.  Without this option (the default behavior)
-  SQLite uses its own internal implementation of isnan().  SQLite uses
-  its own internal isnan() implementation by default because of past
-  problems with system isnan() functions.
+  the system math library.  This is an alias for the <a href="compile.html#isnan">HAVE_ISNAN</a> configuration
+  option.
 </p></blockquote><a name="os_other"></a>
 <p><b>SQLITE_OS_OTHER=<i>&lt;0 or 1&gt;</i></b></p><blockquote><p>
   The option causes SQLite to omit its built-in operating system interfaces
@@ -421,10 +633,10 @@ the available settings:</p>
   to off.  When this option is present, secure_delete defaults to on.</p>
 
 <p>  The secure_delete setting causes deleted content to be overwritten with
-  zeros.  There is a small performance penalty for this since additional I/O
-  must occur.  On the other hand, secure_delete can prevent sensitive 
-  information from lingering in unused parts of the database file after it
-  has allegedly been deleted.  See the documentation on the
+  zeros.  There is a small performance penalty since additional I/O
+  must occur.  On the other hand, secure_delete can prevent fragments of 
+  sensitive information from lingering in unused parts of the database file 
+  after it has been deleted.  See the documentation on the
   <a href="pragma.html#pragma_secure_delete">secure_delete pragma</a> for additional information.
 </p></blockquote><a name="threadsafe"></a>
 <p><b>SQLITE_THREADSAFE=<i>&lt;0 or 1 or 2&gt;</i></b></p><blockquote><p>
@@ -498,11 +710,11 @@ the available settings:</p>
 </p></blockquote>
 
 <a name="enablefeatures"></a>
-<h2>1.4 Options To Enable Features Normally Turned Off</h2>
+<h1 id="_options_to_enable_features_normally_turned_off"><span>7. </span> Options To Enable Features Normally Turned Off</h1>
 
 <a name="allow_uri_authority"></a>
 <p><b>SQLITE_ALLOW_URI_AUTHORITY</b></p><blockquote><p>
-  <a href="uri.html">URI filenames</a> normally throw an error is the authority section is
+  <a href="uri.html">URI filenames</a> normally throws an error if the authority section is
   not either empty or "localhost".  However, if SQLite is compiled with
   the SQLITE_ALLOW_URI_AUTHORITY compile-time option, then the URI is
   converted into a Uniform Naming Convention (UNC) filename and passed
@@ -532,7 +744,12 @@ the available settings:</p>
   the "<tt>8_3_names=1</tt>" query parameter.  If the value of
   this macro is 2, then the use of 8+3 filenames becomes the default
   but may be disabled on using the <tt>8_3_names=0</tt> query parameter.
-  See 
+</p></blockquote><a name="enable_api_armor"></a>
+<p><b>SQLITE_ENABLE_API_ARMOR</b></p><blockquote><p>
+  When defined, this C-preprocessor macro activates extra code that
+  attempts to detect misuse of the SQLite API, such as passing in NULL
+  pointers to required parameters or using objects after they have been
+  destroyed.
 </p></blockquote><a name="enable_atomic_write"></a>
 <p><b>SQLITE_ENABLE_ATOMIC_WRITE</b></p><blockquote><p>
   If this C-preprocessor macro is defined and if the
@@ -561,8 +778,10 @@ the available settings:</p>
   <li> <a href="c3ref/column_database_name.html">sqlite3_column_table_name16()</a> </li>
   <li> <a href="c3ref/column_database_name.html">sqlite3_column_origin_name()</a> </li>
   <li> <a href="c3ref/column_database_name.html">sqlite3_column_origin_name16()</a> </li>
-  <li> <a href="c3ref/table_column_metadata.html">sqlite3_table_column_metadata()</a> </li>
   </ul>
+</p></blockquote><a name="enable_dbstat_vtab"></a>
+<p><b>SQLITE_ENABLE_DBSTAT_VTAB</b></p><blockquote><p>
+  This option enables the <a href="dbstat.html">dbstat virtual table</a>.
 </p></blockquote><a name="enable_explain_comments"></a>
 <p><b>SQLITE_ENABLE_EXPLAIN_COMMENTS</b></p><blockquote><p>
   This option adds extra logic to SQLite that inserts comment text into the
@@ -582,10 +801,30 @@ the available settings:</p>
   This option modifies the query pattern parser in FTS3 such that it
   supports operators AND and NOT (in addition to the usual OR and NEAR)
   and also allows query expressions to contain nested parenthesis.
+</p></blockquote><a name="enable_fts3_tokenizer"></a>
+<p><b>SQLITE_ENABLE_FTS3_TOKENIZER</b></p><blockquote><p>
+  This option enables the two-argument version of the <a href="fts3.html#f3tknzr">fts3_tokenizer()</a>
+  interface.  The second argument to fts3_tokenizer() is suppose to be a
+  pointer to a function (encoded as a BLOB) that implements an
+  application defined tokenizer.  If hostile actors are able to run
+  the two-argument version of fts3_tokenizer() with an arbitrary second
+  argument, they could use crash or take control of the process. 
+  <p>
+  Because of security concerns, the two-argument fts3_tokenizer() feature 
+  was disabled beginning with <a href="releaselog/3_11_0.html">Version 3.11.0</a> (2016-02-15)
+  unless this compile-time option is used.
+  <a href="releaselog/3_12_0.html">Version 3.12.0</a> (2016-03-29) added the 
+  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,1,0) interface
+  that activates the two-argument version of <a href="fts3.html#f3tknzr">fts3_tokenizer()</a>
+  for a specific <a href="c3ref/sqlite3.html">database connection</a> at run-time.
 </p></blockquote><a name="enable_fts4"></a>
 <p><b>SQLITE_ENABLE_FTS4</b></p><blockquote><p>
   When this option is defined in the <a href="amalgamation.html">amalgamation</a>, versions 3 and 4
   of the full-text search engine is added to the build automatically.
+</p></blockquote><a name="enable_fts5"></a>
+<p><b>SQLITE_ENABLE_FTS5</b></p><blockquote><p>
+  When this option is defined in the <a href="amalgamation.html">amalgamation</a>, versions 5
+  of the full-text search engine (<a href="fts5.html">fts5</a>) is added to the build automatically.
 </p></blockquote><a name="enable_icu"></a>
 <p><b>SQLITE_ENABLE_ICU</b></p><blockquote><p>
   This option causes the 
@@ -597,6 +836,10 @@ the available settings:</p>
   compiled with this option, then the CLI provides an extra command
   named ".iotrace" that provides a low-level log of I/O activity.
   This option is experimental and may be discontinued in a future release.
+</p></blockquote><a name="enable_json1"></a>
+<p><b>SQLITE_ENABLE_JSON1</b></p><blockquote><p>
+  When this option is defined in the <a href="amalgamation.html">amalgamation</a>, the
+  <a href="json1.html">JSON SQL functions</a> are added to the build automatically.
 </p></blockquote><a name="enable_locking_style"></a>
 <p><b>SQLITE_ENABLE_LOCKING_STYLE</b></p><blockquote><p>
   This option enables additional logic in the OS interface layer for
@@ -664,10 +907,35 @@ the available settings:</p>
   of two and uses a first-fit, buddy-allocator algorithm
   that provides strong guarantees against fragmentation and breakdown
   subject to certain operating constraints.
+</p></blockquote><a name="enable_preupdate_hook"></a>
+<p><b>SQLITE_ENABLE_PREUPDATE_HOOK</b></p><blockquote><p>
+  This option enables 
+  <a href="c3ref/preupdate_count.html">several new APIs</a> that provide callbacks
+  prior to any change to a <a href="rowidtable.html">rowid table</a>.  The callbacks can be used
+  to record the state of the row before the change occurs.
+  <p>The action of the preupdate hook is similar to the
+  <a href="c3ref/update_hook.html">update hook</a> except that the callback is
+  invoked before the change, not afterwards, and the preupdate
+  hook interfaces are omitted unless this compile-time option is
+  used.
+  <p>The preupdate hook interfaces were originally added to
+  support the <a href="sessionintro.html">session</a> extension.
+</p></blockquote><a name="enable_rbu"></a>
+<p><b>SQLITE_ENABLE_RBU</b></p><blockquote><p>
+  Enable the code the implements the <a href="rbu.html">RBU extension</a>.
 </p></blockquote><a name="enable_rtree"></a>
 <p><b>SQLITE_ENABLE_RTREE</b></p><blockquote><p>
   This option causes SQLite to include support for the
   <a href="rtree.html">R*Tree index extension</a>.
+</p></blockquote><a name="enable_session"></a>
+<p><b>SQLITE_ENABLE_SESSION</b></p><blockquote><p>
+  This option enables the <a href="sessionintro.html">session extension</a>.
+</p></blockquote><a name="enable_stmt_scanstatus"></a>
+<p><b>SQLITE_ENABLE_STMT_SCANSTATUS</b></p><blockquote><p>
+  This option enables the <a href="c3ref/stmt_scanstatus.html">sqlite3_stmt_scanstatus()</a> interface.  The
+  <a href="c3ref/stmt_scanstatus.html">sqlite3_stmt_scanstatus()</a> interface is normally omitted from the build
+  because it imposes a small performance penalty, even on statements that
+  do not use the feature.
 </p></blockquote><a name="rtree_int_only"></a>
 <p><b>SQLITE_RTREE_INT_ONLY</b></p><blockquote><p>
   If this option is used together with <a href="compile.html#enable_rtree">SQLITE_ENABLE_RTREE</a> then the
@@ -695,7 +963,8 @@ the available settings:</p>
   This option used to cause the <a href="lang_analyze.html">ANALYZE</a> command to collect
   index histogram data in the <b>sqlite_stat2</b> table.  But that
   functionality was superceded by <a href="compile.html#enable_stat3">SQLITE_ENABLE_STAT3</a> as of
-  SQLite version 3.7.9.  The SQLITE_ENABLE_STAT2 compile-time option
+  SQLite <a href="releaselog/3_7_9.html">version 3.7.9</a> (2011-11-01).  
+  The SQLITE_ENABLE_STAT2 compile-time option
   is now a no-op.
 </p></blockquote><a name="enable_stat3"></a>
 <p><b>SQLITE_ENABLE_STAT3</b></p><blockquote><p>
@@ -740,6 +1009,21 @@ the available settings:</p>
   from source, not from the <a href="amalgamation.html">amalgamation</a> or from the collection of
   pre-packaged C files provided for non-Unix like platforms on the website.
   </p>
+</p></blockquote><a name="enable_unknown_sql_function"></a>
+<p><b>SQLITE_ENABLE_UNKNOWN_SQL_FUNCTION</b></p><blockquote><p>
+  When the SQLITE_ENABLE_UNKNOWN_SQL_FUNCTION compile-time option is
+  activated, SQLite will suppress "unknown function" errors when running
+  an <a href="lang_explain.html">EXPLAIN</a> or <a href="eqp.html">EXPLAIN QUERY PLAN</a>.  Instead of throwing an error,
+  SQLite will insert a substitute no-op function named "unknown()".
+  The substitution of "unknown()" in place of unrecognized functions
+  only occurs on <a href="lang_explain.html">EXPLAIN</a> and <a href="eqp.html">EXPLAIN QUERY PLAN</a>, not on ordinary
+  statements.
+  <p>
+  When used in the <a href="cli.html">command-line shell</a>, the
+  SQLITE_ENABLE_UNKNOWN_SQL_FUNCTION feature allows SQL text that contains
+  application-defined functions to be pasted into the shell for 
+  analysis and debugging without having to create and load an
+  extension that implements the application-defined functions.
 </p></blockquote><a name="enable_unlock_notify"></a>
 <p><b>SQLITE_ENABLE_UNLOCK_NOTIFY</b></p><blockquote><p>
   This option enables the <a href="c3ref/unlock_notify.html">sqlite3_unlock_notify()</a> interface and
@@ -765,7 +1049,7 @@ the available settings:</p>
 </p></blockquote>
 
 <a name="disablefeatures"></a>
-<h2>1.5 Options To Disable Features Normally Turned On</h2>
+<h1 id="_options_to_disable_features_normally_turned_on"><span>8. </span> Options To Disable Features Normally Turned On</h1>
 
 <a name="disable_lfs"></a>
 <p><b>SQLITE_DISABLE_LFS</b></p><blockquote><p>
@@ -793,7 +1077,7 @@ the available settings:</p>
 
 <a name="omitfeatures"></a>
 
-<h2>1.6 Options To Omit Features</h2>
+<h1 id="_options_to_omit_features"><span>9. </span> Options To Omit Features</h1>
 
 <p>The following options can be used to 
 <a href="footprint.html#relfootprint">reduce the size of the compiled library</a>
@@ -818,16 +1102,17 @@ options must also be defined when using the 'lemon' tool to generate the
 parse.c file and when compiling the 'mkkeywordhash' tool which generates 
 the keywordhash.h file.
 Because of this, these options may only be used when the library is built
-from canonical source, not from the <a href="amalgamation.html">amalgamation</a> or from the collection of
-pre-packaged C files provided for non-Unix like platforms on the website.
-Any SQLITE_OMIT_* options which can be used directly with the <a href="amalgamation.html">amalgamation</a> 
-are listed below, however, the warnings in the following paragraph should be noted.
+from canonical source, not from the <a href="amalgamation.html">amalgamation</a>.
+Some SQLITE_OMIT_* options might work, or appear to work, when used with
+the <a href="amalgamation.html">amalgamation</a>.  But this is not guaranteed.  In general, always compile
+from canonical sources in order to take advantage of SQLITE_OMIT_* options.
 </p>
 
 <blockquote>
-<i><b>Important Note:</b> The SQLITE_OMIT_* options do not work with the
-<a href="amalgamation.html">amalgamation</a> or with pre-packaged C code files.  SQLITE_OMIT_* compile-time
-options only work correctly when SQLite is built from canonical source files.
+<i><b>Important Note:</b> The SQLITE_OMIT_* options may not work with the
+<a href="amalgamation.html">amalgamation</a>.  SQLITE_OMIT_* compile-time
+options usually work correctly only when SQLite is built from canonical 
+source files.
 </i>
 </blockquote>
 
@@ -838,25 +1123,26 @@ make a copy of the Makefile.linux-gcc makefile template in the canonical
 source code distribution.  Change the name of your copy to simply "Makefile".
 Then edit "Makefile" to set up appropriate compile-time options.  Then
 type:
-<blockquote><tt>make clean; make sqlite3.c</tt></blockquote>
-The resulting "sqlite3.c" amalgamation code file (and its associated
+</p><div class="codeblock"><pre>make clean; make sqlite3.c
+</pre></div>
+<p>The resulting "sqlite3.c" amalgamation code file (and its associated
 header file "sqlite3.h") can then be moved to a non-unix platform
 for final compilation using a native compiler.</p>
 
-<p>All of the SQLITE_OMIT_* options are unsupported.</p>
+<p>The SQLITE_OMIT_* options are unsupported.  By this we mean that
+an SQLITE_OMIT_* option that omits code from the build in the current
+release might become a no-op in the next release.  Or the other way around:
+an SQLITE_OMIT_* that is a no-op in the current release might cause code
+to be excluded in the next release.  Also, not all SQLITE_OMIT_* options
+are tested.  Some SQLITE_OMIT_* options might cause SQLite to malfunction
+and/or provide incorrect answers.
 
-<blockquote>
+</p><blockquote>
 <i><b>Important Note:</b>
-The SQLITE_OMIT_* compile-time options are unsupported.
+The SQLITE_OMIT_* compile-time options are mostly unsupported.
 </i></blockquote>
 
-<p>
-The SQLITE_OMIT_* compile-time options are usually untested and
-are almost certainly untested in combination.
-Any or all of these options may be removed from the code in future releases
-and without warning.  For any particular release, some of these
-options may cause compile-time or run-time failures, particularly
-when used in combination with other options.</p>
+<p>The following are the available OMIT options:
 
 <a name="omit_altertable"></a>
 <p><b>SQLITE_OMIT_ALTERTABLE</b></p><blockquote><p>
@@ -878,9 +1164,8 @@ when used in combination with other options.</p>
   in the library.
 </p></blockquote><a name="omit_autoincrement"></a>
 <p><b>SQLITE_OMIT_AUTOINCREMENT</b></p><blockquote><p>
-  This option is used to omit the 
-  <a href="autoinc.html">AUTOINCREMENT</a> functionality. When this 
-  is macro is defined, columns declared as 
+  This option is omits the <a href="autoinc.html">AUTOINCREMENT</a> feature. 
+  When this is macro is defined, columns declared as 
   "<a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> AUTOINCREMENT"
   behave in the same way as columns declared as "<a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a>" when a 
   NULL is inserted. The sqlite_sequence system table is neither created, nor
@@ -911,7 +1196,8 @@ when used in combination with other options.</p>
   than <a href="rescode.html#row">SQLITE_ROW</a>, <a href="rescode.html#busy">SQLITE_BUSY</a>, or <a href="rescode.html#locked">SQLITE_LOCKED</a> unless there was an
   intervening call to <a href="c3ref/reset.html">sqlite3_reset()</a>.</p>
 
-<p>  In SQLite version 3.6.23.1 and earlier, <a href="c3ref/step.html">sqlite3_step()</a> used to always
+<p>  In SQLite <a href="releaselog/3_6_23_1.html">version 3.6.23.1</a> (2010-03-26)
+  and earlier, <a href="c3ref/step.html">sqlite3_step()</a> used to always
   return <a href="rescode.html#misuse">SQLITE_MISUSE</a> if it was invoked again after returning anything
   other than <a href="rescode.html#row">SQLITE_ROW</a> without an intervening call to <a href="c3ref/reset.html">sqlite3_reset()</a>.
   This caused problems on some poorly written smartphone applications which
@@ -924,7 +1210,7 @@ when used in combination with other options.</p>
   an application gets an SQLITE_MISUSE error code from SQLite, that means the
   application is misusing the SQLite interface and is thus incorrectly
   implemented.)  The SQLITE_OMIT_AUTORESET interface was added to SQLite
-  version 3.7.5 in an effort to get all of the (broken)
+  <a href="releaselog/3_7_5.html">version 3.7.5</a> (2011-02-01) in an effort to get all of the (broken)
   applications to work again without having to actually fix the applications.
 </p></blockquote><a name="omit_autovacuum"></a>
 <p><b>SQLITE_OMIT_AUTOVACUUM</b></p><blockquote><p>
@@ -950,10 +1236,7 @@ when used in combination with other options.</p>
   "SELECT count(*) FROM table" run faster) is omitted.
 </p></blockquote><a name="omit_builtin_test"></a>
 <p><b>SQLITE_OMIT_BUILTIN_TEST</b></p><blockquote><p>
-  A standard SQLite build includes a small amount of logic controlled
-  by the <a href="c3ref/test_control.html">sqlite3_test_control()</a> interface that is used to exercise
-  parts of the SQLite core that are difficult to control and measure using
-  the standard API.  This option omits that built-in test logic.
+  This compile-time option has been renamed to <a href="compile.html#untestable">SQLITE_UNTESTABLE</a>.
 </p></blockquote><a name="omit_cast"></a>
 <p><b>SQLITE_OMIT_CAST</b></p><blockquote><p>
   This option causes SQLite to omit support for the CAST operator.
@@ -1112,7 +1395,7 @@ when used in combination with other options.</p>
 <p><b>SQLITE_OMIT_SCHEMA_VERSION_PRAGMAS</b></p><blockquote><p>
   Defining this option omits pragmas for querying and modifying the 
   database schema version and user version from the build. Specifically, the 
-  <a href="pragma.html#pragma_schema_version">schema_version</a> and <a href="pragma.html#pragma_schema_version">user_version</a> PRAGMAs are omitted.
+  <a href="pragma.html#pragma_schema_version">schema_version</a> and <a href="pragma.html#pragma_user_version">user_version</a> PRAGMAs are omitted.
 </p></blockquote><a name="omit_shared_cache"></a>
 <p><b>SQLITE_OMIT_SHARED_CACHE</b></p><blockquote><p>
   This option builds SQLite without support for shared-cache mode.
@@ -1193,6 +1476,24 @@ when used in combination with other options.</p>
 <p><b>SQLITE_OMIT_XFER_OPT</b></p><blockquote><p>
   This option omits support for optimizations that help statements
   of the form "INSERT INTO ... SELECT ..." run faster.
+</p></blockquote><a name="untestable"></a>
+<p><b>SQLITE_UNTESTABLE</b></p><blockquote><p>
+  A standard SQLite build includes a small amount of logic associated
+  with <a href="c3ref/test_control.html">sqlite3_test_control()</a> to exercise
+  parts of the SQLite core that are otherwise difficult to validate.
+  This compile-time option omits that extra testing logic.  This
+  compile-time option was called "SQLITE_OMIT_BUILTIN_TEST" prior
+  to SQLite version 3.16.0 (2017-01-02).  The name was changed
+  to better describe the implications of using it.
+  <p>
+  Setting this compile-time option prevents SQLite from being fully
+  testable.  Branch test coverage drops from 100% down to about 95%.
+  <p>
+  SQLite developers follow the NASA principle of
+  "fly what you test and test what you fly".  This principle is violated
+  if this option is enabled for delivery but disabled for testing.
+  But if this option is enabled during testing, not all branches are 
+  reachable.  Therefore, the use of this compile-time option is discouraged.
 </p></blockquote><a name="zero_malloc"></a>
 <p><b>SQLITE_ZERO_MALLOC</b></p><blockquote><p>
   This option omits both the <a href="malloc.html#defaultalloc">default memory allocator</a> and the
@@ -1207,7 +1508,7 @@ when used in combination with other options.</p>
   malloc(), free(), and/or realloc().
 </p></blockquote>
 <a name="debugoptions"></a>
-<h2>1.7 Analysis and Debugging Options</h2>
+</p><h1 id="_analysis_and_debugging_options"><span>10. </span> Analysis and Debugging Options</h1>
 <a name="debug"></a>
 <p><b>SQLITE_DEBUG</b></p><blockquote><p>
   The SQLite source code contains literally thousands of assert() statements
@@ -1231,7 +1532,7 @@ when used in combination with other options.</p>
   allocated memory.
 </p></blockquote>
 <a name="win32options"></a>
-<h2>1.8 Windows-Specific Options</h2>
+<h1 id="_windows_specific_options"><span>11. </span> Windows-Specific Options</h1>
 <a name="win32_heap_create"></a>
 <p><b>SQLITE_WIN32_HEAP_CREATE</b></p><blockquote><p>
   This option forces the Win32 native memory allocator, when enabled, to
@@ -1241,5 +1542,78 @@ when used in combination with other options.</p>
   This option forces the Win32 native memory allocator, when enabled, to
   make strategic calls into the HeapValidate() function if assert() is also
   enabled.
+</p></blockquote>
+<a name="linkage"></a>
+<h1 id="compiler_linkage_control"><span>12. </span>Compiler Linkage Control</h1>
+
+<p>The following macros specify
+interface linkage for certain kinds of SQLite builds.  The Makefiles will normally
+handle setting these macros automatically.  Application developers should
+not need to worry with these macros.  The following documentation about these 
+macros is included completeness.</p>
+
+<a name="api"></a>
+<p><b>SQLITE_API</b></p><blockquote><p>
+  This macro identifies a externally visible interface for SQLite.
+  This macro is sometimes set to "extern".  But the definition is
+  compiler-specific.
+</p></blockquote><a name="apicall"></a>
+<p><b>SQLITE_APICALL</b></p><blockquote><p>
+  This macro identifies the calling convention used by public interface
+  routines in SQLite.  This macro is normally defined to be nothing,
+  though on Windows builds it can sometimes be set to "__cdecl" or "__stdcall".
+  The "__cdecl" setting is the default, but "__stdcall" is used when SQLite
+  is intended to be compiled as a Windows system library.
+  <p>
+  A single function declaration should contain no more than one of
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
+  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+</p></blockquote><a name="callback"></a>
+<p><b>SQLITE_CALLBACK</b></p><blockquote><p>
+  This macro specifies the calling convention used by callback pointers
+  in SQLite.  This macro is normally defined to be nothing, though on Windows
+  builds it can sometimes be set to "__cdecl" or "__stdcall".  The
+  "__cdecl" setting is the default, but "__stdcall" is used when SQLite
+  is intended to be compiled as a Windows system library.
+  <p>
+  A single function declaration should contain no more than one of
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
+  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+</p></blockquote><a name="cdecl"></a>
+<p><b>SQLITE_CDECL</b></p><blockquote><p>
+  This macro specifies the calling convention used by varargs interface
+  routines in SQLite.  This macro is normally defined to be nothing,
+  though on Windows builds it can sometimes be set to "__cdecl".  This
+  macro is used on varargs routines and so cannot be set to "__stdcall"
+  since the __stdcall calling convention does not support varargs functions.
+  <p>
+  A single function declaration should contain no more than one of
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
+  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+</p></blockquote><a name="syscall"></a>
+<p><b>SQLITE_SYSCALL</b></p><blockquote><p>
+  This macro identifies the calling convention used by operating system
+  interfaces for target the platform for an SQLite build.
+  This macro is normally defined to be nothing, though on Windows
+  builds it can sometimes be set to "__stdcall".
+  <p>
+  A single function declaration should contain no more than one of
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
+  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+</p></blockquote><a name="tclapi"></a>
+<p><b>SQLITE_TCLAPI</b></p><blockquote><p>
+  This macro specifies the calling convention used by the 
+  <a href="http://www.tcl.tk">TCL</a> library interface routines.
+  This macro is not used by the SQLite core, but only by the <a href="tclsqlite.html">TCL Interface</a>
+  and <a href="testing.html#tcl">TCL test suite</a>.
+  This macro is normally defined to be nothing,
+  though on Windows builds it can sometimes be set to "__cdecl".  This
+  macro is used on TCL library interface routines which are always compiled
+  as __cdecl, even on platforms that prefer to use __stdcall, so this
+  macro should not be set to __stdcall unless the platform as a custom
+  TCL library build that supports __stdcall.
+  <p>
+  This macro may not be used in combination with any of <a href="compile.html#apicall">SQLITE_APICALL</a>,
+  <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>, or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
 </p></blockquote>
 

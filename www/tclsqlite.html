@@ -1,141 +1,88 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link href="sqlite.css" rel="stylesheet">
 <title>The Tcl interface to the SQLite library</title>
-<style type="text/css">
-body {
-    margin: auto;
-    font-family: Verdana, sans-serif;
-    padding: 8px 1%;
-}
-
-a { color: #044a64 }
-a:visited { color: #734559 }
-
-.logo { position:absolute; margin:3px; }
-.tagline {
-  float:right;
-  text-align:right;
-  font-style:italic;
-  width:300px;
-  margin:12px;
-  margin-top:58px;
-}
-
-.menubar {
-  clear: both;
-  border-radius: 8px;
-  background: #044a64;
-  padding: 0px;
-  margin: 0px;
-  cell-spacing: 0px;
-}    
-.toolbar {
-  text-align: center;
-  line-height: 1.6em;
-  margin: 0;
-  padding: 0px 8px;
-}
-.toolbar a { color: white; text-decoration: none; padding: 6px 12px; }
-.toolbar a:visited { color: white; }
-.toolbar a:hover { color: #044a64; background: white; }
-
-.content    { margin: 5%; }
-.content dt { font-weight:bold; }
-.content dd { margin-bottom: 25px; margin-left:20%; }
-.content ul { padding:0px; padding-left: 15px; margin:0px; }
-
-/* Things for "fancyformat" documents start here. */
-.fancy img+p {font-style:italic}
-.fancy .codeblock i { color: darkblue; }
-.fancy h1,.fancy h2,.fancy h3,.fancy h4 {font-weight:normal;color:#044a64}
-.fancy h2 { margin-left: 10px }
-.fancy h3 { margin-left: 20px }
-.fancy h4 { margin-left: 30px }
-.fancy th {white-space:nowrap;text-align:left;border-bottom:solid 1px #444}
-.fancy th, .fancy td {padding: 0.2em 1ex; vertical-align:top}
-.fancy #toc a        { color: darkblue ; text-decoration: none }
-.fancy .todo         { color: #AA3333 ; font-style : italic }
-.fancy .todo:before  { content: 'TODO:' }
-.fancy p.todo        { border: solid #AA3333 1px; padding: 1ex }
-.fancy img { display:block; }
-.fancy :link:hover, .fancy :visited:hover { background: wheat }
-.fancy p,.fancy ul,.fancy ol { margin: 1em 5ex }
-.fancy li p { margin: 1em 0 }
-/* End of "fancyformat" specific rules. */
-
-</style>
-  
 </head>
 <body>
-<div><!-- container div to satisfy validator -->
-
+<div class=nosearch>
 <a href="index.html">
-<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite Logo"
- border="0"></a>
-<div><!-- IE hack to prevent disappearing logo--></div>
-<div class="tagline">Small. Fast. Reliable.<br>Choose any three.</div>
-
-<table width=100% class="menubar"><tr>
-  <td width=100%>
-  <div class="toolbar">
-    <a href="about.html">About</a>
-    <a href="sitemap.html">Sitemap</a>
-    <a href="docs.html">Documentation</a>
-    <a href="download.html">Download</a>
-    <a href="copyright.html">License</a>
-    <a href="news.html">News</a>
-    <a href="support.html">Support</a>
-  </div>
+<img class="logo" src="images/sqlite370_banner.gif" alt="SQLite" border="0">
+</a>
+<div><!-- IE hack to prevent disappearing logo --></div>
+<div class="tagline desktoponly">
+Small. Fast. Reliable.<br>Choose any three.
+</div>
+<div class="menu mainmenu">
+<ul>
+<li><a href="index.html">Home</a>
+<li class='mobileonly'><a href="javascript:void(0)" onclick='toggle_div("submenu")'>Menu</a>
+<li class='wideonly'><a href='about.html'>About</a>
+<li class='desktoponly'><a href="docs.html">Documentation</a>
+<li class='desktoponly'><a href="download.html">Download</a>
+<li class='wideonly'><a href='copyright.html'>License</a>
+<li class='desktoponly'><a href="support.html">Support</a>
+<li class='desktoponly'><a href="prosupport.html">Purchase</a>
+<li class='search' id='search_menubutton'>
+<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+</ul>
+</div>
+<div class="menu submenu" id="submenu">
+<ul>
+<li><a href='about.html'>About</a>
+<li><a href='docs.html'>Documentation</a>
+<li><a href='download.html'>Download</a>
+<li><a href='support.html'>Support</a>
+<li><a href='prosupport.html'>Purchase</a>
+</ul>
+</div>
+<div class="searchmenu" id="searchmenu">
+<form method="GET" action="search">
+<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<input type="submit" value="Go">
+</form>
+</div>
+</div>
 <script>
-  gMsg = "Search SQLite Docs..."
-  function entersearch() {
-    var q = document.getElementById("q");
-    if( q.value == gMsg ) { q.value = "" }
-    q.style.color = "black"
-    q.style.fontStyle = "normal"
-  }
-  function leavesearch() {
-    var q = document.getElementById("q");
-    if( q.value == "" ) { 
-      q.value = gMsg
-      q.style.color = "#044a64"
-      q.style.fontStyle = "italic"
-    }
-  }
-  function hideorshow(btn,obj){
-    var x = document.getElementById(obj);
-    var b = document.getElementById(btn);
-    if( x.style.display!='none' ){
-      x.style.display = 'none';
-      b.innerHTML='show';
-    }else{
-      x.style.display = '';
-      b.innerHTML='hide';
-    }
-    return false;
-  }
+function toggle_div(nm) {
+var w = document.getElementById(nm);
+if( w.style.display=="block" ){
+w.style.display = "none";
+}else{
+w.style.display = "block";
+}
+}
+function div_off(nm){document.getElementById(nm).style.display="none";}
+window.onbeforeunload = function(e){div_off("submenu");}
+/* Disable the Search feature if we are not operating from CGI, since */
+/* Search is accomplished using CGI and will not work without it. */
+if( !location.origin.match || !location.origin.match(/http/) ){
+document.getElementById("search_menubutton").style.display = "none";
+}
+/* Used by the Hide/Show button beside syntax diagrams, to toggle the */
+function hideorshow(btn,obj){
+var x = document.getElementById(obj);
+var b = document.getElementById(btn);
+if( x.style.display!='none' ){
+x.style.display = 'none';
+b.innerHTML='show';
+}else{
+x.style.display = '';
+b.innerHTML='hide';
+}
+return false;
+}
 </script>
-<td>
-    <div style="padding:0 1em 0px 0;white-space:nowrap">
-    <form name=f method="GET" action="http://www.sqlite.org/search">
-      <input id=q name=q type=text
-       onfocus="entersearch()" onblur="leavesearch()" style="width:24ex;padding:1px 1ex; border:solid white 1px; font-size:0.9em ; font-style:italic;color:#044a64;" value="Search SQLite Docs...">
-      <input type=submit value="Go" style="border:solid white 1px;background-color:#044a64;color:white;font-size:0.9em;padding:0 1ex">
-    </form>
-    </div>
-  </table>
-
-<div class=startsearch></div>
-  
+</div>
 
 
 
 <h1 align=center>The Tcl interface to the SQLite library</h1>
 
 <p>The SQLite library is designed to be very easy to use from
-a <a href="http://www.tcl.tk">Tcl or Tcl/Tk</a> script.  SQLite
-began as a <a href="http://www.tcl.tk/doc/tea/">Tcl extension</a>
+a <a href="http://www.tcl-lang.org">Tcl or Tcl/Tk</a> script.  SQLite
+began as a <a href="http://www.tcl-lang.org/doc/tea/">Tcl extension</a>
 and the primary <a href="testing.html">test suite</a> for SQLite is written in TCL.  SQLite
 can be used with any programming language, but its connections to
 TCL run deep.</p>
@@ -204,7 +151,7 @@ If true, then open the database file read-only.  If false, then the
 database is opened for both reading and writing if filesystem permissions
 allow, or for reading only if filesystem write permission is denied
 by the operating system.  The default setting is "false".  Note that
-if the previous process to have the database did not exits cleanly
+if the previous process to have the database did not exit cleanly
 and left behind a <a href="lockingv3.html#hotjrnl">hot journal</a>, then the write permission is required
 to recover the database after opening, and the database cannot be
 opened read-only.
@@ -225,17 +172,58 @@ Use an alternative <a href="vfs.html">VFS</a> named by the argument.
 </dl>
 </blockquote>
 
+
+
 <p>
 Once an SQLite database is open, it can be controlled using 
-methods of the <i>dbcmd</i>.  There are currently 22 methods
+methods of the <i>dbcmd</i>.
+There are currently 33 methods
 defined.</p>
 
-<p>
-<ul>
 
-<li><a href="#authorizer">authorizer</a></li><li><a href="#backup">backup</a></li><li><a href="#busy">busy</a></li><li><a href="#cache">cache</a></li><li><a href="#changes">changes</a></li><li><a href="#close">close</a></li><li><a href="#collate">collate</a></li><li><a href="#collation_needed">collation_needed</a></li><li><a href="#commit_hook">commit_hook</a></li><li><a href="#complete">complete</a></li><li><a href="#copy">copy</a></li><li><a href="#enable_load_extension">enable_load_extension</a></li><li><a href="#errorcode">errorcode</a></li><li><a href="#eval">eval</a></li><li><a href="#exists">exists</a></li><li><a href="#function">function</a></li><li><a href="#incrblob">incrblob</a></li><li><a href="#last_insert_rowid">last_insert_rowid</a></li><li><a href="#nullvalue">nullvalue</a></li><li><a href="#onecolumn">onecolumn</a></li><li><a href="#profile">profile</a></li><li><a href="#progress">progress</a></li><li><a href="#restore">restore</a></li><li><a href="#rollback_hook">rollback_hook</a></li><li><a href="#status">status</a></li><li><a href="#timeout">timeout</a></li><li><a href="#total_changes">total_changes</a></li><li><a href="#trace">trace</a></li><li><a href="#transaction">transaction</a></li><li><a href="#unlock_notify">unlock_notify</a></li><li><a href="#update_hook">update_hook</a></li><li><a href="#version">version</a></li><li><a href="#wal_hook">wal_hook</a></li>
-</ul>
-</p>
+<table border=0 cellpadding=10 width='100%'>
+<tr><td valign='top'><ul>
+<li><a href="#authorizer">authorizer</a></li>
+<li><a href="#backup">backup</a></li>
+<li><a href="#busy">busy</a></li>
+<li><a href="#cache">cache</a></li>
+<li><a href="#changes">changes</a></li>
+<li><a href="#close">close</a></li>
+<li><a href="#collate">collate</a></li>
+<li><a href="#collation_needed">collation_needed</a></li>
+<li><a href="#commit_hook">commit_hook</a></li>
+<li><a href="#complete">complete</a></li>
+<li><a href="#copy">copy</a></li>
+</ul></td>
+<td valign='top'><ul>
+<li><a href="#enable_load_extension">enable_load_extension</a></li>
+<li><a href="#errorcode">errorcode</a></li>
+<li><a href="#eval">eval</a></li>
+<li><a href="#exists">exists</a></li>
+<li><a href="#function">function</a></li>
+<li><a href="#incrblob">incrblob</a></li>
+<li><a href="#last_insert_rowid">last_insert_rowid</a></li>
+<li><a href="#nullvalue">nullvalue</a></li>
+<li><a href="#onecolumn">onecolumn</a></li>
+<li><a href="#profile">profile</a></li>
+<li><a href="#progress">progress</a></li>
+</ul></td>
+<td valign='top'><ul>
+<li><a href="#restore">restore</a></li>
+<li><a href="#rollback_hook">rollback_hook</a></li>
+<li><a href="#status">status</a></li>
+<li><a href="#timeout">timeout</a></li>
+<li><a href="#total_changes">total_changes</a></li>
+<li><a href="#trace">trace</a></li>
+<li><a href="#transaction">transaction</a></li>
+<li><a href="#unlock_notify">unlock_notify</a></li>
+<li><a href="#update_hook">update_hook</a></li>
+<li><a href="#version">version</a></li>
+<li><a href="#wal_hook">wal_hook</a></li>
+
+</ul></td></tr>
+</table>
+
 
 <p>The use of each of these methods will be explained in the sequel, though
 not in the order shown above.</p>
@@ -250,7 +238,7 @@ like this:</p>
 
 <blockquote>
 <i>dbcmd</i>&nbsp;&nbsp;<b>eval</b>&nbsp;&nbsp;<i>sql</i>
-&nbsp;&nbsp;&nbsp;&nbsp;?<i>array-name&nbsp;</i>?&nbsp;?<i>script</i>?
+&nbsp;&nbsp;?<i>array-name</i>?&nbsp;&nbsp;?<i>script</i>?
 </blockquote>
 
 <p>
@@ -369,7 +357,7 @@ If the $bigstring variable has both a string and a "bytearray" representation,
 then TCL inserts the value as a string.  If it has only a "bytearray"
 representation, then the value is inserted as a BLOB.  To force a
 value to be inserted as a BLOB even if it also has a text representation,
-us a "@" character to in place of the "$".  Like this:
+use a "@" character to in place of the "$".  Like this:
 </p>
 
 <blockquote><b>
@@ -452,7 +440,7 @@ The syntax looks like this:
 
 <blockquote>
 <i>dbcmd</i>&nbsp;&nbsp;<b>transaction</b>&nbsp;&nbsp;<i>?transaction-type?</i>
-&nbsp;&nbsp;<i>SCRIPT,</i>
+&nbsp;&nbsp;<i>script</i>
 </blockquote>
 
 
@@ -517,7 +505,7 @@ The syntax of the copy method looks like this:</p>
 <blockquote>
 <i>dbcmd</i>&nbsp;&nbsp;<b>copy</b>&nbsp;&nbsp;<i>conflict-algorithm</i>
 &nbsp;&nbsp;<i>table-name&nbsp;</i>&nbsp;&nbsp;<i>file-name&nbsp;</i>
-&nbsp;&nbsp;&nbsp;&nbsp;?<i>column-separator&nbsp;</i>?
+&nbsp;&nbsp;&nbsp;&nbsp;?<i>column-separator</i>?
 &nbsp;&nbsp;?<i>null-indicator</i>?
 </blockquote>
 
@@ -544,17 +532,6 @@ precede the null-indicator argument.</p>
 
 <p>The copy method implements similar functionality to the <b>.import</b>
 SQLite shell command. 
-The SQLite 2.x <a href="lang.html#copy"><b>COPY</b></a> statement 
-(using the PostgreSQL COPY file format)
-can be implemented with this method as:</p>
-
-<blockquote>
-dbcmd&nbsp;&nbsp;copy&nbsp;&nbsp;$conflictalgo
-&nbsp;&nbsp;$tablename&nbsp;&nbsp;&nbsp;$filename&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;\t&nbsp;
-&nbsp;&nbsp;\\N
-</blockquote>
-
 <a name="timeout"></a>
 <h3>The "timeout" method</h3>
 
@@ -591,9 +568,11 @@ would be 2 seconds.</p>
 database is locked.  But the "busy" method gives the programmer much more
 control over what action to take.  The "busy" method specifies a callback
 Tcl procedure that is invoked whenever SQLite tries to open a locked
-database.  This callback can do whatever is desired.  Presumably, the
-callback will do some other useful work for a short while (such as service
-GUI events) then return
+database.  A single integer argument is appended to the callback before
+it is invoke.  The argument is the number of prior calls to the busy
+callback for the current locking event.  It is intended that
+the callback will do some other useful work for a short while 
+(such as service GUI events) then return
 so that the lock can be tried again.  The callback procedure should
 return "0" if it wants SQLite to try again to open the database and
 should return "1" if it wants SQLite to abandon the current operation.
@@ -656,6 +635,24 @@ its numeric argument in to a hexadecimal encoded string:
 db function hex {format 0x%X}
 </b></blockquote>
 
+<p>The "function" method accepts the following options:
+<blockquote>
+<dl>
+
+<dt><b>-argcount</b> <i>INTEGER</i></dt>
+<dd><p>
+Specify the number of arguments that the SQL function accepts.  The default
+value of -1 means any number of arguments.
+
+<dt><b>-deterministic</b>
+<dd><p>
+This option indicates that the function will always return the same
+answer given the same argument values.  The SQLite query optimizer
+uses this information to cache answers from function calls with 
+constant inputs and reuse the result rather than invoke the function
+repeatedly.
+</dl>
+</blockquote>
 <a name="nullvalue"></a>
 <h3>The "nullvalue" method</h3>
 
@@ -822,7 +819,7 @@ are occurring since the auto-checkpointing mechanism will be disabled.</p>
 into a preexisting BLOB in the database.  The syntax is like this:</p>
 
 <blockquote>
-<i>dbcmd</i>&nbsp;&nbsp;<b>incrblob</b>&nbsp;&nbsp;<b>?-readonly??</b>
+<i>dbcmd</i>&nbsp;&nbsp;<b>incrblob</b>&nbsp;&nbsp;<b>?-readonly?</b>
 &nbsp;&nbsp;<i>?DB?&nbsp;&nbsp;TABLE&nbsp;&nbsp;COLUMN&nbsp;&nbsp;ROWID</i>
 </blockquote>
 
@@ -872,7 +869,7 @@ it does, it must be a well-formed SQLite database.</p>
 <h3>The "restore" method</h3>
 
 
-<p>The "restore" method copies the content a separate database file 
+<p>The "restore" method copies the content from a separate database file 
 into the current database connection, overwriting any preexisting content.
 The command syntax is like this:</p>
 
@@ -902,7 +899,7 @@ database file from which the content is extracted.</p>
 </p>
 
 <blockquote>
-<i>dbcmd</i>&nbsp;&nbsp;<b>profile</b>&nbsp;&nbsp;?<i>script</i>
+<i>dbcmd</i>&nbsp;&nbsp;<b>profile</b>&nbsp;&nbsp;?<i>script</i>?
 </blockquote>
 
 <p>Unless <i>script</i> is an empty string, this method arranges for the
