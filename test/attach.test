@@ -193,7 +193,7 @@ do_test attach-1.20.2 {
 } ;# ifcapable schema_pragmas
 integrity_check attach-1.20.3
 ifcapable tempdb {
-  execsql {select * from sqlite_temp_master}
+  execsql {select * from temp.sqlite_master}
 }
 do_test attach-1.21 {
   catchsql {
@@ -858,5 +858,17 @@ do_test attach-10.2 {
     PRAGMA database_list;
   }] 9 end
 } {4 noname {} 5 inmem {}}
+
+# Attach with a very long URI filename.
+#
+db close
+sqlite3 db test.db -uri 1
+do_execsql_test attach-11.1 {
+  ATTACH printf('file:%09000x/x.db?mode=memory&cache=shared',1) AS aux1;
+  CREATE TABLE aux1.t1(x,y);
+  INSERT INTO aux1.t1(x,y) VALUES(1,2),(3,4);
+  SELECT * FROM aux1.t1;
+} {1 2 3 4}
+
 
 finish_test

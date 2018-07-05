@@ -12,8 +12,8 @@
 **
 ** This file contains code that is specific to Windows.
 */
-#ifndef _OS_WIN_H_
-#define _OS_WIN_H_
+#ifndef SQLITE_OS_WIN_H
+#define SQLITE_OS_WIN_H
 
 /*
 ** Include the primary Windows SDK header file.
@@ -74,4 +74,15 @@
 # define SQLITE_WIN32_VOLATILE volatile
 #endif
 
-#endif /* _OS_WIN_H_ */
+/*
+** For some Windows sub-platforms, the _beginthreadex() / _endthreadex()
+** functions are not available (e.g. those not using MSVC, Cygwin, etc).
+*/
+#if SQLITE_OS_WIN && !SQLITE_OS_WINCE && !SQLITE_OS_WINRT && \
+    SQLITE_THREADSAFE>0 && !defined(__CYGWIN__)
+# define SQLITE_OS_WIN_THREADS 1
+#else
+# define SQLITE_OS_WIN_THREADS 0
+#endif
+
+#endif /* SQLITE_OS_WIN_H */

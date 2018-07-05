@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include "sqlite3.h"
 
+#define ISPRINT(X)  isprint((unsigned char)(X))
+
 typedef sqlite3_int64 i64;   /* 64-bit signed integer type */
 
 
@@ -39,6 +41,7 @@ int main(int argc, char **argv){
   int nSample;
   i64 iVal;
   const char *zSep;
+  int iRow = 0;
 
   if( argc!=2 ){
     fprintf(stderr, "Usage: %s DATABASE-FILE\n", argv[0]);
@@ -60,13 +63,13 @@ int main(int argc, char **argv){
   }
   while( SQLITE_ROW==sqlite3_step(pStmt) ){
     if( zIdx==0 || strcmp(zIdx, (const char*)sqlite3_column_text(pStmt,0))!=0 ){
-      if( zIdx ) printf("\n");
+      if( zIdx ) printf("\n**************************************"
+                        "**************\n\n");
       sqlite3_free(zIdx);
       zIdx = sqlite3_mprintf("%s", sqlite3_column_text(pStmt,0));
-      printf("%s:\n", zIdx);
-    }else{
-      printf("  -----------------------------------------------------------\n");
+      iRow = 0;
     }
+    printf("%s sample %d ------------------------------------\n", zIdx, ++iRow);
     printf("  nEq    = %s\n", sqlite3_column_text(pStmt,1));
     printf("  nLt    = %s\n", sqlite3_column_text(pStmt,2));
     printf("  nDLt   = %s\n", sqlite3_column_text(pStmt,3));
@@ -127,11 +130,11 @@ int main(int argc, char **argv){
         }
         printf("'");
       }else{
-        printf("%s\"", zSep);
+        printf("%s'", zSep);
         for(j=0; j<sz; j++){
           char c = (char)aSample[y+j];
-          if( isprint(c) ){
-            if( c=='"' || c=='\\' ) putchar('\\');
+          if( ISPRINT(c) ){
+            if( c=='\'' || c=='\\' ) putchar('\\');
             putchar(c);
           }else if( c=='\n' ){
             printf("\\n");
@@ -143,7 +146,7 @@ int main(int argc, char **argv){
             printf("\\%03o", c);
           }
         }
-        printf("\"");
+        printf("'");
       }
       zSep = ",";
       y += sz;
