@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Create An Iterator To Traverse A Changeset </title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -80,20 +96,26 @@ return false;
   int nChangeset,                 /* Size of changeset blob in bytes */
   void *pChangeset                /* Pointer to blob containing changeset */
 );
+int sqlite3changeset_start_v2(
+  sqlite3_changeset_iter **pp,    /* OUT: New changeset iterator handle */
+  int nChangeset,                 /* Size of changeset blob in bytes */
+  void *pChangeset,               /* Pointer to blob containing changeset */
+  int flags                       /* SESSION_CHANGESETSTART_* flags */
+);
 </pre></blockquote><p>
 Create an iterator used to iterate through the contents of a changeset.
 If successful, *pp is set to point to the iterator handle and SQLITE_OK
 is returned. Otherwise, if an error occurs, *pp is set to zero and an
 SQLite error code is returned.</p>
 
-<p>The following functions can be used to advance and query a changeset
+<p>The following functions can be used to advance and query a changeset 
 iterator created by this function:</p>
 
 <p><ul>
-<li> <a href="../session/sqlite3changeset_next.html">sqlite3changeset_next()</a>
-<li> <a href="../session/sqlite3changeset_op.html">sqlite3changeset_op()</a>
-<li> <a href="../session/sqlite3changeset_new.html">sqlite3changeset_new()</a>
-<li> <a href="../session/sqlite3changeset_old.html">sqlite3changeset_old()</a>
+  <li> <a href="../session/sqlite3changeset_next.html">sqlite3changeset_next()</a>
+  <li> <a href="../session/sqlite3changeset_op.html">sqlite3changeset_op()</a>
+  <li> <a href="../session/sqlite3changeset_new.html">sqlite3changeset_new()</a>
+  <li> <a href="../session/sqlite3changeset_old.html">sqlite3changeset_old()</a>
 </ul></p>
 
 <p>It is the responsibility of the caller to eventually destroy the iterator
@@ -103,13 +125,20 @@ destroyed.</p>
 
 <p>Assuming the changeset blob was created by one of the
 <a href="../session/sqlite3session_changeset.html">sqlite3session_changeset()</a>, <a href="../session/sqlite3changeset_concat.html">sqlite3changeset_concat()</a> or
-<a href="../session/sqlite3changeset_invert.html">sqlite3changeset_invert()</a> functions, all changes within the changeset
-that apply to a single table are grouped together. This means that when
-an application iterates through a changeset using an iterator created by
-this function, all changes that relate to a single table are visited
-consecutively. There is no chance that the iterator will visit a change
-the applies to table X, then one for table Y, and then later on visit
-another change for table X.
+<a href="../session/sqlite3changeset_invert.html">sqlite3changeset_invert()</a> functions, all changes within the changeset 
+that apply to a single table are grouped together. This means that when 
+an application iterates through a changeset using an iterator created by 
+this function, all changes that relate to a single table are visited 
+consecutively. There is no chance that the iterator will visit a change 
+the applies to table X, then one for table Y, and then later on visit 
+another change for table X.</p>
+
+<p>The behavior of sqlite3changeset_start_v2() and its streaming equivalent
+may be modified by passing a combination of
+<a href="../session/c_changesetstart_invert.html">supported flags</a> as the 4th parameter.</p>
+
+<p>Note that the sqlite3changeset_start_v2() API is still <b>experimental</b>
+and therefore subject to change.
 </p><p>See also lists of
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and

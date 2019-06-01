@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Recent SQLite News</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -79,13 +95,205 @@ return false;
 
 <h2>Recent News</h2>
 
-<a name="2017_01_06"></a><h3>2017-01-06 - Release 3.16.2</h3><blockquote>
+<a name="2019_02_08"></a><h3>2019-02-08 - Release 3.27.1</h3><blockquote>
+After release 3.27.0 was tagged, but before the build could
+be completed and uploaded, a 
+<a href="https://www.sqlite.org/src/info/4e8e4857d32d401f">long-standing bug</a>
+in the query optimizer was reported via System.Data.SQLite.
+Since people will be upgrading anyhow, we decided 
+publish the fix for this newly discovered problems right
+away.  Hence, 3.27.1 was released less than 24 hours after
+3.27.0.
+<p>
+It would have been better if the query optimizer bug had come to
+our attention one day earlier, so that we could have incorporated
+a fix into 3.27.0, but sometimes that's the way things go.
+</blockquote><hr width="50%"><a name="2019_02_07"></a><h3>2019-02-07 - Release 3.27.0</h3><blockquote>
+SQLite <a href="releaselog/3_27_0.html">version 3.27.0</a> is a routine maintenance release with various
+performance and feature enhancements.  See the
+<a href="releaselog/3_27_0.html">release notes</a> for details.
+</blockquote><hr width="50%"><a name="2018_12_01"></a><h3>2018-12-01 - Release 3.26.0</h3><blockquote>
+SQLite <a href="releaselog/3_26_0.html">version 3.26.0</a> is a routine maintenance release with various
+performance and feature enhancements.  See the
+<a href="releaselog/3_26_0.html">release notes</a> for details.
+</blockquote><hr width="50%"><a name="2018_11_05"></a><h3>2018-11-05 - Release 3.25.3</h3><blockquote>
+SQLite <a href="releaselog/3_25_3.html">version 3.25.3</a> is a third patch against 3.25.0 that fixes various
+problems that have come to light and which seem serious enough to 
+justify a patch.
+</blockquote><hr width="50%"><a name="2018_09_25"></a><h3>2018-09-25 - Release 3.25.2</h3><blockquote>
+SQLite <a href="releaselog/3_25_2.html">version 3.25.2</a> is another patch against 3.25.0 that fixes still
+more problems associated with the new <a href="windowfunctions.html">window function</a> feature and the
+<a href="lang_altertable.html">ALTER TABLE</a> enhancements.  Of particular note is the new
+<a href="pragma.html#pragma_legacy_alter_table">PRAGMA legacy_alter_table=ON</a> command, which causes the ALTER TABLE RENAME
+command to behave in the same goofy way that it did before the enhancements
+found in version 3.25.0 &rarr; references to renamed tables that are inside
+the bodies of triggers and views are not updated.  The legacy behavior is
+arguably a bug, but some programs depend on the older buggy behavior.  The
+3.25.2 release also contains a fix to <a href="windowfunctions.html">window function</a> processing for
+VIEWs.  There also a slew of other minor fixes that affect obscure
+compile-time options.  See the
+<a href="https://sqlite.org/src/timeline?r=branch-3.25">Fossil Timeline</a> for
+details.
+</blockquote><hr width="50%"><a name="2018_09_18"></a><h3>2018-09-18 - Release 3.25.1</h3><blockquote>
+SQLite <a href="releaselog/3_25_1.html">version 3.25.1</a> is a patch against version 3.25.0 that contains
+two one-line fixes for bug that were introduced in version 3.25.0.
+See the change log for details.  Upgrading from 3.25.0 is recommended.
+</blockquote><hr width="50%"><a name="2018_09_15"></a><h3>2018-09-15 - Release 3.25.0</h3><blockquote>
+SQLite <a href="releaselog/3_25_0.html">version 3.25.0</a> is a regularly scheduled maintenance release.
+Two big enhancements in this release:
+<ol>
+<li><p>
+Support for <a href="windowfunctions.html">window functions</a> was added, using the PostgreSQL documentation
+as the baseline.
+<li><p>
+The <a href="lang_altertable.html">ALTER TABLE</a> command was enhanced to support renaming of columns, and
+so that column and table renames are propagated into trigger bodies and views.
+</ol>
+<p>In addition, there are various performance enhancements and minor fixes.
+<p>One bug of note is 
+<a href="https://www.sqlite.org/src/info/9936b2fa443fec03ff25">ticket 9936b2fa443fec</a>
+which describes a hard-to-reach condition where the ORDER BY LIMIT
+optimization might cause an infinite loop during query evaluation.  
+This ticket raised a lot of
+concern on 
+<a href="https://news.ycombinator.com/item?id=17964243">HackerNews</a> and
+<a href="https://www.reddit.com/r/programming/comments/9ezy8c/serious_bug_causing_infinite_loop_in_some_queries/">Reddit</a>,
+probably due to my choice of the ticket
+title.  "Infinite Loop" sounds scary.  But I argue that the bug isn't really
+all that bad in that it is very difficult to reach, will show up during
+testing (rather than magically appearing after a product is
+deployed), does not cause any data loss, and does not return an
+incorrect result.  It was an important error, but not nearly as dire
+as many people interpreted it to be.  And, in any event, it is fixed now.
+</blockquote><hr width="50%"><a name="2018_06_04"></a><h3>2018-06-04 - Release 3.24.0</h3><blockquote>
+SQLite <a href="releaselog/3_24_0.html">version 3.24.0</a> is a regularly scheduled maintenance release.
+Highlights of this release include support for PostgreSQL-style
+UPSERT and improved performance, especially for ORDER BY LIMIT queries.
+</blockquote><hr width="50%"><a name="2018_04_10"></a><h3>2018-04-10 - Release 3.23.1</h3><blockquote>
+The <a href="releaselog/3_23_1.html">version 3.23.1</a> release fixes a bug in the new
+<a href="optoverview.html#leftjoinreduction">LEFT JOIN strength reduction optimization</a> added to version 3.23.0.
+A few other minor and obscure fixes were also inserted, as well as
+a small performance optimization.  Code changes relative to
+version 3.23.0 are minimal.
+</blockquote><hr width="50%"><a name="2018_04_02"></a><h3>2018-04-02 - Release 3.23.0</h3><blockquote>
+The <a href="releaselog/3_23_0.html">version 3.23.0</a> release is a regularly scheduled maintenance release.
+See the <a href="releaselog/3_23_0.html">change log</a> for a list of enhancements and bug
+fixes.
+</blockquote><hr width="50%"><a name="2018_01_22"></a><h3>2018-01-22 - Release 3.22.0</h3><blockquote>
+The <a href="releaselog/3_22_0.html">version 3.22.0</a> release is a regularly scheduled maintenance release.
+There are many minor, though interesting, enhancements in this release.
+See the <a href="releaselog/3_22_0.html">change log</a> for details.
+</blockquote><hr width="50%"><a name="2017_10_24"></a><h3>2017-10-24 - Release 3.21.0</h3><blockquote>
+The <a href="releaselog/3_21_0.html">version 3.21.0</a> release is a regularly scheduled maintenance release.
+There are lots of enhancements in this release.
+See the <a href="releaselog/3_21_0.html">change log</a> for details.
+</blockquote><hr width="50%"><a name="2017_08_24"></a><h3>2017-08-24 - Release 3.20.1</h3><blockquote>
+The <a href="releaselog/3_20_1.html">version 3.20.1</a> patch release changes two lines of code in
+the <a href="c3ref/result_blob.html">sqlite3_result_pointer()</a> interface in order to fix a rare
+memory leak.  There are no other changes relative to <a href="releaselog/3_20_0.html">version 3.20.0</a>.
+</blockquote><hr width="50%"><a name="2017_08_01"></a><h3>2017-08-01 - Release 3.20.0</h3><blockquote>
+SQLite <a href="releaselog/3_20_0.html">version 3.20.0</a> is a regularly scheduled maintenance release
+of SQLite.
+<p>
+This release contains many minor enhancements, including:
+<ul>
+<li> Several new extensions
+<li> Enhancements to the "sqlite3.exe" command-line shell
+<li> Query planner enhancements
+<li> Miscellaneous code optimizations for improved performance
+<li> Fixes for some obscure bugs
+</ul>
+<p>
+See the <a href="releaselog/3_20_0.html">release notes</a> for more information.
+</blockquote><hr width="50%"><a name="2017_06_17"></a><h3>2017-06-17 - Release 3.18.2</h3><blockquote>
+SQLite <a href="releaselog/3_18_2.html">version 3.18.2</a> is another backport of a bug fix found
+in SQLite <a href="releaselog/3_19_0.html">version 3.19.0</a>, specifically the fix for
+ticket <a href="https://sqlite.org/src/info/61fe9745">61fe9745</a>.  Changes
+against <a href="releaselog/3_18_0.html">version 3.18.0</a> are minimal.
+</blockquote><hr width="50%"><a name="2017_06_16"></a><h3>2017-06-16 - Release 3.18.1</h3><blockquote>
+SQLite <a href="releaselog/3_18_1.html">version 3.18.1</a> is a bug-fix release against <a href="releaselog/3_18_0.html">version 3.18.0</a>
+that fixes the <a href="pragma.html#pragma_auto_vacuum">auto_vacuum</a> corruption bug described in ticket
+<a href="https://sqlite.org/src/info/fda22108">fda22108</a>.  This release was
+created for users who need that bug fix but do not yet want to upgrade 
+to <a href="releaselog/3_19_3.html">version 3.19.3</a>.  
+</blockquote><hr width="50%"><a name="2017_06_08"></a><h3>2017-06-08 - Release 3.19.3</h3><blockquote>
+<a href="releaselog/3_19_3.html">Version 3.19.3</a> is an emergency patch release to fix a 
+<a href="https://sqlite.org/src/info/fda22108">bug</a> in 
+<a href="pragma.html#pragma_auto_vacuum">auto_vacuum</a> logic that can lead to database corruption.
+The bug was introduced in <a href="releaselog/3_16_0.html">version 3.16.0</a> 
+(2017-01-02).  Though the bug is obscure and rarely
+encountered, upgrading is recommended for all users, and
+especially for users who turn on <a href="pragma.html#pragma_auto_vacuum">auto_vacuum</a>.
+</blockquote><hr width="50%"><a name="2017_05_25"></a><h3>2017-05-25 - Release 3.19.2</h3><blockquote>
+Still more problems have been found in the LEFT JOIN
+<a href="https://sqlite.org/optoverview.html#flattening">flattening</a> optimization
+that was added in the 3.19.0 release.  This patch release fixes all known
+issues with that optimization and adds new test cases.  Hopefully this
+will be the last patch.
+</blockquote><hr width="50%"><a name="2017_05_24"></a><h3>2017-05-24 - Release 3.19.1</h3><blockquote>
+One of the new query planner optimizations in the 3.19.0 release contained
+bugs.  The 3.19.1 patch release fixes them.
+<p>
+Beginning with 3.19.0, subqueries and views on the right-hand side of
+a LEFT JOIN operator could sometimes be
+<a href="https://sqlite.org/optoverview.html#flattening">flattened</a> into the
+main query.  The new optimization worked well for all of the test cases
+that the developers devised, and for millions of legacy test cases, but
+once 3.19.0 was released, users found some other cases where the optimization
+failed.  Ticket
+<a href="https://sqlite.org/src/info/cad1ab4cb7b0fc344">cad1ab4cb7b0fc344</a> contains
+examples.
+<p>
+These problems exist only in 3.19.0.  Users of SQLite 3.19.0 should
+upgrade, but users of all prior versions of SQLite are safe.
+</blockquote><hr width="50%"><a name="2017_05_22"></a><h3>2017-05-22 - Release 3.19.0</h3><blockquote>
+SQLite <a href="releaselog/3_19_0.html">version 3.19.0</a> is a regularly scheduled maintenance release.
+<p>
+The emphasis on this release is improvements to the query planner.
+There are also some obscure bug fixes.  There is no reason to upgrade
+unless you are having problems with a prior release.
+</blockquote><hr width="50%"><a name="2017_03_30"></a><h3>2017-03-30 - Release 3.18.0</h3><blockquote>
+SQLite <a href="releaselog/3_18_0.html">version 3.18.0</a> is a regularly scheduled maintenance release.
+<p>
+This release features an initial implementation the 
+"<a href="pragma.html#pragma_optimize">PRAGMA optimize</a>" command.  This command can now be used to cause
+<a href="lang_analyze.html">ANALYZE</a> to be run on an as-needed basis.  Applications should invoke
+"PRAGMA optimize" just before closing the <a href="c3ref/sqlite3.html">database connection</a>.
+The "PRAGMA optimize" statement will likely be enhanced to do other
+kinds of automated database maintenance in future releases.
+<p>
+The <a href="https://www.fossil-scm.org/">Fossil</a> version control system that is
+used to manage the SQLite project has been upgraded to use SHA3-256 hashes
+instead of SHA1.  Therefore, the version identifications for SQLite now
+show a 64-hex-digit SHA3-256 hash rather than the 40-hex-digit SHA1 hash.
+<p>
+See the <a href="releaselog/3_18_0.html">change log</a> for other enhancements and optimizations
+in this release.
+</blockquote><hr width="50%"><a name="2017_02_13"></a><h3>2017-02-13 - Release 3.17.0</h3><blockquote>
+SQLite <a href="releaselog/3_17_0.html">version 3.17.0</a> is a regularly scheduled maintenance release.
+<p>
+Most of the changes in this release are performance optimizations.
+Optimizations to the <a href="rtree.html">R-Tree extension</a> are especially noticeable.
+<p>
+In this release, the default size of the 
+<a href="malloc.html#lookaside">lookaside buffer</a> allocated for each database connection
+is increased from 64,000 to 120,000 bytes.  This provides improved
+performance on many common workloads in exchange for a small increase
+in memory usage.
+Applications that value a small memory footprint over raw speed
+can change the lookaside buffer size back to its old value (or to zero)
+using the <a href="compile.html#default_lookaside">SQLITE_DEFAULT_LOOKASIDE</a> compile-time option, or the
+<a href="c3ref/c_config_covering_index_scan.html#sqliteconfiglookaside">sqlite3_config(SQLITE_CONFIG_LOOKASIDE)</a>
+start-time setting, or the
+<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfiglookaside">sqlite3_db_config(SQLITE_DBCONFIG_LOOKASIDE)</a>
+run-time setting.
+</blockquote><hr width="50%"><a name="2017_01_06"></a><h3>2017-01-06 - Release 3.16.2</h3><blockquote>
 One of the performance optimizations added in 3.16.0 caused triggers
 and foreign keys to malfunction for the <a href="lang_replace.html">REPLACE</a> statement on
 <a href="withoutrowid.html">WITHOUT ROWID</a> tables that lack secondary indexes.  This patch
 release fixes the problem.  See ticket 
 <a href="https://www.sqlite.org/src/info/30027b613b4">30027b613b4</a> for details.
-</blockquote><hr width="50%"><a name="2016_01_03"></a><h3>2016-01-03 - Release 3.16.1</h3><blockquote>
+</blockquote><hr width="50%"><a name="2017_01_03"></a><h3>2017-01-03 - Release 3.16.1</h3><blockquote>
 SQLite <a href="releaselog/3_16_1.html">version 3.16.1</a> fixes a bug in the row-value logic for UPDATE
 statements inside of triggers.  The bug has been there since row-values
 were added by release 3.15.0, but was not discovered until just a few

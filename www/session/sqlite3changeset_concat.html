@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Concatenate Two Changeset Objects</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -84,24 +100,26 @@ return false;
   void **ppOut                    /* OUT: Buffer containing output changeset */
 );
 </pre></blockquote><p>
-This function is used to concatenate two changesets, A and B, into a
+This function is used to concatenate two changesets, A and B, into a 
 single changeset. The result is a changeset equivalent to applying
-changeset A followed by changeset B.</p>
+changeset A followed by changeset B. </p>
 
-<p>This function combines the two input changesets using an
+<p>This function combines the two input changesets using an 
 sqlite3_changegroup object. Calling it produces similar results as the
 following code fragment:</p>
 
-<p>sqlite3_changegroup *pGrp;
-rc = sqlite3_changegroup_new(&pGrp);
-if( rc==SQLITE_OK ) rc = sqlite3changegroup_add(pGrp, nA, pA);
-if( rc==SQLITE_OK ) rc = sqlite3changegroup_add(pGrp, nB, pB);
-if( rc==SQLITE_OK ){
-rc = sqlite3changegroup_output(pGrp, pnOut, ppOut);
-}else{
-*ppOut = 0;
-*pnOut = 0;
-}</p>
+<p><pre>
+  sqlite3_changegroup *pGrp;
+  rc = sqlite3_changegroup_new(&pGrp);
+  if( rc==SQLITE_OK ) rc = sqlite3changegroup_add(pGrp, nA, pA);
+  if( rc==SQLITE_OK ) rc = sqlite3changegroup_add(pGrp, nB, pB);
+  if( rc==SQLITE_OK ){
+    rc = sqlite3changegroup_output(pGrp, pnOut, ppOut);
+  }else{
+    *ppOut = 0;
+    *pnOut = 0;
+  }
+</pre></p>
 
 <p>Refer to the sqlite3_changegroup documentation below for details.
 </p><p>See also lists of

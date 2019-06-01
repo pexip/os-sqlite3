@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>No Title</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -698,7 +714,7 @@ cache</i> entries shall be discarded.
     entry can be found and the database page data is loaded from the database
     file, it is cached in the <i>page cache</i> in case the same data is 
     needed again later. Because reading from the database file is assumed to
-    be an order of magnitude faster than reading from main-memory, caching
+    be an order of magnitude slower than reading from main-memory, caching
     database page content in the <i>page cache</i> to minimize the number
     of read operations performed on the database file is a significant
     performance enhancement.

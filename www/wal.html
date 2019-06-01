@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Write-Ahead Logging</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -94,12 +110,13 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#automatic_checkpoint">3.1. Automatic Checkpoint</a></div>
 <div class="fancy-toc2"><a href="#application_initiated_checkpoints">3.2. Application-Initiated Checkpoints</a></div>
 <div class="fancy-toc2"><a href="#persistence_of_wal_mode">3.3. Persistence of WAL mode</a></div>
-<div class="fancy-toc1"><a href="#read_only_databases">4. Read-Only Databases</a></div>
-<div class="fancy-toc1"><a href="#avoiding_excessively_large_wal_files">5. Avoiding Excessively Large WAL Files</a></div>
-<div class="fancy-toc1"><a href="#implementation_of_shared_memory_for_the_wal_index">6. Implementation Of Shared-Memory For The WAL-Index</a></div>
-<div class="fancy-toc1"><a href="#use_of_wal_without_shared_memory">7. Use of WAL Without Shared-Memory</a></div>
-<div class="fancy-toc1"><a href="#sometimes_queries_return_sqlite_busy_in_wal_mode">8. Sometimes Queries Return SQLITE_BUSY In WAL Mode</a></div>
-<div class="fancy-toc1"><a href="#backwards_compatibility">9. Backwards Compatibility</a></div>
+<div class="fancy-toc1"><a href="#the_wal_file">4. The WAL File</a></div>
+<div class="fancy-toc1"><a href="#read_only_databases">5. Read-Only Databases</a></div>
+<div class="fancy-toc1"><a href="#avoiding_excessively_large_wal_files">6. Avoiding Excessively Large WAL Files</a></div>
+<div class="fancy-toc1"><a href="#implementation_of_shared_memory_for_the_wal_index">7. Implementation Of Shared-Memory For The WAL-Index</a></div>
+<div class="fancy-toc1"><a href="#use_of_wal_without_shared_memory">8. Use of WAL Without Shared-Memory</a></div>
+<div class="fancy-toc1"><a href="#sometimes_queries_return_sqlite_busy_in_wal_mode">9. Sometimes Queries Return SQLITE_BUSY In WAL Mode</a></div>
+<div class="fancy-toc1"><a href="#backwards_compatibility">10. Backwards Compatibility</a></div>
 </div>
 </div>
 <script>
@@ -161,11 +178,16 @@ a rollback journal.  Advantages include:</p>
     mode, either on an empty database or by using <a href="lang_vacuum.html">VACUUM</a> or by restoring
     from a backup using the <a href="backup.html">backup API</a>.  You must be in a rollback journal
     mode to change the page size.
-</li><li>It is not possible to open <a href="wal.html#readonly">read-only WAL databases</a>.
+</li><li><s>It is not possible to open <a href="wal.html#readonly">read-only WAL databases</a>.
     The opening process must have write privileges for "<tt>-shm</tt>"
-    <a href="fileformat2.html#walindexformat">wal-index</a> shared memory file associated with the database, if that
+    <a href="walformat.html">wal-index</a> shared memory file associated with the database, if that
     file exists, or else write access on the directory containing
-    the database file if the "<tt>-shm</tt>" file does not exist.
+    the database file if the "<tt>-shm</tt>" file does not exist.</s>
+    Beginning with <a href="releaselog/3_22_0.html">version 3.22.0</a> (2018-01-22), a read-only 
+    WAL-mode database file can be opened if
+    the <tt>-shm</tt> and <tt>-wal</tt> files
+    already exists or those files can be created or the
+    <a href="uri.html#uriimmutable">database is immutable</a>.
 </li><li>WAL might be very slightly slower (perhaps 1% or 2% slower)
     than the traditional rollback-journal approach
     in applications that do mostly reads and seldom write.
@@ -278,7 +300,7 @@ it got and will resume transferring content from the WAL to the database
 from where it left off on the next invocation.</p>
 
 <p>Thus a long-running read transaction can prevent a checkpointer from
-making progress.  But presumably every read transactions will eventually
+making progress.  But presumably every read transaction will eventually
 end and the checkpointer will be able to continue.</p>
 
 <p>Whenever a write operation occurs, the writer checks how much progress
@@ -436,57 +458,63 @@ restart the application.</p>
 connections to the same database file if it is set on any one connection.
 </p>
 
+<a name="walfile"></a>
+
+<h1 id="the_wal_file"><span>4. </span>The WAL File</h1>
+
+<p>While a <a href="c3ref/sqlite3.html">database connection</a> is open on a WAL-mode database, SQLite
+maintains an extra journal file called a "Write Ahead Log" or "WAL File".
+The name of this file on disk is usually the name of the database file
+with an extra "<tt>-wal</tt>" suffix, though different naming rules may
+apply if SQLite is compiled with <a href="compile.html#enable_8_3_names">SQLITE_ENABLE_8_3_NAMES</a>.
+
+</p><p>The WAL file exists for as long as any <a href="c3ref/sqlite3.html">database connection</a> has the
+database open.  Usually, the WAL file is deleted automatically when the
+last connection to the database closes.  However, if the last process to
+have the database open exits without cleanly
+shutting down the database connection, or if the 
+<a href="c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlpersistwal">SQLITE_FCNTL_PERSIST_WAL</a> <a href="c3ref/file_control.html">file control</a> is used, then the WAL file
+might be retained on disk after all connections to the database have
+been closed.  The WAL file is part of the persistent state of the
+database and should be kept with the database if the database is copied
+or moved.  If a database file is separated from its WAL file, then
+transactions that were previously committed to the database might be lost,
+or the database file might become corrupted.
+The only safe way to remove a WAL file is
+to open the database file using one of the <a href="c3ref/open.html">sqlite3_open()</a> interfaces
+then immediately close the database using <a href="c3ref/close.html">sqlite3_close()</a>.
+
+</p><p>The <a href="fileformat2.html#walformat">WAL file format</a> is precisely defined and is cross-platform.
+
 <a name="readonly"></a>
 
-<h1 id="read_only_databases"><span>4. </span>Read-Only Databases</h1>
+</p><h1 id="read_only_databases"><span>5. </span>Read-Only Databases</h1>
 
-<p>No SQLite database (regardless of whether or not it is WAL mode) is
-readable if it is located on read-only media and it requires recovery.
-So, for example, if an application crashes and leaves an SQLite database
-with a <a href="lockingv3.html#hotjrnl">hot journal</a>, that database cannot be opened unless the opening
-process has write privilege on the database file, the directory
-containing the database file, and the hot journal.  This is because the 
-incomplete transaction left over from the crash must be rolled back prior 
-to reading the database and that rollback cannot occur without write 
-permission on all files and the directory containing them.</p>
+<p>Older versions of SQLite could not read a WAL-mode database that was
+read-only.  In other words, write access was required in order to read a
+WAL-mode database.  This constraint was relaxed beginning with
+SQLite <a href="releaselog/3_22_0.html">version 3.22.0</a> (2018-01-22).
 
-<p>A database in WAL mode cannot generally be opened from read-only 
-media because even ordinary reads in WAL mode require recovery-like
-operations.</p>
+</p><p>On newer versions of SQLite,
+a WAL-mode database on read-only media, or a WAL-mode database that lacks
+write permission, can still be read as long as one or more of the following
+conditions are met:
+</p><ol>
+<li>The <tt>-shm</tt> and <tt>-wal</tt> files already exists and are readable
+</li><li>There is write permission on the directory containing the database so
+    that the <tt>-shm</tt> and <tt>-wal</tt> files can be created.
+</li><li>The database connection is opened using the
+    <a href="uri.html#uriimmutable">immutable query parameter</a>.
+</li></ol>
 
-<p>An efficient implementation of the <a href="fileformat2.html#walread">WAL read algorithm</a> requires that
-there exist a hash table in shared memory over the content of the WAL file.
-This hash table is called the <a href="fileformat2.html#walindexformat">wal-index</a>.
-The wal-index is in shared memory, and so technically it does not have 
-to have a name in the host computer filesystem.  Custom
-<a href="vfs.html">VFS</a> implementations are free to implement shared 
-memory in any way they see fit, but the default unix and windows 
-drivers that come built-in with SQLite implement shared memory
-using <a href="http://en.wikipedia.org/wiki/Mmap">mmapped files</a>
-named using the suffix "<tt>-shm</tt>" and
-located in the same directory as the database file.  The wal-index must
-be rebuilt upon first access, even by readers, and so in order to open
-the WAL database, write access is required on the "<tt>-shm</tt>" shared
-memory file if the file exists, or else write access is required on the
-directory containing the database so that the wal-index can be created if
-it does not already exist.
-This does not preclude custom VFS implementations that implement shared 
-memory differently from being able to access read-only WAL databases, but
-it does prevent the default unix and windows backends from accessing
-WAL databases on read-only media.</p>
-
-<p>Hence, SQLite databases should always be converted to 
-<a href="pragma.html#pragma_journal_mode">PRAGMA journal_mode=DELETE</a> prior to being transferred
-to read-only media.</p>
-
-<p>Also, if multiple processes are to access a WAL mode database, then
-all processes should run under user or group IDs that give them write
-access to the database files, the WAL file, the shared memory 
-<tt>-shm</tt> file, and the containing directory.</p>
+<p>Even though it is possible to open a read-only WAL-mode database,
+it is good practice to converted to 
+<a href="pragma.html#pragma_journal_mode">PRAGMA journal_mode=DELETE</a> prior to burning an
+SQLite database image onto read-only media.</p>
 
 <a name="bigwal"></a>
 
-<h1 id="avoiding_excessively_large_wal_files"><span>5. </span>Avoiding Excessively Large WAL Files</h1>
+<h1 id="avoiding_excessively_large_wal_files"><span>6. </span>Avoiding Excessively Large WAL Files</h1>
 
 <p>In normal cases, new content is appended to the WAL file until the
 WAL file accumulates about 1000 pages (and is thus about 4MB 
@@ -561,9 +589,9 @@ written into the WAL file multiple times if the transaction grows larger
 than the page cache.
 </p></li></ul>
 
-<h1 id="implementation_of_shared_memory_for_the_wal_index"><span>6. </span>Implementation Of Shared-Memory For The WAL-Index</h1>
+<h1 id="implementation_of_shared_memory_for_the_wal_index"><span>7. </span>Implementation Of Shared-Memory For The WAL-Index</h1>
 
-<p>The <a href="fileformat2.html#walindexformat">wal-index</a> is implemented using an ordinary file that is
+<p>The <a href="walformat.html">wal-index</a> is implemented using an ordinary file that is
 mmapped for robustness.  Early (pre-release) implementations of WAL mode
 stored the wal-index in volatile shared-memory, such as files created in
 /dev/shm on Linux or /tmp on other unix systems.  The problem
@@ -595,7 +623,7 @@ can be implemented using heap memory instead of true shared memory.</p>
 
 <a name="noshm"></a>
 
-<h1 id="use_of_wal_without_shared_memory"><span>7. </span>Use of WAL Without Shared-Memory</h1>
+<h1 id="use_of_wal_without_shared_memory"><span>8. </span>Use of WAL Without Shared-Memory</h1>
 
 <p>Beginning in SQLite <a href="releaselog/3_7_4.html">version 3.7.4</a> (2010-12-07), 
 WAL databases can be created, read, and
@@ -634,7 +662,7 @@ locking mode is stuck in EXCLUSIVE.</p>
 
 <a name="busy"></a>
 
-<h1 id="sometimes_queries_return_sqlite_busy_in_wal_mode"><span>8. </span>Sometimes Queries Return SQLITE_BUSY In WAL Mode</h1>
+<h1 id="sometimes_queries_return_sqlite_busy_in_wal_mode"><span>9. </span>Sometimes Queries Return SQLITE_BUSY In WAL Mode</h1>
 
 <p>The <a href="wal.html#advantages">second advantage of WAL-mode</a> is that
 writers do not block readers and readers to do not block writers.
@@ -673,10 +701,10 @@ the third connection will get an <a href="rescode.html#busy">SQLITE_BUSY</a> err
 
 <a name="bkwrds"></a>
 
-<h1 id="backwards_compatibility"><span>9. </span>Backwards Compatibility</h1>
+<h1 id="backwards_compatibility"><span>10. </span>Backwards Compatibility</h1>
 
 <p>The database file format is unchanged for WAL mode.  However, the
-WAL file and the <a href="fileformat2.html#walindexformat">wal-index</a> are new concepts and so older versions of 
+WAL file and the <a href="walformat.html">wal-index</a> are new concepts and so older versions of 
 SQLite will not know
 how to recover a crashed SQLite database that was operating in WAL mode
 when the crash occurred.

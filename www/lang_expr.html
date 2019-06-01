@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Query Language: expression</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -76,72 +92,92 @@ return false;
 </script>
 </div>
 <div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>expression</h2></div><p><b><a href="syntax/expr.html">expr:</a></b>
-<button id='x1079' onclick='hideorshow("x1079","x1080")'>hide</button></p>
- <div id='x1080' class='imgcontainer'>
+<button id='x1495' onclick='hideorshow("x1495","x1496")'>hide</button></p>
+ <div id='x1496' class='imgcontainer'>
  <img alt="syntax diagram expr" src="images/syntax/expr.gif" />
+<p><b><a href="syntax/filter.html">filter:</a></b>
+<button id='x1497' onclick='hideorshow("x1497","x1498")'>show</button></p>
+ <div id='x1498' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram filter" src="images/syntax/filter.gif" />
+</div>
 <p><b><a href="syntax/literal-value.html">literal-value:</a></b>
-<button id='x1081' onclick='hideorshow("x1081","x1082")'>show</button></p>
- <div id='x1082' style='display:none;' class='imgcontainer'>
+<button id='x1499' onclick='hideorshow("x1499","x1500")'>show</button></p>
+ <div id='x1500' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram literal-value" src="images/syntax/literal-value.gif" />
 </div>
 <p><b><a href="syntax/raise-function.html">raise-function:</a></b>
-<button id='x1083' onclick='hideorshow("x1083","x1084")'>show</button></p>
- <div id='x1084' style='display:none;' class='imgcontainer'>
+<button id='x1501' onclick='hideorshow("x1501","x1502")'>show</button></p>
+ <div id='x1502' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram raise-function" src="images/syntax/raise-function.gif" />
 </div>
 <p><b><a href="syntax/select-stmt.html">select-stmt:</a></b>
-<button id='x1085' onclick='hideorshow("x1085","x1086")'>show</button></p>
- <div id='x1086' style='display:none;' class='imgcontainer'>
+<button id='x1503' onclick='hideorshow("x1503","x1504")'>show</button></p>
+ <div id='x1504' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram select-stmt" src="images/syntax/select-stmt.gif" />
 <p><b><a href="syntax/common-table-expression.html">common-table-expression:</a></b>
-<button id='x1087' onclick='hideorshow("x1087","x1088")'>show</button></p>
- <div id='x1088' style='display:none;' class='imgcontainer'>
+<button id='x1505' onclick='hideorshow("x1505","x1506")'>show</button></p>
+ <div id='x1506' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram common-table-expression" src="images/syntax/common-table-expression.gif" />
 </div>
 <p><b><a href="syntax/compound-operator.html">compound-operator:</a></b>
-<button id='x1089' onclick='hideorshow("x1089","x1090")'>show</button></p>
- <div id='x1090' style='display:none;' class='imgcontainer'>
+<button id='x1507' onclick='hideorshow("x1507","x1508")'>show</button></p>
+ <div id='x1508' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram compound-operator" src="images/syntax/compound-operator.gif" />
 </div>
 <p><b><a href="syntax/join-clause.html">join-clause:</a></b>
-<button id='x1091' onclick='hideorshow("x1091","x1092")'>show</button></p>
- <div id='x1092' style='display:none;' class='imgcontainer'>
+<button id='x1509' onclick='hideorshow("x1509","x1510")'>show</button></p>
+ <div id='x1510' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-clause" src="images/syntax/join-clause.gif" />
 <p><b><a href="syntax/join-constraint.html">join-constraint:</a></b>
-<button id='x1093' onclick='hideorshow("x1093","x1094")'>show</button></p>
- <div id='x1094' style='display:none;' class='imgcontainer'>
+<button id='x1511' onclick='hideorshow("x1511","x1512")'>show</button></p>
+ <div id='x1512' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-constraint" src="images/syntax/join-constraint.gif" />
 </div>
 <p><b><a href="syntax/join-operator.html">join-operator:</a></b>
-<button id='x1095' onclick='hideorshow("x1095","x1096")'>show</button></p>
- <div id='x1096' style='display:none;' class='imgcontainer'>
+<button id='x1513' onclick='hideorshow("x1513","x1514")'>show</button></p>
+ <div id='x1514' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-operator" src="images/syntax/join-operator.gif" />
 </div>
 </div>
 <p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
-<button id='x1097' onclick='hideorshow("x1097","x1098")'>show</button></p>
- <div id='x1098' style='display:none;' class='imgcontainer'>
+<button id='x1515' onclick='hideorshow("x1515","x1516")'>show</button></p>
+ <div id='x1516' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 <p><b><a href="syntax/result-column.html">result-column:</a></b>
-<button id='x1099' onclick='hideorshow("x1099","x1100")'>show</button></p>
- <div id='x1100' style='display:none;' class='imgcontainer'>
+<button id='x1517' onclick='hideorshow("x1517","x1518")'>show</button></p>
+ <div id='x1518' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram result-column" src="images/syntax/result-column.gif" />
 </div>
 <p><b><a href="syntax/table-or-subquery.html">table-or-subquery:</a></b>
-<button id='x1101' onclick='hideorshow("x1101","x1102")'>show</button></p>
- <div id='x1102' style='display:none;' class='imgcontainer'>
+<button id='x1519' onclick='hideorshow("x1519","x1520")'>show</button></p>
+ <div id='x1520' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram table-or-subquery" src="images/syntax/table-or-subquery.gif" />
 </div>
 </div>
 <p><b><a href="syntax/type-name.html">type-name:</a></b>
-<button id='x1103' onclick='hideorshow("x1103","x1104")'>show</button></p>
- <div id='x1104' style='display:none;' class='imgcontainer'>
+<button id='x1521' onclick='hideorshow("x1521","x1522")'>show</button></p>
+ <div id='x1522' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram type-name" src="images/syntax/type-name.gif" />
 <p><b><a href="syntax/signed-number.html">signed-number:</a></b>
-<button id='x1105' onclick='hideorshow("x1105","x1106")'>show</button></p>
- <div id='x1106' style='display:none;' class='imgcontainer'>
+<button id='x1523' onclick='hideorshow("x1523","x1524")'>show</button></p>
+ <div id='x1524' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram signed-number" src="images/syntax/signed-number.gif" />
+</div>
+</div>
+<p><b><a href="syntax/window-defn.html">window-defn:</a></b>
+<button id='x1525' onclick='hideorshow("x1525","x1526")'>show</button></p>
+ <div id='x1526' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram window-defn" src="images/syntax/window-defn.gif" />
+<p><b><a href="syntax/frame-spec.html">frame-spec:</a></b>
+<button id='x1527' onclick='hideorshow("x1527","x1528")'>show</button></p>
+ <div id='x1528' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram frame-spec" src="images/syntax/frame-spec.gif" />
+</div>
+<p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
+<button id='x1529' onclick='hideorshow("x1529","x1530")'>show</button></p>
+ <div id='x1530' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 </div>
 </div>
@@ -202,8 +238,10 @@ The non-equals operator can be either
 <font color="#2c2cf0"><big>!=</big></font> or <font color="#2c2cf0"><big>&lt;&gt;</big></font>.
 The <font color="#2c2cf0"><big>||</big></font> operator is "concatenate" - it joins together
 the two strings of its operands.
-The operator <font color="#2c2cf0"><big>%</big></font> outputs the value of its left 
-operand modulo its right operand.</p>
+The operator <font color="#2c2cf0"><big>%</big></font> outputs the integer value of its left 
+operand modulo its right operand.  In other words, the
+operator <font color="#2c2cf0"><big>%</big></font> works in SQLite the same as it does
+in ANSI-C.</p>
 
 <p>The result of any binary operator is either a numeric value or 
 NULL, except for the <font color="#2c2cf0"><big>||</big></font> concatenation operator which always 
@@ -568,7 +606,7 @@ statement does not define a real column with the same name.
 The rowid can be used anywhere a regular
 column can be used.</p>
 
-<a name="in_op"></a>
+<a name="exists_op"></a>
 
 <h3>The EXISTS operator</h3>
 
@@ -673,7 +711,18 @@ the <span class='yyterm'>type-name</span>.
         the TEXT value and the remainder ignored. Any leading spaces in the
         TEXT value when converting from TEXT to INTEGER are ignored. If there
         is no prefix that can be interpreted as an integer number, the result
-        of the conversion is 0.  The CAST operator understands decimal
+        of the conversion is 0.  If the prefix integer is greater than
+        +9223372036854775807 then the result of the cast is exactly
+        +9223372036854775807.  Similarly, if the prefix integer is
+        less than -9223372036854775808 then the result of the cast is
+        exactly -9223372036854775808.
+
+        <p>When casting to INTEGER, if the text looks like a floating point
+        value with an exponent, the exponent will be ignored because it is
+        no part of the integer prefix.  For example,
+        "(CAST '123e+5' AS INTEGER)" results in 123, not in 12300000.
+
+        <p> The CAST operator understands decimal
         integers only &mdash; conversion of <a href="lang_expr.html#hexint">hexadecimal integers</a> stops 
         at the "x" in the "0x" prefix of the hexadecimal integer string 
         and thus result of the CAST is always zero.
@@ -738,10 +787,25 @@ All other values are considered true.
 to be false. Values 1, 1.0, 0.1, -0.1 and '1english' are considered to 
 be true.
 
+<p>Beginning with SQLite 3.23.0 (2018-04-02), SQLite recognizes the
+identifiers "TRUE" and "FALSE" as boolean literals, if and only if those
+identifiers are not already used for some other meaning.  If there already
+exists columns or tables or other objects named TRUE or FALSE, then for
+the sake of backwards compatibility, the TRUE and FALSE identifiers refer
+to those other objects, not to the boolean values.
+
+<p>The boolean identifiers TRUE and FALSE are usually just aliases for
+the integer values 1 and 0, respectively.  However, if TRUE or FALSE
+occur on the right-hand side of an IS operator, then they form new
+unary postfix operators "IS TRUE" and "IS FALSE" which test the boolean
+value of the operand on the left.
+
 <h3>Functions</h3>
-<p>SQLite supports many <a href="lang_corefunc.html">simple</a> and <a href="lang_aggfunc.html">aggregate</a>
+<p>SQLite supports many <a href="lang_corefunc.html">simple</a>, <a href="lang_aggfunc.html">aggregate</a>,
+and <a href="windowfunctions.html">window</a>
 SQL functions.  For presentation purposes, simple functions are further
-subdivided into <a href="lang_corefunc.html">core functions</a> and <a href="lang_datefunc.html">date-time functions</a>.
+subdivided into <a href="lang_corefunc.html">core functions</a>, <a href="lang_datefunc.html">date-time functions</a>,
+and <a href="json1.html">JSON functions</a>.
 Applications can add new functions, written in C/C++, using the
 <a href="c3ref/create_function.html">sqlite3_create_function()</a> interface.
 </p>

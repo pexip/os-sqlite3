@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Query Language: SQLite Keywords</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -77,7 +93,7 @@ return false;
 </div>
 <div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>SQLite Keywords</h2></div></DIV>
 
-<p>The SQL standard specifies a huge number of keywords which may not
+<p>The SQL standard specifies a large number of keywords which may not
 be used as the names of tables, indices, columns, databases, user-defined
 functions, collations, virtual table modules, or any other named object.
 The list of keywords is so long that few people can remember them all.
@@ -147,8 +163,12 @@ SQLite regardless of <a href="compile.html">compile-time options</a>.
 Most reasonable configurations use most or all of these keywords,
 but some keywords may be omitted when SQL language features are
 disabled.
+Applications can use the
+<a href="c3ref/keyword_check.html">sqlite3_keyword_count()</a>, <a href="c3ref/keyword_check.html">sqlite3_keyword_name()</a>, and
+<a href="c3ref/keyword_check.html">sqlite3_keyword_check()</a> interfaces to determine the keywords
+recognized by SQLite at run-time.
 Regardless of the compile-time configuration, any identifier that is not on
-the following 124 element
+the following 136 element
 list is not a keyword to the SQL parser in SQLite:
 </p>
 
@@ -180,6 +200,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>CONSTRAINT</li>
 <li>CREATE</li>
 <li>CROSS</li>
+<li>CURRENT</li>
 <li>CURRENT_DATE</li>
 <li>CURRENT_TIME</li>
 <li>CURRENT_TIMESTAMP</li>
@@ -191,6 +212,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>DESC</li>
 <li>DETACH</li>
 <li>DISTINCT</li>
+<li>DO</li>
 <li>DROP</li>
 <li>EACH</li>
 <li>ELSE</li>
@@ -201,6 +223,8 @@ list is not a keyword to the SQL parser in SQLite:
 <li>EXISTS</li>
 <li>EXPLAIN</li>
 <li>FAIL</li>
+<li>FILTER</li>
+<li>FOLLOWING</li>
 <li>FOR</li>
 <li>FOREIGN</li>
 <li>FROM</li>
@@ -231,6 +255,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>NATURAL</li>
 <li>NO</li>
 <li>NOT</li>
+<li>NOTHING</li>
 <li>NOTNULL</li>
 <li>NULL</li>
 <li>OF</li>
@@ -239,11 +264,15 @@ list is not a keyword to the SQL parser in SQLite:
 <li>OR</li>
 <li>ORDER</li>
 <li>OUTER</li>
+<li>OVER</li>
+<li>PARTITION</li>
 <li>PLAN</li>
 <li>PRAGMA</li>
+<li>PRECEDING</li>
 <li>PRIMARY</li>
 <li>QUERY</li>
 <li>RAISE</li>
+<li>RANGE</li>
 <li>RECURSIVE</li>
 <li>REFERENCES</li>
 <li>REGEXP</li>
@@ -255,6 +284,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>RIGHT</li>
 <li>ROLLBACK</li>
 <li>ROW</li>
+<li>ROWS</li>
 <li>SAVEPOINT</li>
 <li>SELECT</li>
 <li>SET</li>
@@ -265,6 +295,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>TO</li>
 <li>TRANSACTION</li>
 <li>TRIGGER</li>
+<li>UNBOUNDED</li>
 <li>UNION</li>
 <li>UNIQUE</li>
 <li>UPDATE</li>
@@ -275,6 +306,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>VIRTUAL</li>
 <li>WHEN</li>
 <li>WHERE</li>
+<li>WINDOW</li>
 <li>WITH</li>
 <li>WITHOUT</li>
 </ol>

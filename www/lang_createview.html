@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Query Language: CREATE VIEW</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -76,77 +92,92 @@ return false;
 </script>
 </div>
 <div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>CREATE VIEW</h2></div><p><b><a href="syntax/create-view-stmt.html">create-view-stmt:</a></b>
-<button id='x983' onclick='hideorshow("x983","x984")'>hide</button></p>
- <div id='x984' class='imgcontainer'>
+<button id='x1381' onclick='hideorshow("x1381","x1382")'>hide</button></p>
+ <div id='x1382' class='imgcontainer'>
  <img alt="syntax diagram create-view-stmt" src="images/syntax/create-view-stmt.gif" />
 <p><b><a href="syntax/select-stmt.html">select-stmt:</a></b>
-<button id='x985' onclick='hideorshow("x985","x986")'>show</button></p>
- <div id='x986' style='display:none;' class='imgcontainer'>
+<button id='x1383' onclick='hideorshow("x1383","x1384")'>show</button></p>
+ <div id='x1384' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram select-stmt" src="images/syntax/select-stmt.gif" />
 <p><b><a href="syntax/common-table-expression.html">common-table-expression:</a></b>
-<button id='x987' onclick='hideorshow("x987","x988")'>show</button></p>
- <div id='x988' style='display:none;' class='imgcontainer'>
+<button id='x1385' onclick='hideorshow("x1385","x1386")'>show</button></p>
+ <div id='x1386' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram common-table-expression" src="images/syntax/common-table-expression.gif" />
 </div>
 <p><b><a href="syntax/compound-operator.html">compound-operator:</a></b>
-<button id='x989' onclick='hideorshow("x989","x990")'>show</button></p>
- <div id='x990' style='display:none;' class='imgcontainer'>
+<button id='x1387' onclick='hideorshow("x1387","x1388")'>show</button></p>
+ <div id='x1388' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram compound-operator" src="images/syntax/compound-operator.gif" />
 </div>
 <p><b><a href="syntax/expr.html">expr:</a></b>
-<button id='x991' onclick='hideorshow("x991","x992")'>show</button></p>
- <div id='x992' style='display:none;' class='imgcontainer'>
+<button id='x1389' onclick='hideorshow("x1389","x1390")'>show</button></p>
+ <div id='x1390' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram expr" src="images/syntax/expr.gif" />
+<p><b><a href="syntax/filter.html">filter:</a></b>
+<button id='x1391' onclick='hideorshow("x1391","x1392")'>show</button></p>
+ <div id='x1392' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram filter" src="images/syntax/filter.gif" />
+</div>
 <p><b><a href="syntax/literal-value.html">literal-value:</a></b>
-<button id='x993' onclick='hideorshow("x993","x994")'>show</button></p>
- <div id='x994' style='display:none;' class='imgcontainer'>
+<button id='x1393' onclick='hideorshow("x1393","x1394")'>show</button></p>
+ <div id='x1394' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram literal-value" src="images/syntax/literal-value.gif" />
 </div>
 <p><b><a href="syntax/raise-function.html">raise-function:</a></b>
-<button id='x995' onclick='hideorshow("x995","x996")'>show</button></p>
- <div id='x996' style='display:none;' class='imgcontainer'>
+<button id='x1395' onclick='hideorshow("x1395","x1396")'>show</button></p>
+ <div id='x1396' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram raise-function" src="images/syntax/raise-function.gif" />
 </div>
 <p><b><a href="syntax/type-name.html">type-name:</a></b>
-<button id='x997' onclick='hideorshow("x997","x998")'>show</button></p>
- <div id='x998' style='display:none;' class='imgcontainer'>
+<button id='x1397' onclick='hideorshow("x1397","x1398")'>show</button></p>
+ <div id='x1398' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram type-name" src="images/syntax/type-name.gif" />
 <p><b><a href="syntax/signed-number.html">signed-number:</a></b>
-<button id='x999' onclick='hideorshow("x999","x1000")'>show</button></p>
- <div id='x1000' style='display:none;' class='imgcontainer'>
+<button id='x1399' onclick='hideorshow("x1399","x1400")'>show</button></p>
+ <div id='x1400' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram signed-number" src="images/syntax/signed-number.gif" />
 </div>
 </div>
 </div>
 <p><b><a href="syntax/join-clause.html">join-clause:</a></b>
-<button id='x1001' onclick='hideorshow("x1001","x1002")'>show</button></p>
- <div id='x1002' style='display:none;' class='imgcontainer'>
+<button id='x1401' onclick='hideorshow("x1401","x1402")'>show</button></p>
+ <div id='x1402' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-clause" src="images/syntax/join-clause.gif" />
 <p><b><a href="syntax/join-constraint.html">join-constraint:</a></b>
-<button id='x1003' onclick='hideorshow("x1003","x1004")'>show</button></p>
- <div id='x1004' style='display:none;' class='imgcontainer'>
+<button id='x1403' onclick='hideorshow("x1403","x1404")'>show</button></p>
+ <div id='x1404' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-constraint" src="images/syntax/join-constraint.gif" />
 </div>
 <p><b><a href="syntax/join-operator.html">join-operator:</a></b>
-<button id='x1005' onclick='hideorshow("x1005","x1006")'>show</button></p>
- <div id='x1006' style='display:none;' class='imgcontainer'>
+<button id='x1405' onclick='hideorshow("x1405","x1406")'>show</button></p>
+ <div id='x1406' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-operator" src="images/syntax/join-operator.gif" />
 </div>
 </div>
 <p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
-<button id='x1007' onclick='hideorshow("x1007","x1008")'>show</button></p>
- <div id='x1008' style='display:none;' class='imgcontainer'>
+<button id='x1407' onclick='hideorshow("x1407","x1408")'>show</button></p>
+ <div id='x1408' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 <p><b><a href="syntax/result-column.html">result-column:</a></b>
-<button id='x1009' onclick='hideorshow("x1009","x1010")'>show</button></p>
- <div id='x1010' style='display:none;' class='imgcontainer'>
+<button id='x1409' onclick='hideorshow("x1409","x1410")'>show</button></p>
+ <div id='x1410' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram result-column" src="images/syntax/result-column.gif" />
 </div>
 <p><b><a href="syntax/table-or-subquery.html">table-or-subquery:</a></b>
-<button id='x1011' onclick='hideorshow("x1011","x1012")'>show</button></p>
- <div id='x1012' style='display:none;' class='imgcontainer'>
+<button id='x1411' onclick='hideorshow("x1411","x1412")'>show</button></p>
+ <div id='x1412' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram table-or-subquery" src="images/syntax/table-or-subquery.gif" />
+</div>
+<p><b><a href="syntax/window-defn.html">window-defn:</a></b>
+<button id='x1413' onclick='hideorshow("x1413","x1414")'>show</button></p>
+ <div id='x1414' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram window-defn" src="images/syntax/window-defn.gif" />
+<p><b><a href="syntax/frame-spec.html">frame-spec:</a></b>
+<button id='x1415' onclick='hideorshow("x1415","x1416")'>show</button></p>
+ <div id='x1416' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram frame-spec" src="images/syntax/frame-spec.gif" />
+</div>
 </div>
 </div>
 </div>
@@ -182,7 +213,17 @@ the <span class='yyterm'>view-name</span>, then that list determines
 the names of the columns for the view.  If the <span class='yyterm'>column-name</span>
 list is omitted, then the names of the columns in the view are derived
 from the names of the result-set columns in the <a href="syntax/select-stmt.html">select-stmt</a>.
-Note that the <span class='yyterm'>column-name</span> list syntax is only
-supported in SQLite versions 3.9.0 (2015-10-14) and later.
+The use of <span class='yyterm'>column-name</span> list is recommended.  Or, if
+<span class='yyterm'>column-name</span> list is omitted, then the result
+columns in the <a href="lang_select.html">SELECT</a> statement that defines the view should have
+well-defined names using the 
+"<a href="syntax/result-column.html">AS column-alias</a>" syntax.
+SQLite allows you to create views that depend on automatically 
+generated column names, but you should avoid using them since the 
+rules used to generate column names are not a defined part of the
+interface and might change in future releases of SQLite.
+
+<p>The <span class='yyterm'>column-name</span> list syntax was added in
+SQLite versions 3.9.0 (2015-10-14).
 
 

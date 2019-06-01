@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite FTS5 Extension</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -90,6 +106,13 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#building_fts5_as_part_of_sqlite">2.1. Building FTS5 as part of SQLite</a></div>
 <div class="fancy-toc2"><a href="#building_a_loadable_extension">2.2. Building a Loadable Extension</a></div>
 <div class="fancy-toc1"><a href="#full_text_query_syntax">3. Full-text Query Syntax</a></div>
+<div class="fancy-toc2"><a href="#fts5_strings">3.1. FTS5 Strings</a></div>
+<div class="fancy-toc2"><a href="#fts5_phrases">3.2. FTS5 Phrases</a></div>
+<div class="fancy-toc2"><a href="#fts5_prefix_queries">3.3. FTS5 Prefix Queries</a></div>
+<div class="fancy-toc2"><a href="#fts5_initial_token_queries">3.4. FTS5 Initial Token Queries</a></div>
+<div class="fancy-toc2"><a href="#fts5_near_queries">3.5. FTS5 NEAR Queries</a></div>
+<div class="fancy-toc2"><a href="#fts5_column_filters">3.6. FTS5 Column Filters</a></div>
+<div class="fancy-toc2"><a href="#fts5_boolean_operators">3.7. FTS5 Boolean Operators</a></div>
 <div class="fancy-toc1"><a href="#fts5_table_creation_and_initialization">4. FTS5 Table Creation and Initialization</a></div>
 <div class="fancy-toc2"><a href="#the_unindexed_column_option">4.1. The UNINDEXED column option</a></div>
 <div class="fancy-toc2"><a href="#prefix_indexes">4.2. Prefix Indexes</a></div>
@@ -138,6 +161,9 @@ Appendix A: Comparison with FTS3/4
 <div class="fancy-toc3"><a href="#_other_issues"> Other Issues</a></div>
 <div class="fancy-toc2"><a href="#_summary_of_technical_differences_">
 Summary of Technical Differences
+</a></div>
+<div class="fancy-toc1"><a href="#appendix_b">
+Appendix B: Shadow tables created by FTS5
 </a></div>
 </div>
 </div>
@@ -202,7 +228,8 @@ the contents of an FTS5 table:
 </li></ul>
 
 <p>If using the MATCH or = operators, the expression to the left of the MATCH
-   operator must be the name of the FTS5 table. The expression on the right
+   operator is usually the name of the FTS5 table (the exception is when 
+   <a href="fts5.html#fts5_column_filters">specifying a column-filter</a>). The expression on the right
    must be a text value specifying the term to search for. For the table-valued
    function syntax, the term to search for is specified as the first table argument.
    For example:
@@ -324,9 +351,9 @@ A detailed explanation follows.
 </p><div class="codeblock"><pre>&lt;phrase&gt;    := string &#91;*]
 &lt;phrase&gt;    := &lt;phrase&gt; + &lt;phrase&gt;
 &lt;neargroup&gt; := NEAR ( &lt;phrase&gt; &lt;phrase&gt; ... &#91;, N] )
-&lt;query&gt;     := &#91; &#91;-] &lt;colspec&gt; :] &lt;phrase&gt;
+&lt;query&gt;     := &#91; &#91;-] &lt;colspec&gt; :] &#91;&#94;] &lt;phrase&gt;
 &lt;query&gt;     := &#91; &#91;-] &lt;colspec&gt; :] &lt;neargroup&gt;
-&lt;query&gt;     := ( &lt;query&gt; )
+&lt;query&gt;     := &#91; &#91;-] &lt;colspec&gt; :] ( &lt;query&gt; )
 &lt;query&gt;     := &lt;query&gt; AND &lt;query&gt;
 &lt;query&gt;     := &lt;query&gt; OR &lt;query&gt;
 &lt;query&gt;     := &lt;query&gt; NOT &lt;query&gt;
@@ -334,6 +361,8 @@ A detailed explanation follows.
 &lt;colspec&gt;   := { colname1 colname2 ... }
 </pre></div>
 
+<a name="fts5_strings"></a>
+<h2 tags="FTS5 Strings" id="fts5_strings"><span>3.1. </span>FTS5 Strings</h2>
 <p>
 Within an FTS expression a <b>string</b> may be specified in one of two ways:
 
@@ -364,13 +393,15 @@ Within an FTS expression a <b>string</b> may be specified in one of two ways:
        string may be interpreted differently by some future version of FTS5.
 </li></ul>
 
+<a name="fts5_phrases"></a>
+<h2 tags="FTS5 Phrases" id="fts5_phrases"><span>3.2. </span>FTS5 Phrases</h2>
 <p>
 FTS queries are made up of <b>phrases</b>. A phrase is an ordered list of 
 one or more tokens. A string is transformed into a phrase by passing it to
 the FTS table tokenizer. Two phrases can be concatenated into a single 
 large phrase using the "+" operator. For example, assuming the tokenizer
 module being used tokenizes the input "one.two.three" to three separate
-tokens, the following three queries all specify the same phrase:
+tokens, the following four queries all specify the same phrase:
 
 </p><div class="codeblock"><pre>... MATCH '"one two three"'
 ... MATCH 'one + two + three'
@@ -382,7 +413,9 @@ tokens, the following three queries all specify the same phrase:
 A phrase matches a document if the document contains at least one sub-sequence
 of tokens that matches the sequence of tokens that make up the phrase.
 
-</p><p>
+</p><a name="fts5_prefix_queries"></a>
+<h2 tags="FTS5 prefix queries" id="fts5_prefix_queries"><span>3.3. </span>FTS5 Prefix Queries</h2>
+<p>
 If a "*" character follows a string within an FTS expression, then the final
 token extracted from the string is marked as a <b>prefix token</b>. As you
 might expect, a prefix token matches any document token of which it is a 
@@ -401,7 +434,30 @@ which will likely discard it (or perhaps, depending on the specific tokenizer
 in use, include it as part of the final token) instead of recognizing it as
 a special FTS character.
 
-</p><p>Two or more phrases may be grouped into a <b>NEAR group</b>. A NEAR group
+<a name="carrotq"></a>
+
+</p><a name="fts5_initial_token_queries"></a>
+<h2 tags="FTS5 initial token queries" id="fts5_initial_token_queries"><span>3.4. </span>FTS5 Initial Token Queries</h2>
+<p>
+If a "&#94;" character appears immediately before a phrase that is not part of a
+NEAR query, then that phrase only matches a document only if it starts at the
+first token in a column. The "&#94;" syntax may be combined with a 
+<a href="fts5.html#fts5_column_filters">column filter</a>, but may not be inserted into the middle of
+a phrase.
+
+</p><div class="codeblock"><pre>... MATCH '&#94;one'              <i>-- first token in any column must be "one"</i>
+... MATCH '&#94; one + two'       <i>-- phrase "one two" must appear at start of a column</i>
+... MATCH '&#94; "one two"'       <i>-- same as previous </i>
+... MATCH 'a : &#94;two'          <i>-- first token of column "a" must be "two"</i>
+... MATCH 'NEAR(&#94;one, two)'   <b>-- syntax error! </b>
+... MATCH 'one + &#94;two'        <b>-- syntax error! </b>
+... MATCH '"&#94;one two"'        <b>-- May not work as expected!</b>
+</pre></div>
+
+<a name="fts5_near_queries"></a>
+<h2 tags="FTS5 NEAR queries" id="fts5_near_queries"><span>3.5. </span>FTS5 NEAR Queries</h2>
+
+<p>Two or more phrases may be grouped into a <b>NEAR group</b>. A NEAR group
 is specified by the token "NEAR" (case sensitive) followed by an open
 parenthesis character, followed by two or more whitespace separated phrases, optionally followed by a comma and the numeric parameter <i>N</i>, followed by
 a close parenthesis. For example:
@@ -438,6 +494,8 @@ INSERT INTO f(rowid, x) VALUES(1, 'A B C D x x x E F x');
 ... MATCH 'NEAR("a b c d" "b c" "e f", 3)';    <i>-- Does not match!</i>
 </pre></div>
 
+<a name="fts5_column_filters"></a>
+<h2 tags="FTS5 column filters" id="fts5_column_filters"><span>3.6. </span>FTS5 Column Filters</h2>
 
 <p>
 A single phrase or NEAR group may be restricted to matching text within a
@@ -467,6 +525,37 @@ it is interpreted as a list of column not to match against. For example:
 <i>-- Search for matches in all columns except "col1", "col2" and "col3"</i>
 ... MATCH '- {col2 col1 col3} : one + two + three'
 </pre></div>
+
+<p>
+Column filter specifications may also be applied to arbitrary expressions
+enclosed in parenthesis. In this case the column filter applies to all 
+phrases within the expression. Nested column filter operations may only 
+further restrict the subset of columns matched, they can not be used to 
+re-enable filtered columns. For example:
+
+</p><div class="codeblock"><pre><i>-- The following are equivalent:</i>
+... MATCH '{a b} : ( {b c} : "hello" AND "world" )'
+... MATCH '(b : "hello") AND ({a b} : "world")'
+</pre></div>
+
+<p>
+Finally, a column filter for a single column may be specified by using
+the column name as the LHS of a MATCH operator (instead of the usual
+table name). For example:
+
+</p><div class="codeblock"><pre><i>-- Given the following table</i>
+CREATE VIRTUAL TABLE ft USING fts5(a, b, c);
+
+<i>-- The following are equivalent</i>
+SELECT * FROM ft WHERE b MATCH 'uvw AND xyz';
+SELECT * FROM ft WHERE ft MATCH 'b : (uvw AND xyz)';
+
+<i>-- This query cannot match any rows (since all columns are filtered out): </i>
+SELECT * FROM ft WHERE b MATCH 'a : xyz';
+</pre></div>
+
+<a name="fts5_boolean_operators"></a>
+<h2 tags="FTS5 boolean operators" id="fts5_boolean_operators"><span>3.7. </span>FTS5 Boolean Operators</h2>
 
 <p>
 Phrases and NEAR groups may be arranged into expressions using <b>boolean
@@ -652,9 +741,16 @@ sections:
 <p> The unicode tokenizer classifies all unicode characters as either 
 "separator" or "token" characters. By default all space and punctuation
 characters, as defined by Unicode 6.1, are considered separators, and all 
-other characters as token characters. Each contiguous run of one or more 
-token characters is considered to be a token. The tokenizer is case-insensitive
-according to the rules defined by Unicode 6.1.
+other characters as token characters. More specifically, all unicode 
+characters assigned to a 
+<a href="https://en.wikipedia.org/wiki/Unicode_character_property#General_Category">
+general category</a> beginning with "L" or "N" (letters and numbers,
+specifically) or to category "Co" ("other, private use") are considered tokens.
+All other characters are separators.
+ 
+</p><p>Each contiguous run of one or more token characters is considered to be a
+token. The tokenizer is case-insensitive according to the rules defined by
+Unicode 6.1.
 
 </p><p> By default, diacritics are removed from all Latin script characters. This
 means, for example, that "A", "a", "&#192;", "&#224;", "&#194;" and "&#226;"
@@ -667,17 +763,31 @@ following options:
 </p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
   <tr style="text-align:left"><th> Option </th><th> Usage
   </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td> remove_diacritics
-  </td><td>This option should be set to "0" or "1". If it is set (the default),
-  diacritics are removed from all latin script characters as described above.
-  If it is clear, they are not. 
+  </td><td>This option should be set to "0", "1" or "2". The default value is "1".
+  If it is set to "1" or "2", then diacritics are removed from Latin script
+  characters as described above. However, if it is set to "1", then diacritics
+  are not removed in the fairly uncommon case where a single unicode codepoint
+  is used to represent a character with more that one diacritic. For example,
+  diacritics are not removed from codepoint 0x1ED9 ("LATIN SMALL LETTER O WITH
+  CIRCUMFLEX AND DOT BELOW"). This is technically a bug, but cannot be fixed
+  without creating backwards compatibility problems. If this option is set to
+  "2", then diacritics are correctly removed from all Latin characters.
 
-  </td></tr><tr style="text-align:left"><td> tokenchars
+  </td></tr><tr style="text-align:left"><td> categories
+  </td><td>This option may be used to modify the set of Unicode general categories
+  that are considered to correspond to token characters. The argument must
+  consist of a space separated list of two-character general category
+  abbreviations (e.g. "Lu" or "Nd"), or of the same with the second character
+  replaced with an asterisk ("*"), interpreted as a glob pattern. The default
+  value is "L* N* Co".
+
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td> tokenchars
   </td><td> This option is used to specify additional unicode characters that 
   should be considered token characters, even if they are white-space or
   punctuation characters according to Unicode 6.1. All characters in the
   string that this option is set to are considered token characters.
 
-  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td> separators
+  </td></tr><tr style="text-align:left"><td> separators
   </td><td> This option is used to specify additional unicode characters that 
   should be considered as separator characters, even if they are token
   characters according to Unicode 6.1. All characters in the string that 
@@ -691,6 +801,15 @@ following options:
 -- to be part of tokens. </i>
 CREATE VIRTUAL TABLE ft USING fts5(a, b, 
     tokenize = "unicode61 remove_diacritics 0 tokenchars '-_'"
+);
+</pre></div>
+
+<p> or:
+
+</p><div class="codeblock"><pre><i>-- Create an FTS5 table that, as well as the default token character classes,</i>
+<i>-- considers characters in class "Mn" to be token characters.</i>
+CREATE VIRTUAL TABLE ft USING fts5(a, b, 
+    tokenize = "unicode61 categories 'L* N* Co Mn'"
 );
 </pre></div>
 
@@ -1354,7 +1473,7 @@ of merged data have been written to the database, where N is the absolute
 value of the parameter specified as part of the 'merge' command. The size of
 each page is as configured by the <a href="fts5.html#the_pgsz_configuration_option">FTS5 pgsz option</a>.
 
-</p><p> If the parameter is a postive value, B-tree structures are only eligible
+</p><p> If the parameter is a positive value, B-tree structures are only eligible
 for merging if one of the following is true:
 
 </p><ul>
@@ -1387,7 +1506,7 @@ same way as the <a href="fts5.html#the_optimize_command">FTS5 optimize command</
 to the FTS index while this process is ongoing, FTS5 will move the new 
 b-tree to the same level as the existing b-trees and restart the merge. To
 avoid this, only the first call to 'merge' should specify a negative parameter.
-Each subsequent call to 'merge' should specify a postive value so that the
+Each subsequent call to 'merge' should specify a positive value so that the
 merge started by the first call is run to completion even if new b-trees are
 added to the FTS index.
 
@@ -1493,9 +1612,10 @@ below.
 registered with FTS5, an application must obtain a pointer to the "fts5_api"
 structure. There is one fts5_api structure for each database connection with
 which the FTS5 extension is registered. To obtain the pointer, the application
-invokes the SQL user-defined function fts5(), which returns a blob value
-containing the pointer to the fts5_api structure for the connection. The
-following example code demonstrates the technique:
+invokes the SQL user-defined function fts5() with a single argument.  That
+argument must be set to a pointer to a pointer to an fts5_api object
+using the <a href="c3ref/bind_blob.html">sqlite3_bind_pointer()</a> interface.
+The following example code demonstrates the technique:
 
 </p><div class="codeblock"><pre><i>/*
 ** Return a pointer to the fts5_api pointer for database connection db.
@@ -1506,18 +1626,21 @@ fts5_api *fts5_api_from_db(sqlite3 *db){
   fts5_api *pRet = 0;
   sqlite3_stmt *pStmt = 0;
 
-  if( SQLITE_OK==sqlite3_prepare(db, "SELECT fts5()", -1, &pStmt, 0)
-   && SQLITE_ROW==sqlite3_step(pStmt) 
-   && sizeof(pRet)==sqlite3_column_bytes(pStmt, 0)
-  ){
-    memcpy(&pRet, sqlite3_column_blob(pStmt, 0), sizeof(pRet));
+  if( SQLITE_OK==sqlite3_prepare(db, "SELECT fts5(?1)", -1, &pStmt, 0) ){
+    sqlite3_bind_pointer(pStmt, (void*)&pRet, "fts5_api_ptr", NULL);
+    sqlite3_step(pStmt);
   }
   sqlite3_finalize(pStmt);
   return pRet;
 }
 </pre></div>
 
-<p> The fts5_api structure is defined as follows. It exposes three methods, 
+<p><b>Backwards Compatibility Warning:</b>
+Prior to SQLite version 3.20.0 (2017-08-01), the fts5() worked slightly
+differently.  Older applications that extend FTS5 must be revised to use 
+the new technique shown above.
+
+</p><p> The fts5_api structure is defined as follows. It exposes three methods, 
 one each for registering new auxiliary functions and tokenizers, and one for
 retrieving existing tokenizer. The latter is intended to facilitate the
 implementation of "tokenizer wrappers" similar to the built-in
@@ -1604,7 +1727,18 @@ struct fts5_tokenizer {
 #define FTS5_TOKEN_COLOCATED    0x0001      <i>/* Same position as prev. token */</i>
 </pre></div>
 
-<p> When an FTS5 table uses the custom tokenizer, the FTS5 core calls xCreate()
+<p> The implementation is registered with the FTS5 module by calling the
+xCreateTokenizer() method of the fts5_api object. If there is already a
+tokenizer with the same name, it is replaced.  If a non-NULL xDestroy parameter
+is passed to xCreateTokenizer(), it is invoked with a copy of the pContext
+pointer passed as the only argument when the database handle is closed or when
+the tokenizer is replaced.
+
+</p><p> If successful, xCreateTokenizer() returns SQLITE_OK. Otherwise, it
+returns an SQLite error code. In this case the xDestroy function is <b>not</b> 
+invoked.
+
+</p><p> When an FTS5 table uses the custom tokenizer, the FTS5 core calls xCreate()
 once to create a tokenizer, then xTokenize() zero or more times to tokenize
 strings, then xDelete() to free any resources allocated by xCreate(). More
 specifically:
@@ -1707,11 +1841,11 @@ specifically:
             the tokenizer substitutes "first" for "1st" and the query works
             as expected.
 <p>
-       </p></li><li> By adding multiple synonyms for a single term to the FTS index.
-            In this case, when tokenizing query text, the tokenizer may 
-            provide multiple synonyms for a single term within the document.
-            FTS5 then queries the index for each synonym individually. For
-            example, faced with the query:
+       </p></li><li> By querying the index for all synonyms of each query term
+            separately. In this case, when tokenizing query text, the
+            tokenizer may provide multiple synonyms for a single term 
+            within the document. FTS5 then queries the index for each 
+            synonym individually. For example, faced with the query:
 <p>
    </p><div class="codeblock"><pre>... MATCH 'first place'
 </pre></div>
@@ -1735,9 +1869,9 @@ specifically:
             "place".
 <p>
             This way, even if the tokenizer does not provide synonyms
-            when tokenizing query text (it should not - to do would be
+            when tokenizing query text (it should not - to do so would be
             inefficient), it doesn't matter if the user queries for 
-            'first + place' or '1st + place', as there are entires in the
+            'first + place' or '1st + place', as there are entries in the
             FTS index corresponding to both forms of the first token.
    </p></li></ol>
 <p>
@@ -1764,7 +1898,7 @@ xToken(pCtx, 0, "place",                  5, 12, 17);
    extra data to the FTS index or require FTS5 to query for multiple terms,
    so it is efficient in terms of disk space and query speed. However, it
    does not support prefix queries very well. If, as suggested above, the
-   token "first" is subsituted for "1st" by the tokenizer, then the query:
+   token "first" is substituted for "1st" by the tokenizer, then the query:
 </p><p>
    </p><div class="codeblock"><pre>... MATCH '1s*'
 </pre></div>
@@ -1821,6 +1955,10 @@ If a non-NULL xDestroy parameter is passed to xCreateFunction(), it is invoked
 with a copy of the pContext pointer passed as the only argument when the
 database handle is closed or when the registered auxiliary function is
 replaced.
+
+</p><p> If successful, xCreateFunction() returns SQLITE_OK. Otherwise, it
+returns an SQLite error code. In this case the xDestroy function is <b>not</b> 
+invoked.
 
 </p><p> The final three arguments passed to the auxiliary function callback are
 similar to the three arguments passed to the implementation of a scalar SQL
@@ -2008,14 +2146,8 @@ Query for the details of phrase match iIdx within the current row.
 <p>
    Usually, output parameter *piPhrase is set to the phrase number, *piCol
    to the column in which it occurs and *piOff the token offset of the
-   first token of the phrase. The exception is if the table was created
-   with the offsets=0 option specified. In this case *piOff is always
-   set to -1.
-</p>
-
-<p>
-   Returns SQLITE_OK if successful, or an error code (i.e. SQLITE_NOMEM) 
-   if an error occurs.
+   first token of the phrase. Returns SQLITE_OK if successful, or an error
+   code (i.e. SQLITE_NOMEM) if an error occurs.
 </p>
 
 <p>
@@ -2230,9 +2362,10 @@ is available whenever FTS5 is.
 </p><p> Each fts5vocab table is associated with a single FTS5 table. An fts5vocab
 table is usually created by specifying two arguments in place of column names
 in the CREATE VIRTUAL TABLE statement - the name of the associated FTS5 table
-and the type of fts5vocab table. Currently there are two types of fts5vocab
-table, "row" and "col". Unless the fts5vocab table is created within the "temp"
-database, it must be part of the same database as the associated FTS5 table.
+and the type of fts5vocab table. Currently there are three types of fts5vocab
+table; "row", "col" and "instance". Unless the fts5vocab table is created
+within the "temp" database, it must be part of the same database as the
+associated FTS5 table.
 
 </p><div class="codeblock"><pre><i>-- Create an fts5vocab "row" table to query the full-text index belonging
 -- to FTS5 table "ft1".</i>
@@ -2241,6 +2374,10 @@ CREATE VIRTUAL TABLE ft1_v USING fts5vocab('ft1', 'row');
 <i>-- Create an fts5vocab "col" table to query the full-text index belonging
 -- to FTS5 table "ft2".</i>
 CREATE VIRTUAL TABLE ft2_v USING fts5vocab(ft2, col);
+
+<i>-- Create an fts5vocab "instance" table to query the full-text index
+-- belonging to FTS5 table "ft3".</i>
+CREATE VIRTUAL TABLE ft3_v USING fts5vocab(ft3, instance);
 </pre></div>
 
 <p> If an fts5vocab table is created in the temp database, it may be associated
@@ -2256,6 +2393,10 @@ CREATE VIRTUAL TABLE temp.ft1_v USING fts5vocab(main, 'ft1', 'row');
 <i>-- Create an fts5vocab "col" table to query the full-text index belonging
 -- to FTS5 table "ft2" in attached database "aux".</i>
 CREATE VIRTUAL TABLE temp.ft2_v USING fts5vocab('aux', ft2, col);
+
+<i>-- Create an fts5vocab "instance" table to query the full-text index 
+-- belonging to FTS5 table "ft3" in attached database "other".</i>
+CREATE VIRTUAL TABLE temp.ft2_v USING fts5vocab('aux', ft3, 'instance');
 </pre></div>
 
 <p> Specifying three arguments when creating an fts5vocab table in any database
@@ -2284,7 +2425,28 @@ combination in the associated FTS5 table. Table columns are as follows:
                    column $col of the FTS5 table (considering all rows). 
 </td></tr></table>
 
-<p>Example:
+<p> An fts5vocab table of type "instance" contains one row for each term
+instance stored in the associated FTS index. Assuming the FTS5 table is
+created with the 'detail' option set to 'full', table columns are as follows:
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+  <tr style="text-align:left"><th>Column</th><th>Contents
+  </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>term</td><td>   The term, as stored in the FTS5 index.
+  </td></tr><tr style="text-align:left"><td>doc</td><td>    The rowid of the document that contains the term instance.
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>col</td><td>    The name of the column that contains the term instance.
+  </td></tr><tr style="text-align:left"><td>offset</td><td> The index of the term instance within its column. Terms 
+                     are numbered in order of occurrence starting from 0.
+</td></tr></table>
+
+<p> If the FTS5 table is created with the 'detail' option set to 'col', then
+the <i>offset</i> column of an instance virtual table always contains NULL.
+In this case there is one row in the table for each unique term/doc/col 
+combination. Or, if the FTS5 table is created with 'detail' set to 'none',
+then both <i>offset</i> and <i>col</i> always contain NULL values. For
+detail=none FTS5 tables, there is one row in the fts5vocab table for each
+unique term/doc combination.
+
+</p><p>Example:
 
 </p><div class="codeblock"><pre><i>-- Assuming a database created using:</i>
 CREATE VIRTUAL TABLE ft1 USING fts5(c1, c2);
@@ -2310,6 +2472,25 @@ CREATE VIRTUAL TABLE ft1_v_col USING fts5vocab(ft1, col);
 --    date   | 1 | 3
 --</i>
 CREATE VIRTUAL TABLE ft1_v_row USING fts5vocab(ft1, row);
+
+<i>-- And, for type "instance"
+INSERT INTO ft1 VALUES('apple banana cherry', 'banana banana cherry');
+INSERT INTO ft1 VALUES('cherry cherry cherry', 'date date date');
+--
+--    apple  | 1 | c1 | 0
+--    banana | 1 | c1 | 1
+--    banana | 1 | c2 | 0
+--    banana | 1 | c2 | 1
+--    cherry | 1 | c1 | 2
+--    cherry | 1 | c2 | 2
+--    cherry | 2 | c1 | 0
+--    cherry | 2 | c1 | 1
+--    cherry | 2 | c1 | 2
+--    date   | 2 | c2 | 0
+--    date   | 2 | c2 | 1
+--    date   | 2 | c2 | 2
+--</i>
+CREATE VIRTUAL TABLE ft1_v_instance USING fts5vocab(ft1, instance);
 </pre></div>
 
 
@@ -2380,8 +2561,16 @@ CREATE VIRTUAL TABLE t1 USING fts5(
   <li> <p>The "docid" alias does not exist. Applications must use "rowid"
           instead.
 
-  </p></li><li> <p>The left hand side of the MATCH operator in a full-text query must be
-          the table name - not any column name as in FTS4.
+  </p></li><li> <p>The behaviour of queries when a column-filter is specified both as
+          part of the FTS query and by using a column as the LHS of a MATCH
+          operator is slightly different. For a table with columns "a" and "b"
+          and a query similar to:
+</p><div class="codeblock"><pre>... a MATCH 'b: string'
+</pre></div>
+       <p>FTS3/4 searches for matches in column "b". However, FTS5 always
+          returns zero rows, as results are first filtered for column "b", then
+          for column "a", leaving no results. In other words, in FTS3/4 the
+          inner filter overrides the outer, in FTS5 both filters are applied.
 
   </p></li><li> <p>The FTS query syntax (right hand side of the MATCH operator) has
           changed in some ways. The FTS5 syntax is quite close to the FTS4
@@ -2390,13 +2579,6 @@ CREATE VIRTUAL TABLE t1 USING fts5(
           strings. Most queries that work with FTS3/4 should also work with
           FTS5, and those that do not should return parse errors.
 </p></li></ol>
-
-<div class="codeblock"><pre><i>-- FTS3/4 query </i>
-SELECT docid FROM t1 WHERE text MATCH 'token';
-
-<i>-- FTS5 equivalent </i>
-SELECT rowid FROM t1 WHERE t1 MATCH 'text:token';
-</pre></div>
 
 <h3 nonumber="1" id="_auxiliary_function_changes_"> Auxiliary Function Changes </h3>
 
@@ -2504,4 +2686,37 @@ using FTS5.
        the amount of processing that may take place within any given 
        INSERT, UPDATE or DELETE operation.
 </p></li></ul>
+
+<a name="appendix_b"></a>
+<h1 id="appendix_b" nonumber="1" tags="fts5 shadow tables">
+  Appendix B: Shadow tables created by FTS5
+</h1>
+
+<p>
+When an FTS5 virtual table is created in a database, between 3 and 5 real
+tables are created in the database. These are known as "<a href="vtab.html#xshadowname">shadow tables</a>", and are
+used by the virtual table module to store persistent data. They should not
+be accessed directly by the user. Many other virtual table modules, including
+<a href="fts3.html">FTS3</a> and <a href="rtree.html">rtree</a>, also create and use shadow tables.
+
+</p><p>FTS5 creates the following shadow tables. In each case the actual table name
+is based on the name of the FTS5 virtual table (in the following table, replace
+&lt;name&gt; with the name of the virtual table to find the actual shadow
+table name).
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+<tr style="text-align:left"><th>Table&nbsp;Name</th><th>Contents
+</th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>&lt;name&gt;_data</td><td> This table contains most of the full-text index data.
+</td></tr><tr style="text-align:left"><td>&lt;name&gt;_idx</td><td> This table contains the remainder of the full-text
+index data. It is almost always much smaller than the &lt;name&gt;_data table.
+</td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>&lt;name&gt;_config</td><td> Contains the values of persistent
+configuration parameters.
+</td></tr><tr style="text-align:left"><td>&lt;name&gt;_content</td><td> Contains the actual data inserted into the 
+FTS5 table. This shadow table is not present for 
+<a href="fts5.html#contentless_tables">contentless</a> or 
+<a href="fts5.html#external_content_tables">external content</a> FTS5 tables.
+</td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>&lt;name&gt;_docsize</td><td> Contains the size of each column of each
+row in the virtual table in tokens. This shadow table is not present if 
+the <a href="fts5.html#the_columnsize_option">"columnsize" option</a> is set to 0.
+</td></tr></table>
 

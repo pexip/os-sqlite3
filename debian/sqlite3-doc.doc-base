@@ -5,5 +5,5 @@ Abstract: Overview of SQLite3
 Section: Data Management
 
 Format: HTML
-Index: /usr/share/doc/sqlite3-doc/index.html
-Files: /usr/share/doc/sqlite3-doc/*.html
+Index: /usr/share/doc/sqlite3/index.html
+Files: /usr/share/doc/sqlite3/*.html

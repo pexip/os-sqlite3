@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>What If OpenDocument Used SQLite?</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -85,7 +101,7 @@ What If OpenDocument Used SQLite?</h1>
 
 <p>Suppose the
 <a href="http://en.wikipedia.org/wiki/OpenDocument">OpenDocument</a> file format,
-and specifically the "ODP" OpenDocument Presentation format, where
+and specifically the "ODP" OpenDocument Presentation format, were
 built around SQLite.  Benefits would include:
 <ul>
 <li>Smaller documents
@@ -120,7 +136,7 @@ An OpenDocument Presentation or "ODP" file is a
 <a href="http://en.wikipedia.org/wiki/Zip_%28file_format%29">ZIP archive</a> containing
 XML files describing presentation slides and separate image files for the
 various images that are included as part of the presentation.
-(OpenDocument word processor and spreedsheet files are similarly
+(OpenDocument word processor and spreadsheet files are similarly
 structured but are not considered by this article.) The reader can
 easily see the content of an ODP file by using the "zip -l" command.
 For example, the following is the "zip -l" output from a 49-slide presentation
@@ -544,7 +560,7 @@ programming errors.  Further enhancement ideas include:
      Undo could go back into prior edit sessions.
 <li> Add <a href="fts3.html#fts4">full text search</a> capabilities to the slide deck, or across
      multiple slide decks.
-<li> Decompose the "settings.xml" file into an SQL table kind that
+<li> Decompose the "settings.xml" file into an SQL table that
      is more easily viewed and edited by separate applications.
 <li> Break out the "Presentor Notes" from each slide into a separate
      table, for easier access from third-party applications and/or scripts.

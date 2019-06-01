@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQL Features That SQLite Does Not Implement</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -85,13 +101,17 @@ Rather than try to list all the features of SQL that SQLite does
 support, it is much easier to list those that it does not.
 Unsupported features of SQL are shown below.</p>
 
+<p>
+See also the
+<a href="quirks.html">Quirks, Caveats, and Gotchas</a> of SQLite.
+
 <table cellpadding="10">
 
 <tr><td valign="top"><b><nobr>RIGHT and FULL OUTER JOIN</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
   LEFT OUTER JOIN is implemented, but not RIGHT OUTER JOIN or
   FULL OUTER JOIN.
 </td></tr><tr><td valign="top"><b><nobr>Complete ALTER TABLE support</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
-  Only the RENAME TABLE and ADD COLUMN variants of the 
+  Only the RENAME TABLE, ADD COLUMN, and RENAME COLUMN variants of the 
   ALTER TABLE command are supported.  Other kinds of ALTER TABLE operations
   such as
   DROP COLUMN, ALTER COLUMN, ADD CONSTRAINT, and so forth are omitted.

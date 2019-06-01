@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite FTS3 and FTS4 Extensions</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -451,7 +467,7 @@ CREATE VIRTUAL TABLE mail USING fts3(subject, body);
 SELECT * FROM mail WHERE rowid = 15;                <i>-- Fast. Rowid lookup.</i>
 SELECT * FROM mail WHERE body MATCH 'sqlite';       <i>-- Fast. Full-text query.</i>
 SELECT * FROM mail WHERE mail MATCH 'search';       <i>-- Fast. Full-text query.</i>
-SELECT * FROM mail WHERE rowid BETWEEN 15 AND 20;   <i>-- Slow. Linear scan.</i>
+SELECT * FROM mail WHERE rowid BETWEEN 15 AND 20;   <i>-- Fast. Rowid lookup.</i>
 SELECT * FROM mail WHERE subject = 'database';      <i>-- Slow. Linear scan.</i>
 SELECT * FROM mail WHERE subject MATCH 'database';  <i>-- Fast. Full-text query.</i>
 </pre></div>
@@ -693,7 +709,7 @@ SELECT * FROM docs WHERE docs MATCH 'title:linux problems';
 
 <i>-- Query the database for documents for which the term "linux" appears in</i>
 <i>-- the document title, and the term "driver" appears in the body of the document</i>
-<i>-- ("driver" may also appear in the title, but this alone will not satisfy the</i>.
+<i>-- ("driver" may also appear in the title, but this alone will not satisfy the</i>
 <i>-- query criteria).</i>
 SELECT * FROM docs WHERE body MATCH 'title:linux driver';
 </pre></div>
@@ -740,8 +756,8 @@ SELECT * FROM docs WHERE docs MATCH '"lin* app*"';
     A NEAR query is a query that returns documents that contain a two or
     more nominated terms or phrases within a specified proximity of each 
     other (by default with 10 or less intervening terms). A NEAR query is 
-    specified by putting the keyword "NEAR" between two phrase, term or 
-    <a href="fts3.html#termprefix">prefix queries</a>. To specify a proximity other than the default,
+    specified by putting the keyword "NEAR" between two phrase, token or 
+    token prefix queries. To specify a proximity other than the default,
     an operator of the form "NEAR/<i>&lt;N&gt;</i>" may be used, where
     <i>&lt;N&gt;</i> is the maximum number of intervening terms allowed.
     For example:
@@ -1816,8 +1832,10 @@ CREATE VIRTUAL TABLE t3 USING fts4(content="t2", a, c);
   When a users query on the FTS table requires a column value other than
   docid, FTS attempts to read the requested value from the corresponding column of
   the row in the content table with a rowid value equal to the current FTS
-  docid. Or, if such a row cannot be found in the content table, a NULL
-  value is used instead. For example:
+  docid. Only the subset of content-table columns duplicated in the FTS/34
+  table declaration can be queried for - to retrieve values from any other
+  columns the content table must be queried directly. Or, if such a row cannot
+  be found in the content table, a NULL value is used instead. For example:
 
 </p><div class="codeblock"><pre>CREATE TABLE t2(id INTEGER PRIMARY KEY, a, b, c);
 CREATE VIRTUAL TABLE t3 USING fts4(content="t2", b, c);
@@ -2020,7 +2038,7 @@ CREATE VIRTUAL TABLE t1 USING fts4(c1, c2, c3, c4, notindexed=c1, notindexed=c3)
 
 <p>
   Values stored in unindexed columns are not eligible to match MATCH 
-  operators. The do not influence the results of the offsets() or matchinfo()
+  operators. They do not influence the results of the offsets() or matchinfo()
   auxiliary functions. Nor will the snippet() function ever return a
   snippet based on a value stored in an unindexed column.
 
@@ -2355,21 +2373,32 @@ SELECT * FROM porter WHERE porter MATCH 'Frustration';
   recognizes ASCII space and punctuation characters as token separators.
 
 </p><p>
-  By default, "unicode61" also removes all diacritics from Latin script
+  By default, "unicode61" attempts to remove diacritics from Latin script
   characters. This behaviour can be overridden by adding the tokenizer argument
   "remove_diacritics=0". For example:
 
-</p><div class="codeblock"><pre><i>-- Create tables that remove diacritics from Latin script characters</i>
+</p><div class="codeblock"><pre><i>-- Create tables that remove <b>all</b>diacritics from Latin script characters</i>
 <i>-- as part of tokenization.</i>
 CREATE VIRTUAL TABLE txt1 USING fts4(tokenize=unicode61);
-CREATE VIRTUAL TABLE txt2 USING fts4(tokenize=unicode61 "remove_diacritics=1");
+CREATE VIRTUAL TABLE txt2 USING fts4(tokenize=unicode61 "remove_diacritics=2");
 
 <i>-- Create a table that does not remove diacritics from Latin script</i>
 <i>-- characters as part of tokenization.</i>
 CREATE VIRTUAL TABLE txt3 USING fts4(tokenize=unicode61 "remove_diacritics=0");
 </pre></div>
 
-<p>
+<p>The remove_diacritics option may be set to "0", "1" or "2". The default
+   value is "1".  If it is set to "1" or "2", then diacritics are removed from
+   Latin script characters as described above. However, if it is set to "1",
+   then diacritics are not removed in the fairly uncommon case where a single
+   unicode codepoint is used to represent a character with more that one
+   diacritic. For example, diacritics are not removed from codepoint 0x1ED9
+   ("LATIN SMALL LETTER O WITH CIRCUMFLEX AND DOT BELOW"). This is technically
+   a bug, but cannot be fixed without creating backwards compatibility
+   problems. If this option is set to "2", then diacritics are correctly
+   removed from all Latin characters.
+
+</p><p>
   It is also possible to customize the set of codepoints that unicode61 treats
   as separator characters. The "separators=" option may be used to specify one
   or more extra characters that should be treated as separator characters, and
@@ -2461,7 +2490,7 @@ SELECT fts3_tokenizer(&lt;tokenizer-name&gt;, &lt;sqlite3_tokenizer_module ptr&g
   always available.  Beginning with SQLite <a href="releaselog/3_12_0.html">version 3.12.0</a>
   (2016-03-29), the second form of
   fts3_tokenizer() can also be activated at run-time by calling
-  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,1,0).
+  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigenablefts3tokenizer">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,1,0).
 
 </p><p>
   <b>SECURITY WARNING</b>: 
@@ -2472,7 +2501,7 @@ SELECT fts3_tokenizer(&lt;tokenizer-name&gt;, &lt;sqlite3_tokenizer_module ptr&g
   This can be done using the <a href="c3ref/set_authorizer.html">authorization callback</a>, 
   or by disabling the two-argument fts3_tokenizer() interface using a
   call to
-  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,0,0).
+  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigenablefts3tokenizer">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,0,0).
 
 </p><p>
   The following block contains an example of calling the fts3_tokenizer()
@@ -3085,6 +3114,12 @@ ORDER BY ranktable.rank DESC
   externally assigned to each column of each document. It may be registered
   with SQLite like any other user function using <a href="c3ref/create_function.html">sqlite3_create_function</a>.
 
+</p><p><b> Security Warning:</b> Because it is just an ordinary SQL function, 
+  rank() may be invoked as part of any SQL query in any context. This means
+  that the first argument passed may not be a valid matchinfo blob.
+  Implementors should take care to handle this case without causing buffer
+  overruns or other potential security problems.
+
 </p><div class="codeblock"><pre><i>/*</i>
 <i>** SQLite user defined function to use with matchinfo() to calculate the</i>
 <i>** relevancy of an FTS match. The value returned is the relevancy score</i>
@@ -3121,8 +3156,9 @@ ORDER BY ranktable.rank DESC
 <i>*/</i>
 static void rankfunc(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal){
   int *aMatchinfo;                <i>/* Return value of matchinfo() */</i>
-  int nCol;                       <i>/* Number of columns in the table */</i>
-  int nPhrase;                    <i>/* Number of phrases in the query */</i>
+  int nMatchinfo;                 <i>/* Number of elements in aMatchinfo&#x5B;&#x5D; */</i>
+  int nCol = 0;                   <i>/* Number of columns in the table */</i>
+  int nPhrase = 0;                <i>/* Number of phrases in the query */</i>
   int iPhrase;                    <i>/* Current phrase */</i>
   double score = 0.0;             <i>/* Value to return */</i>
 
@@ -3132,12 +3168,21 @@ static void rankfunc(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal){
 <i>  ** If not, jump to wrong_number_args. Set aMatchinfo to point to the array</i>
 <i>  ** of unsigned integer values returned by FTS function matchinfo. Set</i>
 <i>  ** nPhrase to contain the number of reportable phrases in the users full-text</i>
-<i>  ** query, and nCol to the number of columns in the table.</i>
+<i>  ** query, and nCol to the number of columns in the table. Then check that the</i>
+<i>  ** size of the matchinfo blob is as expected. Return an error if it is not.</i>
 <i>  */</i>
   if( nVal&lt;1 ) goto wrong_number_args;
   aMatchinfo = (unsigned int *)sqlite3_value_blob(apVal&#x5B;0&#x5D;);
-  nPhrase = aMatchinfo&#x5B;0&#x5D;;
-  nCol = aMatchinfo&#x5B;1&#x5D;;
+  nMatchinfo = sqlite3_value_bytes(apVal&#x5B;0&#x5D;) / sizeof(int);
+  if( nMatchinfo&gt;=2 ){
+    nPhrase = aMatchinfo&#x5B;0&#x5D;;
+    nCol = aMatchinfo&#x5B;1&#x5D;;
+  }
+  if( nMatchinfo!=(2+3*nCol*nPhrase) ){
+    sqlite3_result_error(pCtx,
+      "invalid matchinfo blob passed to function rank()", -1);
+    return;
+  }
   if( nVal!=(1+nCol) ) goto wrong_number_args;
 
 <i>  /* Iterate through each phrase in the users query. */</i>

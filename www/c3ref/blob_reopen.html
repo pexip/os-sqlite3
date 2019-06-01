@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Move a BLOB Handle to a New Row</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -84,11 +100,11 @@ return false;
 int sqlite3_blob_reopen(sqlite3_blob *, sqlite3_int64);
 </pre></blockquote>
 <p>
-This function is used to move an existing blob handle so that it points
+This function is used to move an existing <a href="../c3ref/blob.html">BLOB handle</a> so that it points
 to a different row of the same database table. The new row is identified
 by the rowid value passed as the second argument. Only the row can be
 changed. The database, table and column on which the blob handle is open
-remain the same. Moving an existing blob handle to a new row can be
+remain the same. Moving an existing <a href="../c3ref/blob.html">BLOB handle</a> to a new row is
 faster than closing the existing handle and opening a new one.</p>
 
 <p>The new row must meet the same criteria as for <a href="../c3ref/blob_open.html">sqlite3_blob_open()</a> -

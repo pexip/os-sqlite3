@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>The SQLite Amalgamation</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -92,8 +108,8 @@ The SQLite Amalgamation
 single large files of C-code named "sqlite3.c" and
 called "the amalgamation". The amalgamation
 contains everything an application needs to embed SQLite.
-The amalgamation file is more than 180,000 lines long and over 6
-megabytes in size.
+The amalgamation file is more than 220,000 lines long and over 7.5
+megabytes in size (as of 2018-11-24).
 
 </p><p>Combining all the code for SQLite into one big file makes SQLite
 easier to deploy &mdash; there is just one file to keep track of.  
@@ -118,7 +134,7 @@ or auxiliary programs.  For example, the
 <a href="https://www.sqlite.org/src/artifact?ci=trunk&filename=src/parse.y">parse.y</a>
 file contains an LALR(1) grammar of the SQL language which is compiled
 down into are parser in files "parse.c" and "parse.h" by the
-<a href="https://www.sqlite.org/src/doc/trunk/doc/lemon.html">Lemon</a> parser generator.
+<a href="lemon.html">Lemon parser generator</a>.
 </p>
 
 <p>The makefiles for SQLite have an "sqlite3.c" target for building the
@@ -130,7 +146,7 @@ for the core SQLite library and the <a href="fts3.html">FTS3</a>, <a href="fts5.
 This file contains about 184K lines of code 
 (113K if you omit blank lines and comments) and is over 6.4 megabytes
 in size.
-Though the the various extensions are included in the
+Though the various extensions are included in the
 "sqlite3.c" amalgamation file, they are disabled using #ifdef statements.
 Activate the extensions using <a href="compile.html">compile-time options</a> like:
 

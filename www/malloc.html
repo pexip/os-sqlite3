@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Dynamic Memory Allocation In SQLite</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -98,11 +114,10 @@ Table Of Contents
 <div class="fancy-toc3"><a href="#application_defined_memory_allocators">3.1.6. Application-defined memory allocators</a></div>
 <div class="fancy-toc3"><a href="#memory_allocator_overlays">3.1.7. Memory allocator overlays</a></div>
 <div class="fancy-toc3"><a href="#no_op_memory_allocator_stub">3.1.8. No-op memory allocator stub</a></div>
-<div class="fancy-toc2"><a href="#_scratch_memory">3.2.  Scratch memory</a></div>
-<div class="fancy-toc2"><a href="#_page_cache_memory">3.3.  Page cache memory</a></div>
-<div class="fancy-toc2"><a href="#_lookaside_memory_allocator">3.4.  Lookaside memory allocator</a></div>
-<div class="fancy-toc2"><a href="#_memory_status">3.5.  Memory status</a></div>
-<div class="fancy-toc2"><a href="#_setting_memory_usage_limits">3.6.  Setting memory usage limits</a></div>
+<div class="fancy-toc2"><a href="#_page_cache_memory">3.2.  Page cache memory</a></div>
+<div class="fancy-toc2"><a href="#_lookaside_memory_allocator">3.3.  Lookaside memory allocator</a></div>
+<div class="fancy-toc2"><a href="#_memory_status">3.4.  Memory status</a></div>
+<div class="fancy-toc2"><a href="#_setting_memory_usage_limits">3.5.  Setting memory usage limits</a></div>
 <div class="fancy-toc1"><a href="#_mathematical_guarantees_against_memory_allocation_failures">4.  Mathematical Guarantees Against Memory Allocation Failures</a></div>
 <div class="fancy-toc2"><a href="#_computing_and_controlling_parameters_m_and_n">4.1.  Computing and controlling parameters M and n</a></div>
 <div class="fancy-toc2"><a href="#_ductile_failure">4.2.  Ductile failure</a></div>
@@ -584,59 +599,14 @@ use <a href="c3ref/config.html">sqlite3_config()</a> together with <a href="c3re
 <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigheap">SQLITE_CONFIG_HEAP</a> to specify a new alternative memory allocator
 before beginning to use SQLite.</p>
 
-<a name="scratch"></a>
-
-<h2 id="_scratch_memory"><span>3.2. </span> Scratch memory</h2>
-
-<p>SQLite occasionally needs a large chunk of "scratch" memory to
-perform some transient calculation.  Scratch memory is used, for example,
-as temporary storage when rebalancing a B-Tree.  These scratch memory
-allocations are typically about 10 kilobytes in size and are
-transient - lasting
-only for the duration of a single, short-lived function call.</p>
-
-<p>In older versions of SQLite, the scratch memory was obtained from
-the processor stack.  That works great on workstations with a large stack.
-But pulling large buffers from the stack 
-caused problems on embedded systems with a 
-small processor stack (typically 4K or 8K).  And so SQLite was modified
-to allocate scratch memory from the heap.</p>
-
-<p>However, doing occasional large transient allocations from the heap can
-lead to memory fragmentation in embedded systems.  To work around this
-problem, a separate memory allocation system for scratch memory has been
-created.</p>
-
-<p>The scratch memory allocator is set up as follows:</p>
-
-<blockquote><pre>
-<a href="c3ref/config.html">sqlite3_config</a>(<a href="c3ref/c_config_covering_index_scan.html#sqliteconfigscratch">SQLITE_CONFIG_SCRATCH</a>, pBuf, sz, N);
-</pre></blockquote>
-
-<p>The pBuf parameter is a pointer to a contiguous range of bytes that
-SQLite will use for all scratch memory allocations.  The buffer must be
-at least sz*N bytes in size.  The "sz" parameter
-is the maximum size of each scratch allocation.  N is the maximum 
-number of simultaneous scratch allocations.  The "sz" parameter should
-be approximately 6 times the maximum database page size.  N should
-be twice the number of threads running in the system.  No single thread will
-ever request more than two scratch allocation at a time so if there
-are never more than N threads, then there will always be enough scratch
-memory available.</p>
-
-<p>If the scratch memory setup does not define enough memory, then
-SQLite falls back to using the regular memory allocator for its scratch
-memory allocations.  The default setup is sz=0 and N=0 so the use
-of the regular memory allocator is the default behavior.</p>
-
 <a name="pagecache"></a>
 
-<h2 id="_page_cache_memory"><span>3.3. </span> Page cache memory</h2>
+<h2 id="_page_cache_memory"><span>3.2. </span> Page cache memory</h2>
 
 <p>In most applications, the database page cache subsystem within 
 SQLite uses more dynamically allocated memory than all other parts
 of SQLite combined.  It is not unusual to see the database page cache
-consumes over 10 times more memory than the rest of SQLite combined.</p>
+consume over 10 times more memory than the rest of SQLite combined.</p>
 
 <p>SQLite can be configured to make page cache memory allocations from
 a separate and distinct memory pool of fixed-size
@@ -682,7 +652,7 @@ general-purpose memory allocator.</p>
 
 <a name="lookaside"></a>
 
-<h2 id="_lookaside_memory_allocator"><span>3.4. </span> Lookaside memory allocator</h2>
+<h2 id="_lookaside_memory_allocator"><span>3.3. </span> Lookaside memory allocator</h2>
 
 <p>SQLite <a href="c3ref/sqlite3.html">database connections</a> make many
 small and short-lived memory allocations.
@@ -700,10 +670,10 @@ to SQLite.</p>
 introduced the lookaside memory allocator to
 help reduce the memory allocation load.  In the lookaside allocator,
 each <a href="c3ref/sqlite3.html">database connection</a> preallocates a single large chunk of memory
-(typically in the range of 50 to 100 kilobytes) and divides that chunk
-up into small fixed-size "slots" of around 50 to 200 byte each.  This
+(typically in the range of 60 to 120 kilobytes) and divides that chunk
+up into small fixed-size "slots" of around 100 to 1000 byte each.  This
 becomes the lookaside memory pool.  Thereafter, memory allocations
-associated with the <a href="c3ref/sqlite3.html">database connection</a> and that are not too larger
+associated with the <a href="c3ref/sqlite3.html">database connection</a> and that are not too large
 are satisfied using one of the lookaside pool slots rather than by calling
 the general-purpose memory allocator.  Larger allocations continue to
 use the general-purpose memory allocator, as do allocations that occur
@@ -728,33 +698,34 @@ Consequently, lookaside memory
 allocations and deallocations are very fast.  In speed tests on
 Linux and Mac OS X workstations, SQLite has shown overall performance
 improvements as high as 10% and 15%, depending on the workload how
-lookaside is configured.</p>
+and lookaside is configured.</p>
 
 <p>The size of the lookaside memory pool has a global default value
 but can also be configured on a connection-by-connection basis.
-To change the default size of the lookaside memory pool use the 
-following interface at start-time:</p>
+To change the default size of the lookaside memory pool at
+compile-time, use the 
+<a href="compile.html#default_lookaside">-DSQLITE_DEFAULT_LOOKASIDE=<i>SZ,N</i></a>
+option.
+To change the default size of the lookaside memory pool at
+start-time, use the <a href="c3ref/config.html">sqlite3_config()</a> interface:</p>
 
 <blockquote><pre>
 <a href="c3ref/config.html">sqlite3_config</a>(<a href="c3ref/c_config_covering_index_scan.html#sqliteconfiglookaside">SQLITE_CONFIG_LOOKASIDE</a>, sz, cnt);
 </pre></blockquote>
 
 <p>The "sz" parameter is the size in bytes of each lookaside slot.
-The default is 100 bytes.  The "cnt" parameter is
+The "cnt" parameter is
 the total number of lookaside memory slots per database connection.
-The default value is 500 slots. The total amount
+The total amount
 of lookaside memory allocated to each <a href="c3ref/sqlite3.html">database connection</a> is
-sz*cnt bytes.  Hence the lookaside memory pool allocated per database 
-connection is 50 kilobytes by default.
-(Note: these default values are for SQLite <a href="releaselog/3_6_1.html">version 3.6.1</a> and are subject
-to changes in future releases.)
+sz*cnt bytes. 
 </p>
 
 <p>The lookaside pool can be changed for an individual
 <a href="c3ref/sqlite3.html">database connection</a> "db" using this call:</p>
 
 <blockquote><pre>
-<a href="c3ref/db_config.html">sqlite3_db_config</a>(db, <a href="c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_LOOKASIDE</a>, pBuf, sz, cnt);
+<a href="c3ref/db_config.html">sqlite3_db_config</a>(db, <a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfiglookaside">SQLITE_DBCONFIG_LOOKASIDE</a>, pBuf, sz, cnt);
 </pre></blockquote>
 
 <p>The "pBuf" parameter is a pointer to memory space that will be
@@ -772,7 +743,7 @@ evaluating any SQL statements on the connection.</p>
 
 <a name="memstatus"></a>
 
-<h2 id="_memory_status"><span>3.5. </span> Memory status</h2>
+<h2 id="_memory_status"><span>3.4. </span> Memory status</h2>
 
 <p>By default, SQLite keeps statistics on its memory usage.  These
 statistics are useful in helping to determine how much memory an
@@ -834,12 +805,12 @@ per-connection statistics continue to function even if
 <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigmemstatus">SQLITE_CONFIG_MEMSTATUS</a> is turned off.</p>
 
 <a name="heaplimit"></a>
-<h2 id="_setting_memory_usage_limits"><span>3.6. </span> Setting memory usage limits</h2>
+<h2 id="_setting_memory_usage_limits"><span>3.5. </span> Setting memory usage limits</h2>
 
 <p>The <a href="c3ref/soft_heap_limit64.html">sqlite3_soft_heap_limit64()</a> interface can be used to set an
 upper bound on the total amount of outstanding memory that the
 general-purpose memory allocator for SQLite will allow to be outstanding
-at one time.  If attempts are made to allocate more memory that specified
+at one time.  If attempts are made to allocate more memory than specified
 by the soft heap limit, then SQLite will first attempt to free cache
 memory before continuing with the allocation request.  The soft heap
 limit mechanism only works if <a href="malloc.html#memstatus">memory statistics</a> are enabled and
@@ -849,15 +820,15 @@ compile-time option.</p>
 
 <p>The soft heap limit is "soft" in this sense:  If SQLite is not able
 to free up enough auxiliary memory to stay below the limit, it goes
-ahead and allocations the extra memory and exceeds its limit.  This occurs
+ahead and allocates the extra memory and exceeds its limit.  This occurs
 under the theory that it is better to use additional memory than to fail
 outright.</p>
 
 <p>As of SQLite <a href="releaselog/3_6_1.html">version 3.6.1</a> (2008-08-06), 
 the soft heap limit only applies to the
 general-purpose memory allocator.  The soft heap limit does not know
-about or interact with the <a href="malloc.html#scratch">scratch memory allocator</a>, 
-the <a href="malloc.html#pagecache">pagecache memory allocator</a>, or the <a href="malloc.html#lookaside">lookaside memory allocator</a>.
+about or interact with
+the <a href="malloc.html#pagecache">pagecache memory allocator</a> or the <a href="malloc.html#lookaside">lookaside memory allocator</a>.
 This deficiency will likely be addressed in a future release.</p>
 
 <a name="nofrag"></a>
@@ -949,7 +920,6 @@ used by SQLite:</p>
 
 <ul>
 <li>The general-purpose memory allocator (<a href="malloc.html#memsys5">memsys5</a>).</li>
-<li>The <a href="malloc.html#scratch">scratch memory allocator</a>.</li>
 <li>The <a href="malloc.html#pagecache">pagecache memory allocator</a>.</li>
 <li>The <a href="malloc.html#lookaside">lookaside memory allocator</a>.</li>
 </ul>
@@ -958,14 +928,6 @@ used by SQLite:</p>
 all memory allocations are of the same size.  Hence, <b>n</b>=1
 and therefore <b>N</b>=<b>M</b>.  In other words, the memory pool need
 be no larger than the largest amount of memory in use at any given moment.</p>
-
-<p>SQLite guarantees that no thread will ever use more than two
-scratch memory slots at one time.  So if an application allocates twice as many
-scratch memory slots as there are threads, and assuming the size of
-each slot is large enough, there is never a chance of overflowing the
-scratch memory allocator.  An upper bound on the size of scratch memory
-allocations is six times the largest page size.  It is easy, therefore,
-to guarantee breakdown-free operation of the scratch memory allocator.</p>
 
 <p>The usage of pagecache memory is somewhat harder to control in
 SQLite version 3.6.1, though mechanisms are planned for subsequent
@@ -1031,15 +993,13 @@ might come from several sources:</p>
 <li>Complex SQL queries that compile down to large <a href="c3ref/stmt.html">prepared statements</a>.</li>
 <li>SQL parser objects used internally by <a href="c3ref/prepare.html">sqlite3_prepare_v2()</a>.</li>
 <li>Storage space for <a href="c3ref/sqlite3.html">database connection</a> objects.</li>
-<li>Scratch memory allocations that overflow into the general-purpose
-    memory allocator.</li>
 <li>Page cache memory allocations that overflow into the general-purpose
     memory allocator.</li>
 <li>Lookaside buffer allocations for new <a href="c3ref/sqlite3.html">database connections</a>.</li>
 </ol>
 
-<p>The last three allocations can be controlled and/or eliminated by
-configuring the <a href="malloc.html#scratch">scratch memory allocator</a>, <a href="malloc.html#pagecache">pagecache memory allocator</a>,
+<p>The last two allocations can be controlled and/or eliminated by
+configuring the <a href="malloc.html#pagecache">pagecache memory allocator</a>,
 and <a href="malloc.html#lookaside">lookaside memory allocator</a> appropriately, as described above.
 The storage space required for <a href="c3ref/sqlite3.html">database connection</a> objects depends
 to some extent on the length of the filename of the database file, but
@@ -1089,8 +1049,8 @@ memory.  This gives a value of <b>N</b> of around 100KB.</p>
 for breakdown-free operation but the actual memory usage exceeds
 design limits set by the <a href="malloc.html#nofrag">Robson proof</a>, SQLite will usually continue 
 to operate normally.
-The <a href="malloc.html#scratch">scratch memory allocator</a>, the <a href="malloc.html#pagecache">pagecache memory allocator</a>,
-and the <a href="malloc.html#lookaside">lookaside memory allocator</a> all automatically failover
+The <a href="malloc.html#pagecache">pagecache memory allocator</a>
+and the <a href="malloc.html#lookaside">lookaside memory allocator</a> automatically failover
 to the <a href="malloc.html#memsys5">memsys5</a> general-purpose memory allocator.  And it is usually the
 case that the <a href="malloc.html#memsys5">memsys5</a> memory allocator will continue to function
 without fragmentation even if <b>M</b> and/or <b>n</b> exceeds the limits

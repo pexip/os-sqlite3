@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Appropriate Uses For SQLite</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -77,6 +93,7 @@ return false;
 </div>
 
 
+
 <h1 align="center">Appropriate Uses For SQLite</h1>
 
 <p>
@@ -87,7 +104,7 @@ solve a different problem.
 
 <p>
 Client/server SQL database engines strive to implement a shared repository
-of enterprise data.  They emphasis scalability, concurrency, centralization,
+of enterprise data.  They emphasize scalability, concurrency, centralization,
 and control.
 SQLite strives to provide local data storage for
 individual applications and devices.  SQLite emphasizes economy,
@@ -139,10 +156,15 @@ menu option can be implemented using the <a href="backup.html">backup API</a>.
 </p>
 
 <p>There are many benefits to this approach, including improved
-application performance, reduced cost and complexity, and
+performance, reduced cost and complexity, and
 improved reliability.  See technical notes
-<a href="aff_short.html">here</a> and 
-<a href="appfileformat.html">here</a> for details.
+<a href="aff_short.html">"aff_short.html"</a> and 
+<a href="appfileformat.html">"appfileformat.html"</a> and
+<a href="fasterthanfs.html">"fasterthanfs.html"</a> for more information.
+This use case is closely related to the
+<a href="#wireproto">data transfer format</a> and
+<a href="#container">data container</a> use cases below.
+</li>
 
 <a name="website"></a>
 
@@ -233,14 +255,38 @@ using separate database files for different subdomains.  For
 example, the server might have a separate SQLite database for each
 user, so that the server can handle hundreds or thousands of simultaneous
 connections, but each SQLite database is only used by one connection.</p>
-
-
 </li>
 
-<li><p><b>File archives</b></p>
+<a name="wireproto"></a>
+
+<li><p><b>Data transfer format</b><p>
+
+<p>Because an SQLite database is a single compact file in a
+<a href="fileformat2.html">well-defined cross-platform format</a>, it is often used
+as a container for transferring content from one system to another.
+The sender gathers content into an SQLite database file, transfers
+that one file to the receiver, then the receiver uses SQL to extract
+the content as needed.
+
+<p>An SQLite database facilitates data transfer between systems even
+when the endpoints have different word sizes and/or byte orders.
+The data can be a complex mix of large binary blobs, text, and small
+numeric or boolean values.  The data format can be easily extended
+by adding new tables and/or columns, without breaking legacy receivers.
+The SQL query language means that receivers are not required to parse
+the entire transfer all at once, but can instead query the
+received content as needed.  The data format is "transparent" in the
+sense that it is easily decoded for human viewing using 
+a variety of universally available, open-source tools, from multiple
+vendors.
+</li>
+
+<a name="container"></a>
+
+<li><p><b>File archive and/or data container</b></p>
 
 <p>
-The <a href="https://www.sqlite.org/sqlar">SQLite Archiver</a> project shows how
+The <a href="sqlar.html">SQLite Archive</a> idea shows how
 SQLite can be used as a substitute for ZIP archives or Tarballs.
 An archive of files stored in SQLite is only very slightly larger, and
 in some cases actually smaller, than the equivalent ZIP archive.
@@ -248,7 +294,24 @@ And an SQLite archive features incremental and atomic updating
 and the ability to store much richer metadata.
 </p>
 
-<p>SQLite archives are useful as the distribution format for software
+<p><a href="https://www.fossil-scm.org/">Fossil</a> version 2.5 and later offers
+<a href="sqlar.html">SQLite Archive files</a> as a download format, in addition
+to traditional tarball and ZIP archive.
+The <a href="cli.html">sqlite3.exe command-line shell</a> version 3.22.0 and later will create,
+list, or unpack an SQL archiving using the 
+<a href="cli.html#sqlar">.archive command</a>.</p>
+
+<p>
+SQLite is a good solution for any situation that requires bundling
+diverse content into a self-contained and self-describing package 
+for shipment across a network.
+Content is encoding in a 
+<a href="fileformat2.html">well-defined, cross-platform, and stable file format</a>.
+The encoding is efficient, and receivers can extract small subsets
+of the content without having to read and parse the entire file.
+</p>
+
+<p>SQL archives are useful as the distribution format for software
 or content updates that are broadcast to many clients.  Variations
 on this idea are used, for example, to transmit TV programming guides
 to set-top boxes and to send over-the-air updates to vehicle navigation
@@ -263,7 +326,9 @@ systems.</p>
 <a href="http://man.he.net/man3/fwrite">fwrite()</a> to create and
 manage files of data in home-grown formats.  SQLite works 
 particularly well as a
-replacement for these <i>ad hoc</i> data files.</p>
+replacement for these <i>ad hoc</i> data files.
+Contrary to intuition, SQLite can be <a href="fasterthanfs.html">faster than the filesystem</a>
+for reading and writing content to disk.
 </li>
 
 <li><p><b>Internal or temporary databases</b></p>
@@ -366,7 +431,7 @@ disk files, and perhaps across multiple volumes.
 <p>
 SQLite supports an unlimited number of simultaneous readers, but it 
 will only allow one writer at any instant in time.
-For many situations, this is not a problem.  Writer queue up. Each application
+For many situations, this is not a problem.  Writers queue up. Each application
 does its database work quickly and moves on, and no lock lasts for more
 than a few dozen milliseconds. But there are some applications that require
 more concurrency, and those applications may need to seek a different

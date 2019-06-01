@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Result Codes</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -83,7 +99,7 @@ return false;
 <blockquote><pre>
 #define SQLITE_OK           0   /* Successful result */
 /* beginning-of-error-codes */
-#define SQLITE_ERROR        1   /* SQL error or missing database */
+#define SQLITE_ERROR        1   /* Generic error */
 #define SQLITE_INTERNAL     2   /* Internal logic error in SQLite */
 #define SQLITE_PERM         3   /* Access permission denied */
 #define SQLITE_ABORT        4   /* Callback routine requested an abort */
@@ -98,7 +114,7 @@ return false;
 #define SQLITE_FULL        13   /* Insertion failed because database is full */
 #define SQLITE_CANTOPEN    14   /* Unable to open the database file */
 #define SQLITE_PROTOCOL    15   /* Database lock protocol error */
-#define SQLITE_EMPTY       16   /* Database is empty */
+#define SQLITE_EMPTY       16   /* Internal use only */
 #define SQLITE_SCHEMA      17   /* The database schema changed */
 #define SQLITE_TOOBIG      18   /* String or BLOB exceeds size limit */
 #define SQLITE_CONSTRAINT  19   /* Abort due to constraint violation */
@@ -106,7 +122,7 @@ return false;
 #define SQLITE_MISUSE      21   /* Library used incorrectly */
 #define SQLITE_NOLFS       22   /* Uses OS features not supported on host */
 #define SQLITE_AUTH        23   /* Authorization denied */
-#define SQLITE_FORMAT      24   /* Auxiliary database format error */
+#define SQLITE_FORMAT      24   /* Not used */
 #define SQLITE_RANGE       25   /* 2nd parameter to sqlite3_bind out of range */
 #define SQLITE_NOTADB      26   /* File opened that is not a database file */
 #define SQLITE_NOTICE      27   /* Notifications from sqlite3_log() */

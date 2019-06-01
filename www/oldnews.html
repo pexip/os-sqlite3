@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Older News</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -922,7 +938,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
 <p>  Upgrading from version 3.7.6.1 is only needed on NetBSD.
 </blockquote><hr width="50%"><a name="2011_04_13"></a><h3>2011-04-13 - Version 3.7.6.1</h3><blockquote>
   SQLite <a href="releaselog/3_7_6_1.html">version 3.7.6.1</a> fixes a single bug in 3.7.6 that can cause a
-  segfault if <a href="c3ref/c_fcntl_busyhandler.html#sqlitefcntlsizehint">SQLITE_FCNTL_SIZE_HINT</a> is used on a unix build that has
+  segfault if <a href="c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlsizehint">SQLITE_FCNTL_SIZE_HINT</a> is used on a unix build that has
   SQLITE_ENABLE_LOCKING_MODE set to 0 and is compiled with
   HAVE_POSIX_FALLOCATE.</p>
 
@@ -1219,10 +1235,10 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   bugs.  
 </blockquote><hr width="50%"><a name="2009_05_25"></a><h3>2009-05-25 - Version 3.6.14.2</h3><blockquote>
   SQLite <a href="releaselog/3_6_14_2.html">version 3.6.14.2</a> fixes an obscure bug in the code generator
-  (<a href="http://www.sqlite.org/cvstrac/tktview?tn=3879">ticket #3879</a>)
+  (ticket #3879)
   section of SQLite which can potentially cause incorrect query results.
   The changes from the prior release consist of only this one bug fix,
-  check-in <a href="http://www.sqlite.org/cvstrac/chngview?cn=6676">[6676]</a>
+  check-in [6676]
   and a change to the version number text.</p>
 
 <p>  The bug was introduced in version 3.6.14.  It is recommended that
@@ -1423,7 +1439,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   Fix a long-standing bug that might cause database corruption if a
   disk-full error occurs in the middle of a transaction and that
   transaction is not rolled back.
-  <a href="http://www.sqlite.org/cvstrac/tktview?tn=2686">Ticket #2686.</a></p>
+  Ticket #2686.</p>
 
 <p>  The new VFS layer is stable.  However, we still reserve the right to
   make tweaks to the interface definition of the VFS if necessary.
@@ -1443,9 +1459,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   While stress-testing the 
   <a href="c3ref/soft_heap_limit.html">soft_heap_limit</a>
   feature, a bug that could lead to
-  <a href="http://www.sqlite.org/cvstrac/wiki?p=DatabaseCorruption">database
-  corruption</a> was <a href="http://www.sqlite.org/cvstrac/tktview?tn=2565">
-  discovered and fixed</a>.
+  database corruption was discovered and fixed.
   Though the consequences of this bug are severe, the chances of hitting 
   it in a typical application are remote.  Upgrading is recommended
   only if you use the 
@@ -1453,8 +1467,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   interface.
 </blockquote><hr width="50%"><a name="2007_07_20"></a><h3>2007-07-20 - Version 3.4.1</h3><blockquote>
   This release fixes a bug in <a href="lang_vacuum.html">VACUUM</a> that
-  can lead to <a href="http://www.sqlite.org/cvstrac/wiki?p=DatabaseCorruption">
-  database corruption</a>.  The bug was introduced in version 
+  can lead to database corruption.  The bug was introduced in version 
   <a href="changes.html#version_3_3_14">3.3.14</a>.
   Upgrading is recommended for all users.  Also included are a slew of
   other more routine
@@ -1464,10 +1477,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   can lead to database corruption.  Upgrading
   is strongly recommended.  If you must continue using an older version
   of SQLite, please at least read about how to avoid these bugs
-  at
-  <a href="http://www.sqlite.org/cvstrac/wiki?p=CorruptionFollowingBusyError">
-  CorruptionFollowingBusyError</a> and
-  <a href="http://www.sqlite.org/cvstrac/tktview?tn=2418">ticket #2418</a>
+  at CorruptionFollowingBusyError and ticket #2418
   <p>
   This release also adds explicit <a href="limits.html">limits</a> on the
   sizes and quantities of things SQLite will handle.  The new limits might
@@ -1498,8 +1508,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   also many enhancements to the test suite.  
 </blockquote><hr width="50%"><a name="2007_04_02"></a><h3>2007-04-02 - Version 3.3.14</h3><blockquote>
   This version focuses on performance improvements.  If you recompile
-  <a href="http://www.sqlite.org/cvstrac/wiki?p=TheAmalgamation">
-  the amalgamation</a> using GCC option -O3 (the precompiled binaries
+  the amalgamation using GCC option -O3 (the precompiled binaries
   use -O2) you may see performance
   improvements of 35% or more over version 3.3.13 depending on your
   workload.  This version also
@@ -1525,9 +1534,8 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
 </blockquote><hr width="50%"><a name="2007_01_04"></a><h3>2007-01-04 - Version 3.3.9</h3><blockquote>
   Version 3.3.9 fixes bugs that can lead to database corruption under
   obscure and difficult to reproduce circumstances.  See
-  <a href="http://www.sqlite.org/cvstrac/wiki?p=DatabaseCorruption">
-  DatabaseCorruption</a> in the
-  <a href="http://www.sqlite.org/cvstrac/wiki">wiki</a> for details.
+  DatabaseCorruption in the
+  wiki for details.
   This release also adds the new
   <a href="c3ref/prepare.html">sqlite3_prepare_v2()</a>
   API and includes important bug fixes in the command-line
@@ -1535,8 +1543,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   recommended.
 </blockquote><hr width="50%"><a name="2006_10_09"></a><h3>2006-10-09 - Version 3.3.8</h3><blockquote>
   Version 3.3.8 adds support for full-text search using the 
-  <a href="http://www.sqlite.org/cvstrac/wiki?p=FtsOne">FTS1
-  module.</a>  There are also minor bug fixes.  Upgrade only if
+  FTS1 module.  There are also minor bug fixes.  Upgrade only if
   you want to try out the new full-text search capabilities or if
   you are having problems with 3.3.7.
 </blockquote><hr width="50%"><a name="2006_08_12"></a><h3>2006-08-12 - Version 3.3.7</h3><blockquote>
@@ -1583,8 +1590,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   paradigm of maintaining a pool of database connections and handing
   them off to transient worker threads is now supported.
   Please help test this new feature.
-  See <a href="http://www.sqlite.org/cvstrac/wiki?p=MultiThreading">
-  the MultiThreading wiki page</a> for additional
+  See the MultiThreading wiki page for additional
   information.
 </blockquote><hr width="50%"><a name="2006_01_10"></a><h3>2006-01-10 - Version 3.3.0 alpha</h3><blockquote>
   Version 3.3.0 adds support for CHECK constraints, DESC indices,
@@ -1655,14 +1661,12 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   within that transaction an UPDATE or INSERT statement fails due to a
   constraint, then you try to rollback the whole transaction, the rollback
   might not work correctly.  See
-  <a href="http://www.sqlite.org/cvstrac/tktview?tn=1171">Ticket #1171</a>
-  for details.  Upgrading is recommended for all users.
+  Ticket #1171 for details.  Upgrading is recommended for all users.
 </blockquote><hr width="50%"><a name="2005_03_16"></a><h3>2005-03-16 - Version 3.1.6</h3><blockquote>
   Version 3.1.6 fixes a critical bug that can cause database corruption
   when inserting rows into tables with around 125 columns. This bug was
   introduced in version 3.0.0.  See
-  <a href="http://www.sqlite.org/cvstrac/tktview?tn=1163">Ticket #1163</a>
-  for additional information.
+  Ticket #1163 for additional information.
 </blockquote><hr width="50%"><a name="2005_03_11"></a><h3>2005-03-11 - Versions 3.1.4 and 3.1.5 Released</h3><blockquote>
   Version 3.1.4 fixes a critical bug that could cause database corruption
   if the autovacuum mode of version 3.1.0 is turned on (it is off by
@@ -1682,8 +1686,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   3.x line.  This bug has existed in all prior versions of SQLite.
   Even though it is unlikely you will ever encounter this bug,
   it is suggested that all users upgrade.  See
-  <a href="http://www.sqlite.org/cvstrac/tktview?tn=1116">
-  ticket #1116</a>. for additional information.</p>
+  ticket #1116 for additional information.</p>
 
 <p>  Version 3.1.2 is also the first stable release of the 3.1
   series.  SQLite 3.1 features added support for correlated

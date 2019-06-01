@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Retrieving Statement SQL</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<!-- keywords: sqlite3_expanded_sql sqlite3_sql -->
+<!-- keywords: sqlite3_expanded_sql sqlite3_normalized_sql sqlite3_sql -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Retrieving Statement SQL</h2>
@@ -83,14 +99,21 @@ return false;
 <blockquote><pre>
 const char *sqlite3_sql(sqlite3_stmt *pStmt);
 char *sqlite3_expanded_sql(sqlite3_stmt *pStmt);
+const char *sqlite3_normalized_sql(sqlite3_stmt *pStmt);
 </pre></blockquote>
 <p>
 The sqlite3_sql(P) interface returns a pointer to a copy of the UTF-8
 SQL text used to create <a href="../c3ref/stmt.html">prepared statement</a> P if P was
-created by either <a href="../c3ref/prepare.html">sqlite3_prepare_v2()</a> or <a href="../c3ref/prepare.html">sqlite3_prepare16_v2()</a>.
+created by <a href="../c3ref/prepare.html">sqlite3_prepare_v2()</a>, <a href="../c3ref/prepare.html">sqlite3_prepare_v3()</a>,
+<a href="../c3ref/prepare.html">sqlite3_prepare16_v2()</a>, or <a href="../c3ref/prepare.html">sqlite3_prepare16_v3()</a>.
 The sqlite3_expanded_sql(P) interface returns a pointer to a UTF-8
 string containing the SQL text of prepared statement P with
-<a href="../lang_expr.html#varparam">bound parameters</a> expanded.</p>
+<a href="../lang_expr.html#varparam">bound parameters</a> expanded.
+The sqlite3_normalized_sql(P) interface returns a pointer to a UTF-8
+string containing the normalized SQL text of prepared statement P.  The
+semantics used to normalize a SQL statement are unspecified and subject
+to change.  At a minimum, literal values will be replaced with suitable
+placeholders.</p>
 
 <p>For example, if a prepared statement is created using the SQL
 text "SELECT $abc,:xyz" and if parameter $abc is bound to integer 2345
@@ -106,8 +129,9 @@ the maximum string length determined by the <a href="../c3ref/c_limit_attached.h
 bound parameter expansions.  The <a href="../compile.html#omit_trace">SQLITE_OMIT_TRACE</a> compile-time
 option causes sqlite3_expanded_sql() to always return NULL.</p>
 
-<p>The string returned by sqlite3_sql(P) is managed by SQLite and is
-automatically freed when the prepared statement is finalized.
+<p>The strings returned by sqlite3_sql(P) and sqlite3_normalized_sql(P)
+are managed by SQLite and are automatically freed when the prepared
+statement is finalized.
 The string returned by sqlite3_expanded_sql(P), on the other hand,
 is obtained from <a href="../c3ref/free.html">sqlite3_malloc()</a> and must be free by the application
 by passing it to <a href="../c3ref/free.html">sqlite3_free()</a>.

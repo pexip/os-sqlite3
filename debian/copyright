@@ -1,6 +1,6 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: sqlite3
-Source: http://www.sqlite.org/cgi/src/dir?ci=trunk
+Source: https://www.sqlite.org/cgi/src/dir?ci=trunk
 
 Files: *
 Copyright: D. Richard Hipp <drh@hwaci.com>
@@ -9,7 +9,7 @@ License: public-domain
  contributors.
 
 Files: debian/*
-Copyright: 2006- Laszlo Boszormenyi (GCS) <gcs@debian.org>,
+Copyright: 2006-     Laszlo Boszormenyi (GCS) <gcs@debian.org>,
  2005-2006 Tomas Fasth <tomfa@debian.org>,
  2001-2005 Andreas Rottmann <rotty@debian.org>
 License: GPL-2+

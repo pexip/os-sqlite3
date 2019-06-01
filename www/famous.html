@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Well-Known Users Of SQLite</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -117,7 +133,7 @@ developers use it in their projects without ever telling us.
 <p>
   <a href="http://www.airbus.com/">Airbus</a> confirms that SQLite is being
   used in the flight software for the 
-  <a href="http://www.airbus.com/en/aircraftfamilies/a350">A350 XWB</a> family
+  <a href="http://www.aircraft.airbus.com/aircraftfamilies/passengeraircraft/a350xwbfamily/">A350 XWB</a> family
   of aircraft.
 </p>
 
@@ -217,6 +233,14 @@ developers use it in their projects without ever telling us.
   reports from users seen 
   <a href="http://community.intuit.com/posts/database-error-sqlite-error-code1">here</a> and
   <a href="https://ttlc.intuit.com/post/show_full/cJf8mIhC4r4jjracfArQzM/when-i-try-to-update-turbotax-i-receive-an-unexpected-error-message">here</a>.
+</p>
+
+<hr class='xhr'>
+<center><a href='http://www.loc.gov/' border=0>
+<img src='images/foreignlogos/loc.jpg' width=215></a></center>
+<p>
+  The United States Library of Congress recognizes SQLite as a
+  <a href="locrsf.html">recommended storage format</a> for preservation of digital content.
 </p>
 
 <hr class='xhr'>
@@ -333,7 +357,7 @@ developers use it in their projects without ever telling us.
 
   <a href="http://www.airbus.com/">Airbus</a> confirms that SQLite is being
   used in the flight software for the 
-  <a href="http://www.airbus.com/en/aircraftfamilies/a350">A350 XWB</a> family
+  <a href="http://www.aircraft.airbus.com/aircraftfamilies/passengeraircraft/a350xwbfamily/">A350 XWB</a> family
   of aircraft.
 </td></tr>
 <tr><td valign='top'>
@@ -433,6 +457,14 @@ developers use it in their projects without ever telling us.
   reports from users seen 
   <a href="http://community.intuit.com/posts/database-error-sqlite-error-code1">here</a> and
   <a href="https://ttlc.intuit.com/post/show_full/cJf8mIhC4r4jjracfArQzM/when-i-try-to-update-turbotax-i-receive-an-unexpected-error-message">here</a>.
+</td></tr>
+<tr><td valign='top'>
+<a href='http://www.loc.gov/' border=0>
+<img src='images/foreignlogos/loc.jpg' width=215></a>
+</td><td valign='top'>
+
+  The United States Library of Congress recognizes SQLite as a
+  <a href="locrsf.html">recommended storage format</a> for preservation of digital content.
 </td></tr>
 <tr><td valign='top'>
 <a href='http://www.mcafee.com/' border=0>

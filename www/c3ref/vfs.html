@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>OS Interface Object</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -128,12 +144,18 @@ the SQLite core and the underlying operating system.  The "vfs"
 in the name of the object stands for "virtual file system".  See
 the <a href="../vfs.html">VFS documentation</a> for further information.</p>
 
-<p>The value of the iVersion field is initially 1 but may be larger in
-future versions of SQLite.  Additional fields may be appended to this
-object when the iVersion value is increased.  Note that the structure
-of the sqlite3_vfs object changes in the transaction between
-SQLite version 3.5.9 and 3.6.0 and yet the iVersion field was not
-modified.</p>
+<p>The VFS interface is sometimes extended by adding new methods onto
+the end.  Each time such an extension occurs, the iVersion field
+is incremented.  The iVersion value started out as 1 in
+SQLite <a href="../releaselog/3_5_0.html">version 3.5.0</a> on 2007-09-04, then increased to 2
+with SQLite <a href="../releaselog/3_7_0.html">version 3.7.0</a> on 2010-07-21, and then increased
+to 3 with SQLite <a href="../releaselog/3_7_6.html">version 3.7.6</a> on 2011-04-12.  Additional fields
+may be appended to the sqlite3_vfs object and the iVersion value
+may increase again in future versions of SQLite.
+Note that the structure
+of the sqlite3_vfs object changes in the transition from
+SQLite <a href="../releaselog/3_5_9.html">version 3.5.9</a> to <a href="../releaselog/3_6_0.html">version 3.6.0</a> on 2008-07-16
+and yet the iVersion field was not modified.</p>
 
 <p>The szOsFile field is the size of the subclassed <a href="../c3ref/file.html">sqlite3_file</a>
 structure used by this VFS.  mxPathname is the maximum length of

@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Obtain old.* Values From A Changeset Iterator</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -84,7 +100,7 @@ return false;
 The pIter argument passed to this function may either be an iterator
 passed to a conflict-handler by <a href="../session/sqlite3changeset_apply.html">sqlite3changeset_apply()</a>, or an iterator
 created by <a href="../session/sqlite3changeset_start.html">sqlite3changeset_start()</a>. In the latter case, the most recent
-call to <a href="../session/sqlite3changeset_next.html">sqlite3changeset_next()</a> must have returned SQLITE_ROW.
+call to <a href="../session/sqlite3changeset_next.html">sqlite3changeset_next()</a> must have returned SQLITE_ROW. 
 Furthermore, it may only be called if the type of change that the iterator
 currently points to is either <a href="../c3ref/c_alter_table.html">SQLITE_DELETE</a> or <a href="../c3ref/c_alter_table.html">SQLITE_UPDATE</a>. Otherwise,
 this function returns <a href="../rescode.html#misuse">SQLITE_MISUSE</a> and sets *ppValue to NULL.</p>
@@ -94,9 +110,9 @@ of columns in the table affected by the current change. Otherwise,
 <a href="../rescode.html#range">SQLITE_RANGE</a> is returned and *ppValue is set to NULL.</p>
 
 <p>If successful, this function sets *ppValue to point to a protected
-sqlite3_value object containing the iVal'th value from the vector of
+sqlite3_value object containing the iVal'th value from the vector of 
 original row values stored as part of the UPDATE or DELETE change and
-returns SQLITE_OK. The name of the function comes from the fact that this
+returns SQLITE_OK. The name of the function comes from the fact that this 
 is similar to the "old.*" columns available to update or delete triggers.</p>
 
 <p>If some other error occurs (e.g. an OOM condition), an SQLite error code

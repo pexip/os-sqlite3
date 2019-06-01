@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>SQLite Release 3.16.2 On 2017-01-06</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<h2>SQLite Release 3.16.2 On 2017-01-06</h2><p><ul class='lessindent'>
+<h2>SQLite Release 3.16.2 On 2017-01-06</h2><p><ol class='lessindent'>
 <li>Fix the <a href="../lang_replace.html">REPLACE</a> statement for 
     <a href="../withoutrowid.html">WITHOUT ROWID</a> tables that lack secondary indexes so that
     it works correctly with triggers and foreign keys.  This was a new bug
@@ -98,21 +114,21 @@ return false;
 <li>SQLITE_SOURCE_ID: "2017-01-06 16:32:41 a65a62893ca8319e89e48b8a38cf8a59c69a8209"
 <li>SHA1 for sqlite3.c: 2bebdc3f24911c0d12b6d6c0123c3f84d6946b08
 
-</ul></p>
+</ol></p>
 <p><b>Changes carried forward from version 3.16.1 (2017-01-03):</b></p>
-<p><ul class='lessindent'>
+<p><ol class='lessindent'>
 <li>Fix a bug concerning the use of <a href="../rowvalue.html">row values</a> within <a href="../lang_createtrigger.html">triggers</a>
     (see ticket <a href="https://www.sqlite.org/src/info/8c9458e7">8c9458e7</a>)
     that was in version 3.15.0 but was not reported until moments after the 3.16.0
     release was published.
 
-</ul></p>
+</ol></p>
 <p><b>Changes carried forward from version 3.16.0 (2017-01-02):</b></p>
-<p><ul class='lessindent'>
+<p><ol class='lessindent'>
 <li>Uses 9% fewer CPU cycles. (See the <a href="../cpu.html">CPU performance measurement</a> report for
     details on how this performance increase was computed.)
 <li>Added experimental support for <a href="../pragma.html#pragfunc">PRAGMA functions</a>.
-<li>Added the <a href="../c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE</a> option to <a href="../c3ref/db_config.html">sqlite3_db_config()</a>.
+<li>Added the <a href="../c3ref/c_dbconfig_defensive.html#sqlitedbconfignockptonclose">SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE</a> option to <a href="../c3ref/db_config.html">sqlite3_db_config()</a>.
 <li>Enhance the <a href="../lang_datefunc.html">date and time functions</a> so that the 'unixepoch' modifier works
     for the full span of supported dates.
 <li>Changed the default configuration of the <a href="../malloc.html#lookaside">lookaside memory allocator</a> from
@@ -123,7 +139,7 @@ return false;
     are in process.
 <li>Enhanced the <a href="../lang_expr.html#like">LIKE</a> and <a href="../lang_expr.html#glob">GLOB</a> matching algorithm to be faster
     for cases when the pattern contains multiple wildcards.
-<li>Added the <a href="../c3ref/c_fcntl_busyhandler.html#sqlitefcntlwin32gethandle">SQLITE_FCNTL_WIN32_GET_HANDLE</a> file control opcode.
+<li>Added the <a href="../c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlwin32gethandle">SQLITE_FCNTL_WIN32_GET_HANDLE</a> file control opcode.
 <li>Added ".mode quote" to the <a href="../cli.html">command-line shell</a>.
 <li>Added ".lint fkey-indexes" to the <a href="../cli.html">command-line shell</a>.
 <li>Added the <a href="../imposter.html#dotimposter">.imposter dot-command</a> to the <a href="../cli.html">command-line shell</a>.
@@ -138,7 +154,7 @@ return false;
     <a href="https://www.sqlite.org/src/info/2df0107b">2df0107b</a>.
 <li>Correctly handle the integer literal -0x8000000000000000 in the query planner.
 
-</ul></p>
+</ol></p>
 
       <p>A <a href="../changes.html">complete list of SQLite releases</a>
       in a single page and a <a href="../chronology.html">chronology</a> are both also available.  
