@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Constants Passed To The Conflict Handler</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -85,51 +101,51 @@ Values that may be passed as the second argument to a conflict-handler.</p>
 
 <p><dl>
 <dt>SQLITE_CHANGESET_DATA<dd>
-The conflict handler is invoked with CHANGESET_DATA as the second argument
-when processing a DELETE or UPDATE change if a row with the required
-PRIMARY KEY fields is present in the database, but one or more other
-(non primary-key) fields modified by the update do not contain the
-expected "before" values.</p>
+  The conflict handler is invoked with CHANGESET_DATA as the second argument
+  when processing a DELETE or UPDATE change if a row with the required
+  PRIMARY KEY fields is present in the database, but one or more other 
+  (non primary-key) fields modified by the update do not contain the 
+  expected "before" values.</p>
 
-<p>The conflicting row, in this case, is the database row with the matching
-primary key.</p>
+<p>  The conflicting row, in this case, is the database row with the matching
+  primary key.</p>
 
 <p><dt>SQLITE_CHANGESET_NOTFOUND<dd>
-The conflict handler is invoked with CHANGESET_NOTFOUND as the second
-argument when processing a DELETE or UPDATE change if a row with the
-required PRIMARY KEY fields is not present in the database.</p>
+  The conflict handler is invoked with CHANGESET_NOTFOUND as the second
+  argument when processing a DELETE or UPDATE change if a row with the
+  required PRIMARY KEY fields is not present in the database.</p>
 
-<p>There is no conflicting row in this case. The results of invoking the
-sqlite3changeset_conflict() API are undefined.</p>
+<p>  There is no conflicting row in this case. The results of invoking the
+  sqlite3changeset_conflict() API are undefined.</p>
 
 <p><dt>SQLITE_CHANGESET_CONFLICT<dd>
-CHANGESET_CONFLICT is passed as the second argument to the conflict
-handler while processing an INSERT change if the operation would result
-in duplicate primary key values.</p>
+  CHANGESET_CONFLICT is passed as the second argument to the conflict
+  handler while processing an INSERT change if the operation would result 
+  in duplicate primary key values.</p>
 
-<p>The conflicting row in this case is the database row with the matching
-primary key.</p>
+<p>  The conflicting row in this case is the database row with the matching
+  primary key.</p>
 
 <p><dt>SQLITE_CHANGESET_FOREIGN_KEY<dd>
-If foreign key handling is enabled, and applying a changeset leaves the
-database in a state containing foreign key violations, the conflict
-handler is invoked with CHANGESET_FOREIGN_KEY as the second argument
-exactly once before the changeset is committed. If the conflict handler
-returns CHANGESET_OMIT, the changes, including those that caused the
-foreign key constraint violation, are committed. Or, if it returns
-CHANGESET_ABORT, the changeset is rolled back.</p>
+  If foreign key handling is enabled, and applying a changeset leaves the
+  database in a state containing foreign key violations, the conflict 
+  handler is invoked with CHANGESET_FOREIGN_KEY as the second argument
+  exactly once before the changeset is committed. If the conflict handler
+  returns CHANGESET_OMIT, the changes, including those that caused the
+  foreign key constraint violation, are committed. Or, if it returns
+  CHANGESET_ABORT, the changeset is rolled back.</p>
 
-<p>No current or conflicting row information is provided. The only function
-it is possible to call on the supplied sqlite3_changeset_iter handle
-is sqlite3changeset_fk_conflicts().</p>
+<p>  No current or conflicting row information is provided. The only function
+  it is possible to call on the supplied sqlite3_changeset_iter handle
+  is sqlite3changeset_fk_conflicts().</p>
 
 <p><dt>SQLITE_CHANGESET_CONSTRAINT<dd>
-If any other constraint violation occurs while applying a change (i.e.
-a UNIQUE, CHECK or NOT NULL constraint), the conflict handler is
-invoked with CHANGESET_CONSTRAINT as the second argument.</p>
+  If any other constraint violation occurs while applying a change (i.e. 
+  a UNIQUE, CHECK or NOT NULL constraint), the conflict handler is 
+  invoked with CHANGESET_CONSTRAINT as the second argument.</p>
 
-<p>There is no conflicting row in this case. The results of invoking the
-sqlite3changeset_conflict() API are undefined.</p>
+<p>  There is no conflicting row in this case. The results of invoking the
+  sqlite3changeset_conflict() API are undefined.</p>
 
 <p></dl>
 </p><p>See also lists of

@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>How SQLite Is Tested</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -96,6 +112,7 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#fuzz_testing">4. Fuzz Testing</a></div>
 <div class="fancy-toc2"><a href="#sql_fuzz">4.1. SQL Fuzz</a></div>
 <div class="fancy-toc3"><a href="#sql_fuzz_using_the_american_fuzzy_lop_fuzzer">4.1.1. SQL Fuzz Using The American Fuzzy Lop Fuzzer</a></div>
+<div class="fancy-toc3"><a href="#google_oss_fuzz">4.1.2. Google OSS Fuzz</a></div>
 <div class="fancy-toc2"><a href="#malformed_database_files">4.2. Malformed Database Files</a></div>
 <div class="fancy-toc2"><a href="#boundary_value_tests">4.3. Boundary Value Tests</a></div>
 <div class="fancy-toc1"><a href="#regression_testing">5. Regression Testing</a></div>
@@ -147,15 +164,15 @@ mk.innerHTML = "&#x25ba;";
 <p>The reliability and robustness of SQLite is achieved in part
 by thorough and careful testing.</p>
 
-<p>As of <a href="releaselog/3_16_0.html">version 3.16.0</a> (2017-01-02),
+<p>As of <a href="releaselog/3_23_0.html">version 3.23.0</a> (2018-04-02),
 the SQLite library consists of approximately
-122.9 KSLOC of C code.
+128.9 KSLOC of C code.
 (KSLOC means thousands of "Source Lines Of Code" or, in other words,
 lines of code excluding blank lines and comments.)
 By comparison, the project has
-745 times as much
+711 times as much
 test code and test scripts - 
-91596.1 KSLOC.</p>
+91772.0 KSLOC.</p>
 
 <h2 id="executive_summary"><span>1.1. </span>Executive Summary</h2>
 
@@ -197,11 +214,11 @@ SQLite core and like the SQLite core are in the public domain.  The
 TCL tests are the primary tests used during development.
 The TCL tests are written using the 
 <a href="http://www.tcl-lang.org/">TCL scripting language</a>.
-The TCL test harness itself consists of 25.3 KSLOC 
+The TCL test harness itself consists of 26.1 KSLOC 
 of C code used to create the TCL interface.  The test scripts are contained
-in 1080 files totaling 
-12.7MB in size.  There are
-39035 distinct test cases, but many of the test
+in 1307 files totaling 
+15.5MB in size.  There are
+40870 distinct test cases, but many of the test
 cases are parameterized and run multiple times (with different parameters)
 so that on a full test run millions of
 separate tests are performed.
@@ -210,13 +227,14 @@ separate tests are performed.
 
 <li><p>
 The <b><a href="th3.html">TH3</a></b> test harness is a set of proprietary tests, written in
-C that provide 100% branch test coverage (and 100% MC/DC test coverage) to
+C that provide 100% branch test coverage 
+(and <a href="testing.html#mcdc">100% MC/DC test coverage</a>) to
 the core SQLite library.  The TH3 tests are designed to run
 on embedded and specialized platforms that would not easily support
 TCL or other workstation services.  TH3 tests use only the published 
 SQLite interfaces. TH3 consists of about
-56.6 MB or 773.3 KSLOC
-of C code implementing 41661 distinct test cases.
+57.9 MB or 792.3 KSLOC
+of C code implementing 43049 distinct test cases.
 TH3 tests are heavily parameterized, though, so a full-coverage test runs
 about 1.6 million different test
 instances.  The cases that provide 100% branch test coverage constitute
@@ -247,7 +265,7 @@ concurrently reading and writing a single database.
 </li><li>The "threadtest3.c" program is a stress test for multiple threads using
 SQLite simultaneously.  
 </li><li>The "fuzzershell.c" program is used to
-run some <a href="'#fuzztesting'">fuzz tests</a>.
+run some <a href="#fuzztesting">fuzz tests</a>.
 </li></ol>
 
 
@@ -258,7 +276,7 @@ before each release of SQLite.</p>
 <p>Prior to each check-in to the SQLite source tree, developers
 typically run a subset (called "veryquick") of the Tcl tests
 consisting of about 
-135.5 thousand test cases.
+142.6 thousand test cases.
 The veryquick tests include most tests other than the anomaly, fuzz, and 
 soak tests.  The idea behind the veryquick tests are that they are
 sufficient to catch most errors, but also run in only a few minutes
@@ -415,7 +433,7 @@ resulting prepared statement is run to make sure it gives a reasonable
 result.</p>
 
 <p>The SQL fuzz generator tests are part of the TCL test suite.
-During a full test run, about 105.3 
+During a full test run, about 111.3 
 thousand fuzz SQL statements are
 generated and tested.</p>
 
@@ -448,6 +466,22 @@ instrumentation has narrowed them down to less than 50,000 test cases that
 cover all distinct behaviors.  Newly discovered test cases are periodically
 captured and added to the <a href="testing.html#tcl">TCL test suite</a> where they can be rerun using
 the "make fuzztest" or "make valgrindfuzz" commands.
+
+<a name="ossfuzz"></a>
+
+</p><h3 id="google_oss_fuzz"><span>4.1.2. </span>Google OSS Fuzz</h3>
+
+<p>Beginning in 2016, a team of engineers at Google started the
+<a href="https://github.com/google/oss-fuzz">OSS Fuzz</a> project.  
+OSS Fuzz uses a AFL-style guided fuzzer running on Google's infrastructure.
+The Fuzzer automatically downloads the latest check-ins for participating
+projects, fuzzes them, and sends email to the developers reporting any
+problems.  When a fix is checked in, the fuzzer automatically detects this
+and emails a confirmation to the developers.
+
+</p><p>SQLite is one of many open-source projects that OSS Fuzz tests. The
+<a href="https://www.sqlite.org/src/file/test/ossfuzz.c">test/ossfuzz.c</a> source file
+in the SQLite repository is SQLite's interface to OSS fuzz.
 
 </p><h2 id="malformed_database_files"><span>4.2. </span>Malformed Database Files</h2>
 
@@ -669,7 +703,7 @@ testcase( mask & SQLITE_OPEN_TEMP_DB );
 if( (mask & (SQLITE_OPEN_MAIN_DB|SQLITE_OPEN_TEMP_DB))!=0 ){ ... }
 </pre></div>
 
-<p>The SQLite source code contains 844
+<p>The SQLite source code contains 878
 uses of the <tt>testcase()</tt> macro.</p>
 
 <a name="mcdc"></a>
@@ -837,7 +871,7 @@ quality of SQLite.</p>
 
 <h2 id="assert"><span>8.1. </span>Assert</h2>
 
-<p>The SQLite core contains 5191 <tt>assert()</tt>
+<p>The SQLite core contains 5415 <tt>assert()</tt>
 statements that verify function preconditions and postconditions and
 loop invariants.  Assert() is a macro which is a standard part of
 ANSI-C.  The argument is a boolean value that is assumed to always be
@@ -954,7 +988,7 @@ necessarily wrap around, as most people expect.)
 and can easily lead to incorrect answers, SQLite works very hard to avoid it.
 For example,
 when adding two integer column values together as part of an SQL statement,
-SQLite does not simple add them together using the C-language "+" operator.
+SQLite does not simply add them together using the C-language "+" operator.
 Instead, it first checks to make sure the
 addition will not overflow, and if it will, it does the addition using
 floating point instead.

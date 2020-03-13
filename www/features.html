@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Features Of SQLite</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -88,7 +104,7 @@ return false;
 <li><a href="fullsql.html">Full-featured SQL</a> implementation
     with advanced capabilities like <a href="partialindex.html">partial indexes</a>,
     <a href="expridx.html">indexes on expressions</a>, <a href="json1.html">JSON</a>,
-    and <a href="lang_with.html">common table expressions</a>.
+    <a href="lang_with.html">common table expressions</a>, and <a href="windowfunctions.html">window functions</a>.
     (<a href="omitted.html">Omitted features</a>)</li>
 <li>A complete database is stored in a 
     <a href="onefile.html">single cross-platform disk file</a>.
@@ -96,9 +112,11 @@ return false;
 <li>Supports terabyte-sized databases and gigabyte-sized strings
     and blobs.  (See <a href="limits.html">limits.html</a>.)
 <li>Small code <a href="footprint.html">footprint</a>: 
-    less than 500KiB fully configured or much less
+    less than 600KiB fully configured or much less
     with optional features omitted.</li>
 <li>Simple, easy to use <a href="cintro.html">API</a>.</li>
+<li>Fast:  In some cases, SQLite is 
+    <a href="fasterthanfs.html">faster than direct filesystem I/O</a>
 <li>Written in ANSI-C.  <a href="tclsqlite.html">TCL bindings</a> included.
     Bindings for dozens of other languages available separately.</li>
 <li>Well-commented source code with

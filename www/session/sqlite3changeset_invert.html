@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Invert A Changeset</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -85,9 +101,9 @@ changeset to a database reverses the effects of applying the uninverted
 changeset. Specifically:</p>
 
 <p><ul>
-<li> Each DELETE change is changed to an INSERT, and
-<li> Each INSERT change is changed to a DELETE, and
-<li> For each UPDATE change, the old.* and new.* values are exchanged.
+  <li> Each DELETE change is changed to an INSERT, and
+  <li> Each INSERT change is changed to a DELETE, and
+  <li> For each UPDATE change, the old.* and new.* values are exchanged.
 </ul></p>
 
 <p>This function does not change the order in which changes appear within
@@ -99,7 +115,7 @@ SQLITE_OK is returned. If an error occurs, both *pnOut and *ppOut are
 zeroed and an SQLite error code returned.</p>
 
 <p>It is the responsibility of the caller to eventually call sqlite3_free()
-on the *ppOut pointer to free the buffer allocation following a successful
+on the *ppOut pointer to free the buffer allocation following a successful 
 call to this function.</p>
 
 <p>WARNING/TODO: This function currently assumes that the input is a valid

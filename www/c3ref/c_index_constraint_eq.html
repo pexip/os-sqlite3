@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Virtual Table Constraint Operator Codes</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,21 +91,27 @@ return false;
 }
 </script>
 </div>
-<!-- keywords: SQLITE_INDEX_CONSTRAINT_EQ SQLITE_INDEX_CONSTRAINT_GE SQLITE_INDEX_CONSTRAINT_GLOB SQLITE_INDEX_CONSTRAINT_GT SQLITE_INDEX_CONSTRAINT_LE SQLITE_INDEX_CONSTRAINT_LIKE SQLITE_INDEX_CONSTRAINT_LT SQLITE_INDEX_CONSTRAINT_MATCH SQLITE_INDEX_CONSTRAINT_REGEXP -->
+<!-- keywords: SQLITE_INDEX_CONSTRAINT_EQ SQLITE_INDEX_CONSTRAINT_FUNCTION SQLITE_INDEX_CONSTRAINT_GE SQLITE_INDEX_CONSTRAINT_GLOB SQLITE_INDEX_CONSTRAINT_GT SQLITE_INDEX_CONSTRAINT_IS SQLITE_INDEX_CONSTRAINT_ISNOT SQLITE_INDEX_CONSTRAINT_ISNOTNULL SQLITE_INDEX_CONSTRAINT_ISNULL SQLITE_INDEX_CONSTRAINT_LE SQLITE_INDEX_CONSTRAINT_LIKE SQLITE_INDEX_CONSTRAINT_LT SQLITE_INDEX_CONSTRAINT_MATCH SQLITE_INDEX_CONSTRAINT_NE SQLITE_INDEX_CONSTRAINT_REGEXP -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Virtual Table Constraint Operator Codes</h2>
 </div>
 <blockquote><pre>
-#define SQLITE_INDEX_CONSTRAINT_EQ      2
-#define SQLITE_INDEX_CONSTRAINT_GT      4
-#define SQLITE_INDEX_CONSTRAINT_LE      8
-#define SQLITE_INDEX_CONSTRAINT_LT     16
-#define SQLITE_INDEX_CONSTRAINT_GE     32
-#define SQLITE_INDEX_CONSTRAINT_MATCH  64
-#define SQLITE_INDEX_CONSTRAINT_LIKE   65
-#define SQLITE_INDEX_CONSTRAINT_GLOB   66
-#define SQLITE_INDEX_CONSTRAINT_REGEXP 67
+#define SQLITE_INDEX_CONSTRAINT_EQ         2
+#define SQLITE_INDEX_CONSTRAINT_GT         4
+#define SQLITE_INDEX_CONSTRAINT_LE         8
+#define SQLITE_INDEX_CONSTRAINT_LT        16
+#define SQLITE_INDEX_CONSTRAINT_GE        32
+#define SQLITE_INDEX_CONSTRAINT_MATCH     64
+#define SQLITE_INDEX_CONSTRAINT_LIKE      65
+#define SQLITE_INDEX_CONSTRAINT_GLOB      66
+#define SQLITE_INDEX_CONSTRAINT_REGEXP    67
+#define SQLITE_INDEX_CONSTRAINT_NE        68
+#define SQLITE_INDEX_CONSTRAINT_ISNOT     69
+#define SQLITE_INDEX_CONSTRAINT_ISNOTNULL 70
+#define SQLITE_INDEX_CONSTRAINT_ISNULL    71
+#define SQLITE_INDEX_CONSTRAINT_IS        72
+#define SQLITE_INDEX_CONSTRAINT_FUNCTION 150
 </pre></blockquote>
 <p>
 These macros defined the allowed values for the

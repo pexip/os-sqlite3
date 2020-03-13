@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>SQLite Release 3.7.1 On 2010-08-23</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<h2>SQLite Release 3.7.1 On 2010-08-23</h2><p><ul class='lessindent'>
+<h2>SQLite Release 3.7.1 On 2010-08-23</h2><p><ol class='lessindent'>
 <li> Added new commands <a href="../c3ref/c_dbstatus_options.html#sqlitedbstatusschemaused">SQLITE_DBSTATUS_SCHEMA_USED</a> and
      <a href="../c3ref/c_dbstatus_options.html#sqlitedbstatusstmtused">SQLITE_DBSTATUS_STMT_USED</a> to the <a href="../c3ref/db_status.html">sqlite3_db_status()</a> interface, in
      order to report out the amount of memory used to hold the schema and
@@ -83,7 +99,7 @@ return false;
 <li> Increase the maximum size of a database pages from 32KiB to 64KiB.
 <li> Use the <a href="../optoverview.html#like_opt">LIKE optimization</a> even if the right-hand side string contains
      no wildcards.
-<li> Added the <a href="../c3ref/c_fcntl_busyhandler.html#sqlitefcntlchunksize">SQLITE_FCNTL_CHUNK_SIZE</a> verb to the <a href="../c3ref/file_control.html">sqlite3_file_control()</a>
+<li> Added the <a href="../c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlchunksize">SQLITE_FCNTL_CHUNK_SIZE</a> verb to the <a href="../c3ref/file_control.html">sqlite3_file_control()</a>
      interface for both unix and windows, to cause database files to grow in
      large chunks in order to reduce disk fragmentation.
 <li> Fixed a bug in the query planner that caused performance regressions
@@ -93,7 +109,7 @@ return false;
 <li> The SQLITE_MAX_PAGE_SIZE compile-time option is now silently ignored.
      The maximum page size is hard-coded at 65536 bytes.
 
-</ul></p>
+</ol></p>
 
       <p>A <a href="../changes.html">complete list of SQLite releases</a>
       in a single page and a <a href="../chronology.html">chronology</a> are both also available.  

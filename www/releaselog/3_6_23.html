@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>SQLite Release 3.6.23 On 2010-03-09</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<h2>SQLite Release 3.6.23 On 2010-03-09</h2><p><ul class='lessindent'>
+<h2>SQLite Release 3.6.23 On 2010-03-09</h2><p><ol class='lessindent'>
 <li> Added the <a href="../pragma.html#pragma_secure_delete">secure_delete pragma</a>.
 <li> Added the <a href="../c3ref/compileoption_get.html">sqlite3_compileoption_used()</a> and
      <a href="../c3ref/compileoption_get.html">sqlite3_compileoption_get()</a> interfaces as well as the
@@ -89,11 +105,11 @@ return false;
 <li> The <a href="../pragma.html#pragma_integrity_check">integrity_check pragma</a> is enhanced to detect out-of-order rowids.
 <li> The ".genfkey" operator has been removed from the
      <a href="../cli.html">Command Line Interface</a>.
-<li> Updates to the co-hosted Lemon LALR(1) parser generator. (These
+<li> Updates to the co-hosted <a href="../lemon.html">Lemon LALR(1) parser generator</a>. (These
      updates did not affect SQLite.)
 <li> Various minor bug fixes and performance enhancements.
 
-</ul></p>
+</ol></p>
 
       <p>A <a href="../changes.html">complete list of SQLite releases</a>
       in a single page and a <a href="../chronology.html">chronology</a> are both also available.  

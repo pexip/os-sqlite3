@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Configuration Options</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -75,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<!-- keywords: SQLITE_CONFIG_COVERING_INDEX_SCAN SQLITE_CONFIG_GETMALLOC SQLITE_CONFIG_GETMUTEX SQLITE_CONFIG_GETPCACHE SQLITE_CONFIG_GETPCACHE2 SQLITE_CONFIG_HEAP SQLITE_CONFIG_LOG SQLITE_CONFIG_LOOKASIDE SQLITE_CONFIG_MALLOC SQLITE_CONFIG_MEMSTATUS SQLITE_CONFIG_MMAP_SIZE SQLITE_CONFIG_MULTITHREAD SQLITE_CONFIG_MUTEX SQLITE_CONFIG_PAGECACHE SQLITE_CONFIG_PCACHE SQLITE_CONFIG_PCACHE2 SQLITE_CONFIG_PCACHE_HDRSZ SQLITE_CONFIG_PMASZ SQLITE_CONFIG_SCRATCH SQLITE_CONFIG_SERIALIZED SQLITE_CONFIG_SINGLETHREAD SQLITE_CONFIG_SQLLOG SQLITE_CONFIG_STMTJRNL_SPILL SQLITE_CONFIG_URI SQLITE_CONFIG_WIN32_HEAPSIZE {configuration option} -->
+<!-- keywords: SQLITE_CONFIG_COVERING_INDEX_SCAN SQLITE_CONFIG_GETMALLOC SQLITE_CONFIG_GETMUTEX SQLITE_CONFIG_GETPCACHE SQLITE_CONFIG_GETPCACHE2 SQLITE_CONFIG_HEAP SQLITE_CONFIG_LOG SQLITE_CONFIG_LOOKASIDE SQLITE_CONFIG_MALLOC SQLITE_CONFIG_MEMDB_MAXSIZE SQLITE_CONFIG_MEMSTATUS SQLITE_CONFIG_MMAP_SIZE SQLITE_CONFIG_MULTITHREAD SQLITE_CONFIG_MUTEX SQLITE_CONFIG_PAGECACHE SQLITE_CONFIG_PCACHE SQLITE_CONFIG_PCACHE2 SQLITE_CONFIG_PCACHE_HDRSZ SQLITE_CONFIG_PMASZ SQLITE_CONFIG_SCRATCH SQLITE_CONFIG_SERIALIZED SQLITE_CONFIG_SINGLETHREAD SQLITE_CONFIG_SMALL_MALLOC SQLITE_CONFIG_SORTERREF_SIZE SQLITE_CONFIG_SQLLOG SQLITE_CONFIG_STMTJRNL_SPILL SQLITE_CONFIG_URI SQLITE_CONFIG_WIN32_HEAPSIZE {configuration option} -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Configuration Options</h2>
@@ -86,7 +102,7 @@ return false;
 #define SQLITE_CONFIG_SERIALIZED    3  /* nil */
 #define SQLITE_CONFIG_MALLOC        4  /* sqlite3_mem_methods* */
 #define SQLITE_CONFIG_GETMALLOC     5  /* sqlite3_mem_methods* */
-#define SQLITE_CONFIG_SCRATCH       6  /* void*, int sz, int N */
+#define SQLITE_CONFIG_SCRATCH       6  /* No longer used */
 #define SQLITE_CONFIG_PAGECACHE     7  /* void*, int sz, int N */
 #define SQLITE_CONFIG_HEAP          8  /* void*, int nByte, int min */
 #define SQLITE_CONFIG_MEMSTATUS     9  /* boolean */
@@ -107,6 +123,9 @@ return false;
 #define SQLITE_CONFIG_PCACHE_HDRSZ        24  /* int *psz */
 #define SQLITE_CONFIG_PMASZ               25  /* unsigned int szPma */
 #define SQLITE_CONFIG_STMTJRNL_SPILL      26  /* int nByte */
+#define SQLITE_CONFIG_SMALL_MALLOC        27  /* boolean */
+#define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */
+#define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */
 </pre></blockquote>
 <p>
 These constants are the available integer configuration options that
@@ -184,6 +203,17 @@ This option can be used to overload the default memory allocation
 routines with a wrapper that simulations memory allocation failure or
 tracks memory usage, for example. </dd></p>
 
+<p><a name="sqliteconfigsmallmalloc"></a>
+ <dt>SQLITE_CONFIG_SMALL_MALLOC</dt>
+<dd> The SQLITE_CONFIG_SMALL_MALLOC option takes single argument of
+type int, interpreted as a boolean, which if true provides a hint to
+SQLite that it should avoid large memory allocations if possible.
+SQLite will run faster if it is free to make large memory allocations,
+but some application might prefer to run slower in exchange for
+guarantees about memory fragmentation that are possible if large
+allocations are avoided.  This hint is normally off.
+</dd></p>
+
 <p><a name="sqliteconfigmemstatus"></a>
  <dt>SQLITE_CONFIG_MEMSTATUS</dt>
 <dd> The SQLITE_CONFIG_MEMSTATUS option takes single argument of type int,
@@ -203,25 +233,7 @@ allocation statistics are disabled by default.
 
 <p><a name="sqliteconfigscratch"></a>
  <dt>SQLITE_CONFIG_SCRATCH</dt>
-<dd> The SQLITE_CONFIG_SCRATCH option specifies a static memory buffer
-that SQLite can use for scratch memory.  There are three arguments
-to SQLITE_CONFIG_SCRATCH:  A pointer an 8-byte
-aligned memory buffer from which the scratch allocations will be
-drawn, the size of each scratch allocation (sz),
-and the maximum number of scratch allocations (N).
-The first argument must be a pointer to an 8-byte aligned buffer
-of at least sz*N bytes of memory.
-SQLite will not use more than one scratch buffers per thread.
-SQLite will never request a scratch buffer that is more than 6
-times the database page size.
-If SQLite needs needs additional
-scratch memory beyond what is provided by this configuration option, then
-<a href="../c3ref/free.html">sqlite3_malloc()</a> will be used to obtain the memory needed.<p>
-When the application provides any amount of scratch memory using
-SQLITE_CONFIG_SCRATCH, SQLite avoids unnecessary large
-<a href="../c3ref/free.html">heap allocations</a>.
-This can help <a href="../malloc.html#nofrag">prevent memory allocation failures</a> due to heap
-fragmentation in low-memory embedded systems.
+<dd> The SQLITE_CONFIG_SCRATCH option is no longer used.
 </dd></p>
 
 <p><a name="sqliteconfigpagecache"></a>
@@ -259,8 +271,7 @@ additional cache line. </dd></p>
  <dt>SQLITE_CONFIG_HEAP</dt>
 <dd> The SQLITE_CONFIG_HEAP option specifies a static memory buffer
 that SQLite will use for all of its dynamic memory allocation needs
-beyond those provided for by <a href="../c3ref/c_config_covering_index_scan.html#sqliteconfigscratch">SQLITE_CONFIG_SCRATCH</a> and
-<a href="../c3ref/c_config_covering_index_scan.html#sqliteconfigpagecache">SQLITE_CONFIG_PAGECACHE</a>.
+beyond those provided for by <a href="../c3ref/c_config_covering_index_scan.html#sqliteconfigpagecache">SQLITE_CONFIG_PAGECACHE</a>.
 The SQLITE_CONFIG_HEAP option is only available if SQLite is compiled
 with either <a href="../compile.html#enable_memsys3">SQLITE_ENABLE_MEMSYS3</a> or <a href="../compile.html#enable_memsys5">SQLITE_ENABLE_MEMSYS5</a> and returns
 <a href="../rescode.html#error">SQLITE_ERROR</a> if invoked otherwise.
@@ -311,7 +322,7 @@ the default size of lookaside memory on each <a href="../c3ref/sqlite3.html">dat
 The first argument is the
 size of each lookaside buffer slot and the second is the number of
 slots allocated to each database connection.  SQLITE_CONFIG_LOOKASIDE
-sets the <i>default</i> lookaside size. The <a href="../c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_LOOKASIDE</a>
+sets the <i>default</i> lookaside size. The <a href="../c3ref/c_dbconfig_defensive.html#sqlitedbconfiglookaside">SQLITE_DBCONFIG_LOOKASIDE</a>
 option to <a href="../c3ref/db_config.html">sqlite3_db_config()</a> can be used to change the lookaside
 configuration on individual connections. </dd></p>
 
@@ -412,7 +423,7 @@ that are the default mmap size limit (the default setting for
 <a href="../pragma.html#pragma_mmap_size">PRAGMA mmap_size</a>) and the maximum allowed mmap size limit.
 The default setting can be overridden by each database connection using
 either the <a href="../pragma.html#pragma_mmap_size">PRAGMA mmap_size</a> command, or by using the
-<a href="../c3ref/c_fcntl_busyhandler.html#sqlitefcntlmmapsize">SQLITE_FCNTL_MMAP_SIZE</a> file control.  The maximum allowed mmap size
+<a href="../c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlmmapsize">SQLITE_FCNTL_MMAP_SIZE</a> file control.  The maximum allowed mmap size
 will be silently truncated if necessary so that it does not exceed the
 compile-time maximum mmap size set by the
 <a href="../compile.html#max_mmap_size">SQLITE_MAX_MMAP_SIZE</a> compile-time option.
@@ -461,7 +472,36 @@ Since many statement journals never become large, setting the spill
 threshold to a value such as 64KiB can greatly reduce the amount of
 I/O required to support statement rollback.
 The default value for this setting is controlled by the
-<a href="../compile.html#stmtjrnl_spill">SQLITE_STMTJRNL_SPILL</a> compile-time option.
+<a href="../compile.html#stmtjrnl_spill">SQLITE_STMTJRNL_SPILL</a> compile-time option.</p>
+
+<p><a name="sqliteconfigsorterrefsize"></a>
+
+<dt>SQLITE_CONFIG_SORTERREF_SIZE
+<dd>The SQLITE_CONFIG_SORTERREF_SIZE option accepts a single parameter
+of type (int) - the new value of the sorter-reference size threshold.
+Usually, when SQLite uses an external sort to order records according
+to an ORDER BY clause, all fields required by the caller are present in the
+sorted records. However, if SQLite determines based on the declared type
+of a table column that its values are likely to be very large - larger
+than the configured sorter-reference size threshold - then a reference
+is stored in each sorted record and the required column values loaded
+from the database as records are returned in sorted order. The default
+value for this option is to never use this optimization. Specifying a
+negative value for this option restores the default behaviour.
+This option is only available if SQLite is compiled with the
+<a href="../compile.html#enable_sorter_references">SQLITE_ENABLE_SORTER_REFERENCES</a> compile-time option.</p>
+
+<p><a name="sqliteconfigmemdbmaxsize"></a>
+
+<dt>SQLITE_CONFIG_MEMDB_MAXSIZE
+<dd>The SQLITE_CONFIG_MEMDB_MAXSIZE option accepts a single parameter
+<a href="../c3ref/int64.html">sqlite3_int64</a> parameter which is the default maximum size for an in-memory
+database created using <a href="../c3ref/deserialize.html">sqlite3_deserialize()</a>.  This default maximum
+size can be adjusted up or down for individual databases using the
+<a href="../c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlsizelimit">SQLITE_FCNTL_SIZE_LIMIT</a> <a href="../c3ref/file_control.html">file-control</a>.  If this
+configuration setting is never used, then the default maximum is determined
+by the <a href="../compile.html#memdb_default_maxsize">SQLITE_MEMDB_DEFAULT_MAXSIZE</a> compile-time option.  If that
+compile-time option is not set, then the default maximum is 1073741824.
 </dl>
 </p><p>See also lists of
   <a href="objlist.html">Objects</a>,

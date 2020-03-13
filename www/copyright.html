@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Copyright</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -96,7 +112,7 @@ All code authors, and representatives of the companies they work for,
 have signed affidavits dedicating their contributions to
 the public domain and originals of
 those signed affidavits are stored in a firesafe at the main offices
-of <a href="http://www.hwaci.com">Hwaci</a>.
+of <a href="https://www.hwaci.com">Hwaci</a>.
 Anyone is free to copy, modify, publish, use, compile, sell, or distribute
 the original SQLite code, either in source code form or as a compiled binary,
 for any purpose, commercial or non-commercial, and by any means.
@@ -122,23 +138,41 @@ on file.  So the SQLite code base is clean and is
 uncontaminated with licensed code from other projects.
 </p>
 
+<a name="notopencontrib"></a>
+
+<h2>Open-Source, not Open-Contribution</h2>
+
+<p>
+SQLite is open-source, meaning that you can make as many copies of it as
+you want and do whatever you want with those copies, without limitation.
+But SQLite is not open-contribution.  In order to keep SQLite in the public
+domain and ensure that the code does not become contaminated with proprietary
+or licensed content, the project does not accept patches from unknown persons.
+
+<p>
+All of the code in SQLite is original, having been written
+specifically for use by SQLite.  No code has been copied from unknown
+sources on the internet.
+
+<a name="warrantyoftitle"></a>
+
+
 <div class="rightsidebar">
-<form method="GET" action="http://www.hwaci.com/cgi-bin/license-step1">
+<form method="GET" action="https://www.hwaci.com/cgi-bin/license-step1">
 <input type="submit" value="Buy An SQLite License">
 </form>
 </div>
 
-<h2>Obtaining An License To Use SQLite</h2>
+<h2>Warranty of Title</h2>
 
 <p>
-Even though SQLite is in the public domain and does not require
-a license, some users want to obtain a license anyway.  Some reasons
-for obtaining a license include:
+SQLite is in the public domain and does not require a license.
+Even so, some organizations want legal proof of their right to use
+SQLite.  Circumstances where this occurs include the following:
 </p>
 
 <ul>
-<li> Your company desires warranty of title and/or
-     indemnity against claims of copyright infringement.
+<li> Your company desires indemnity against claims of copyright infringement.
 <li> You are using SQLite in a jurisdiction that does not recognize
      the public domain.  </li>
 <li> You are using SQLite in a jurisdiction that does not recognize
@@ -152,12 +186,16 @@ for obtaining a license include:
 </ul>
 
 <p>
-If you feel like you really need to purchase a license for SQLite,
-<a href="http://www.hwaci.com/">Hwaci</a>, the company that employs 
+If any of the above circumstances apply to you,
+<a href="https://www.hwaci.com/">Hwaci</a>, the company that employs 
 all the developers of SQLite, will 
-<a href="http://www.hwaci.com/cgi-bin/license-step1">sell you
-one</a>.
-All proceeds from the sale of SQLite licenses are used to fund
+<a href="https://www.hwaci.com/cgi-bin/license-step1">sell you
+a Warranty of Title for SQLite</a>.
+A Warranty of Title is a legal document that asserts that the claimed
+authors of SQLite are the true authors, and that the authors 
+have the legal right to dedicate the SQLite to the public domain, and 
+that Hwaci will vigorously defend against challenges to those claims.
+All proceeds from the sale of SQLite Warranties of Title are used to fund
 continuing improvement and support of SQLite.
 </p>
 
@@ -165,40 +203,8 @@ continuing improvement and support of SQLite.
 
 <p>
 In order to keep SQLite completely free and unencumbered by copyright,
-all new contributors to the SQLite code base are asked to dedicate
-their contributions to the public domain.
-If you want to send a patch or enhancement for possible inclusion in the
-SQLite source tree, please accompany the patch with the following statement:
-</p>
-
-<blockquote><i>
-The author or authors of this code dedicate any and all copyright interest
-in this code to the public domain.  We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and successors.
-We intend this dedication to be an overt act of relinquishment in
-perpetuity of all present and future rights to this code under copyright law.
-</i></blockquote>
-
-<p>
-We are not able to accept patches or changes to 
-SQLite that are not accompanied by a statement such as the above.
-In addition, if you make
-changes or enhancements as an employee, then a simple statement such as the
-above is insufficient.  You must also send by surface mail a copyright release
-signed by a company officer.
-A signed original of the copyright release should be mailed to:</p>
-
-<blockquote>
-Hwaci<br>
-6200 Maple Cove Lane<br>
-Charlotte, NC 28269<br>
-USA
-</blockquote>
-
-<p>
-A template copyright release is available
-in <a href="copyright-release.pdf">PDF</a> or
-<a href="copyright-release.html">HTML</a>.
-You can use this release to make future changes. 
-</p>
+the project does not accept patches.  If you would like to make a
+suggested change, and include a patch as a proof-of-concept, that would
+be great.  However please do not be offended if we rewrite your patch
+from scratch.
 

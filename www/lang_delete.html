@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Query Language: DELETE</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -76,136 +92,166 @@ return false;
 </script>
 </div>
 <div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>DELETE</h2></div><p><b><a href="syntax/delete-stmt.html">delete-stmt:</a></b>
-<button id='x1015' onclick='hideorshow("x1015","x1016")'>hide</button></p>
- <div id='x1016' class='imgcontainer'>
+<button id='x1419' onclick='hideorshow("x1419","x1420")'>hide</button></p>
+ <div id='x1420' class='imgcontainer'>
  <img alt="syntax diagram delete-stmt" src="images/syntax/delete-stmt.gif" />
 <p><b><a href="syntax/expr.html">expr:</a></b>
-<button id='x1017' onclick='hideorshow("x1017","x1018")'>show</button></p>
- <div id='x1018' style='display:none;' class='imgcontainer'>
+<button id='x1421' onclick='hideorshow("x1421","x1422")'>show</button></p>
+ <div id='x1422' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram expr" src="images/syntax/expr.gif" />
+<p><b><a href="syntax/filter.html">filter:</a></b>
+<button id='x1423' onclick='hideorshow("x1423","x1424")'>show</button></p>
+ <div id='x1424' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram filter" src="images/syntax/filter.gif" />
+</div>
 <p><b><a href="syntax/literal-value.html">literal-value:</a></b>
-<button id='x1019' onclick='hideorshow("x1019","x1020")'>show</button></p>
- <div id='x1020' style='display:none;' class='imgcontainer'>
+<button id='x1425' onclick='hideorshow("x1425","x1426")'>show</button></p>
+ <div id='x1426' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram literal-value" src="images/syntax/literal-value.gif" />
 </div>
 <p><b><a href="syntax/raise-function.html">raise-function:</a></b>
-<button id='x1021' onclick='hideorshow("x1021","x1022")'>show</button></p>
- <div id='x1022' style='display:none;' class='imgcontainer'>
+<button id='x1427' onclick='hideorshow("x1427","x1428")'>show</button></p>
+ <div id='x1428' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram raise-function" src="images/syntax/raise-function.gif" />
 </div>
 <p><b><a href="syntax/select-stmt.html">select-stmt:</a></b>
-<button id='x1023' onclick='hideorshow("x1023","x1024")'>show</button></p>
- <div id='x1024' style='display:none;' class='imgcontainer'>
+<button id='x1429' onclick='hideorshow("x1429","x1430")'>show</button></p>
+ <div id='x1430' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram select-stmt" src="images/syntax/select-stmt.gif" />
 <p><b><a href="syntax/common-table-expression.html">common-table-expression:</a></b>
-<button id='x1025' onclick='hideorshow("x1025","x1026")'>show</button></p>
- <div id='x1026' style='display:none;' class='imgcontainer'>
+<button id='x1431' onclick='hideorshow("x1431","x1432")'>show</button></p>
+ <div id='x1432' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram common-table-expression" src="images/syntax/common-table-expression.gif" />
 </div>
 <p><b><a href="syntax/compound-operator.html">compound-operator:</a></b>
-<button id='x1027' onclick='hideorshow("x1027","x1028")'>show</button></p>
- <div id='x1028' style='display:none;' class='imgcontainer'>
+<button id='x1433' onclick='hideorshow("x1433","x1434")'>show</button></p>
+ <div id='x1434' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram compound-operator" src="images/syntax/compound-operator.gif" />
 </div>
 <p><b><a href="syntax/join-clause.html">join-clause:</a></b>
-<button id='x1029' onclick='hideorshow("x1029","x1030")'>show</button></p>
- <div id='x1030' style='display:none;' class='imgcontainer'>
+<button id='x1435' onclick='hideorshow("x1435","x1436")'>show</button></p>
+ <div id='x1436' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-clause" src="images/syntax/join-clause.gif" />
 <p><b><a href="syntax/join-constraint.html">join-constraint:</a></b>
-<button id='x1031' onclick='hideorshow("x1031","x1032")'>show</button></p>
- <div id='x1032' style='display:none;' class='imgcontainer'>
+<button id='x1437' onclick='hideorshow("x1437","x1438")'>show</button></p>
+ <div id='x1438' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-constraint" src="images/syntax/join-constraint.gif" />
 </div>
 <p><b><a href="syntax/join-operator.html">join-operator:</a></b>
-<button id='x1033' onclick='hideorshow("x1033","x1034")'>show</button></p>
- <div id='x1034' style='display:none;' class='imgcontainer'>
+<button id='x1439' onclick='hideorshow("x1439","x1440")'>show</button></p>
+ <div id='x1440' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-operator" src="images/syntax/join-operator.gif" />
 </div>
 </div>
 <p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
-<button id='x1035' onclick='hideorshow("x1035","x1036")'>show</button></p>
- <div id='x1036' style='display:none;' class='imgcontainer'>
+<button id='x1441' onclick='hideorshow("x1441","x1442")'>show</button></p>
+ <div id='x1442' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 <p><b><a href="syntax/result-column.html">result-column:</a></b>
-<button id='x1037' onclick='hideorshow("x1037","x1038")'>show</button></p>
- <div id='x1038' style='display:none;' class='imgcontainer'>
+<button id='x1443' onclick='hideorshow("x1443","x1444")'>show</button></p>
+ <div id='x1444' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram result-column" src="images/syntax/result-column.gif" />
 </div>
 <p><b><a href="syntax/table-or-subquery.html">table-or-subquery:</a></b>
-<button id='x1039' onclick='hideorshow("x1039","x1040")'>show</button></p>
- <div id='x1040' style='display:none;' class='imgcontainer'>
+<button id='x1445' onclick='hideorshow("x1445","x1446")'>show</button></p>
+ <div id='x1446' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram table-or-subquery" src="images/syntax/table-or-subquery.gif" />
 </div>
 </div>
 <p><b><a href="syntax/type-name.html">type-name:</a></b>
-<button id='x1041' onclick='hideorshow("x1041","x1042")'>show</button></p>
- <div id='x1042' style='display:none;' class='imgcontainer'>
+<button id='x1447' onclick='hideorshow("x1447","x1448")'>show</button></p>
+ <div id='x1448' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram type-name" src="images/syntax/type-name.gif" />
 <p><b><a href="syntax/signed-number.html">signed-number:</a></b>
-<button id='x1043' onclick='hideorshow("x1043","x1044")'>show</button></p>
- <div id='x1044' style='display:none;' class='imgcontainer'>
+<button id='x1449' onclick='hideorshow("x1449","x1450")'>show</button></p>
+ <div id='x1450' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram signed-number" src="images/syntax/signed-number.gif" />
+</div>
+</div>
+<p><b><a href="syntax/window-defn.html">window-defn:</a></b>
+<button id='x1451' onclick='hideorshow("x1451","x1452")'>show</button></p>
+ <div id='x1452' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram window-defn" src="images/syntax/window-defn.gif" />
+<p><b><a href="syntax/frame-spec.html">frame-spec:</a></b>
+<button id='x1453' onclick='hideorshow("x1453","x1454")'>show</button></p>
+ <div id='x1454' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram frame-spec" src="images/syntax/frame-spec.gif" />
+</div>
+<p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
+<button id='x1455' onclick='hideorshow("x1455","x1456")'>show</button></p>
+ <div id='x1456' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 </div>
 </div>
 <p><b><a href="syntax/qualified-table-name.html">qualified-table-name:</a></b>
-<button id='x1045' onclick='hideorshow("x1045","x1046")'>show</button></p>
- <div id='x1046' style='display:none;' class='imgcontainer'>
+<button id='x1457' onclick='hideorshow("x1457","x1458")'>show</button></p>
+ <div id='x1458' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram qualified-table-name" src="images/syntax/qualified-table-name.gif" />
 </div>
 <p><b><a href="syntax/with-clause.html">with-clause:</a></b>
-<button id='x1047' onclick='hideorshow("x1047","x1048")'>show</button></p>
- <div id='x1048' style='display:none;' class='imgcontainer'>
+<button id='x1459' onclick='hideorshow("x1459","x1460")'>show</button></p>
+ <div id='x1460' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram with-clause" src="images/syntax/with-clause.gif" />
 <p><b><a href="syntax/cte-table-name.html">cte-table-name:</a></b>
-<button id='x1049' onclick='hideorshow("x1049","x1050")'>show</button></p>
- <div id='x1050' style='display:none;' class='imgcontainer'>
+<button id='x1461' onclick='hideorshow("x1461","x1462")'>show</button></p>
+ <div id='x1462' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram cte-table-name" src="images/syntax/cte-table-name.gif" />
 </div>
 <p><b><a href="syntax/select-stmt.html">select-stmt:</a></b>
-<button id='x1051' onclick='hideorshow("x1051","x1052")'>show</button></p>
- <div id='x1052' style='display:none;' class='imgcontainer'>
+<button id='x1463' onclick='hideorshow("x1463","x1464")'>show</button></p>
+ <div id='x1464' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram select-stmt" src="images/syntax/select-stmt.gif" />
 <p><b><a href="syntax/common-table-expression.html">common-table-expression:</a></b>
-<button id='x1053' onclick='hideorshow("x1053","x1054")'>show</button></p>
- <div id='x1054' style='display:none;' class='imgcontainer'>
+<button id='x1465' onclick='hideorshow("x1465","x1466")'>show</button></p>
+ <div id='x1466' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram common-table-expression" src="images/syntax/common-table-expression.gif" />
 </div>
 <p><b><a href="syntax/compound-operator.html">compound-operator:</a></b>
-<button id='x1055' onclick='hideorshow("x1055","x1056")'>show</button></p>
- <div id='x1056' style='display:none;' class='imgcontainer'>
+<button id='x1467' onclick='hideorshow("x1467","x1468")'>show</button></p>
+ <div id='x1468' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram compound-operator" src="images/syntax/compound-operator.gif" />
 </div>
 <p><b><a href="syntax/join-clause.html">join-clause:</a></b>
-<button id='x1057' onclick='hideorshow("x1057","x1058")'>show</button></p>
- <div id='x1058' style='display:none;' class='imgcontainer'>
+<button id='x1469' onclick='hideorshow("x1469","x1470")'>show</button></p>
+ <div id='x1470' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-clause" src="images/syntax/join-clause.gif" />
 <p><b><a href="syntax/join-constraint.html">join-constraint:</a></b>
-<button id='x1059' onclick='hideorshow("x1059","x1060")'>show</button></p>
- <div id='x1060' style='display:none;' class='imgcontainer'>
+<button id='x1471' onclick='hideorshow("x1471","x1472")'>show</button></p>
+ <div id='x1472' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-constraint" src="images/syntax/join-constraint.gif" />
 </div>
 <p><b><a href="syntax/join-operator.html">join-operator:</a></b>
-<button id='x1061' onclick='hideorshow("x1061","x1062")'>show</button></p>
- <div id='x1062' style='display:none;' class='imgcontainer'>
+<button id='x1473' onclick='hideorshow("x1473","x1474")'>show</button></p>
+ <div id='x1474' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-operator" src="images/syntax/join-operator.gif" />
 </div>
 </div>
 <p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
-<button id='x1063' onclick='hideorshow("x1063","x1064")'>show</button></p>
- <div id='x1064' style='display:none;' class='imgcontainer'>
+<button id='x1475' onclick='hideorshow("x1475","x1476")'>show</button></p>
+ <div id='x1476' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 <p><b><a href="syntax/result-column.html">result-column:</a></b>
-<button id='x1065' onclick='hideorshow("x1065","x1066")'>show</button></p>
- <div id='x1066' style='display:none;' class='imgcontainer'>
+<button id='x1477' onclick='hideorshow("x1477","x1478")'>show</button></p>
+ <div id='x1478' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram result-column" src="images/syntax/result-column.gif" />
 </div>
 <p><b><a href="syntax/table-or-subquery.html">table-or-subquery:</a></b>
-<button id='x1067' onclick='hideorshow("x1067","x1068")'>show</button></p>
- <div id='x1068' style='display:none;' class='imgcontainer'>
+<button id='x1479' onclick='hideorshow("x1479","x1480")'>show</button></p>
+ <div id='x1480' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram table-or-subquery" src="images/syntax/table-or-subquery.gif" />
+</div>
+<p><b><a href="syntax/window-defn.html">window-defn:</a></b>
+<button id='x1481' onclick='hideorshow("x1481","x1482")'>show</button></p>
+ <div id='x1482' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram window-defn" src="images/syntax/window-defn.gif" />
+<p><b><a href="syntax/frame-spec.html">frame-spec:</a></b>
+<button id='x1483' onclick='hideorshow("x1483","x1484")'>show</button></p>
+ <div id='x1484' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram frame-spec" src="images/syntax/frame-spec.gif" />
+</div>
 </div>
 </div>
 </div>

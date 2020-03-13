@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Command Line Shell For SQLite</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -92,15 +108,28 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#changing_output_formats">5. Changing Output Formats</a></div>
 <div class="fancy-toc1"><a href="#writing_results_to_a_file">6. Writing results to a file</a></div>
 <div class="fancy-toc2"><a href="#file_i_o_functions">6.1. File I/O Functions</a></div>
+<div class="fancy-toc2"><a href="#the_edit_sql_function">6.2. The edit() SQL function</a></div>
 <div class="fancy-toc1"><a href="#querying_the_database_schema">7. Querying the database schema</a></div>
 <div class="fancy-toc1"><a href="#csv_import">8. CSV Import</a></div>
 <div class="fancy-toc1"><a href="#csv_export">9. CSV Export</a></div>
+<div class="fancy-toc2"><a href="#_export_to_excel_">9.1.  Export to Excel </a></div>
 <div class="fancy-toc1"><a href="#converting_an_entire_database_to_an_ascii_text_file">10. Converting An Entire Database To An ASCII Text File</a></div>
 <div class="fancy-toc1"><a href="#loading_extensions">11. Loading Extensions</a></div>
-<div class="fancy-toc1"><a href="#other_dot_commands">12. Other Dot Commands</a></div>
-<div class="fancy-toc1"><a href="#using_sqlite3_in_a_shell_script">13. Using sqlite3 in a shell script</a></div>
-<div class="fancy-toc1"><a href="#ending_shell_commands">14. Ending shell commands</a></div>
-<div class="fancy-toc1"><a href="#compiling_the_sqlite3_program_from_sources">15. Compiling the sqlite3 program from sources</a></div>
+<div class="fancy-toc1"><a href="#cryptographic_hashes_of_database_content">12. Cryptographic Hashes Of Database Content</a></div>
+<div class="fancy-toc1"><a href="#database_content_self_tests">13. Database Content Self-Tests</a></div>
+<div class="fancy-toc1"><a href="#sqlite_archive_support">14. SQLite Archive Support</a></div>
+<div class="fancy-toc2"><a href="#_sqlite_archive_create_command_">14.1.  SQLite Archive Create Command </a></div>
+<div class="fancy-toc2"><a href="#_sqlite_archive_extract_command_">14.2.  SQLite Archive Extract Command </a></div>
+<div class="fancy-toc2"><a href="#_sqlite_archive_list_command_">14.3.  SQLite Archive List Command </a></div>
+<div class="fancy-toc2"><a href="#_sqlite_archive_update_command_">14.4.  SQLite Archive Update Command </a></div>
+<div class="fancy-toc2"><a href="#_operations_on_zip_archives_">14.5.  Operations On ZIP Archives </a></div>
+<div class="fancy-toc2"><a href="#_sql_used_to_implement_sqlite_archive_operations_">14.6.  SQL Used To Implement SQLite Archive Operations </a></div>
+<div class="fancy-toc1"><a href="#index_recommendations_sqlite_expert_">15. Index Recommendations (SQLite Expert)</a></div>
+<div class="fancy-toc1"><a href="#other_dot_commands">16. Other Dot Commands</a></div>
+<div class="fancy-toc1"><a href="#using_sqlite3_in_a_shell_script">17. Using sqlite3 in a shell script</a></div>
+<div class="fancy-toc1"><a href="#ending_shell_commands">18. Ending shell commands</a></div>
+<div class="fancy-toc1"><a href="#compiling_the_sqlite3_program_from_sources">19. Compiling the sqlite3 program from sources</a></div>
+<div class="fancy-toc2"><a href="#_do_it_yourself_builds_">19.1.  Do-It-Yourself Builds </a></div>
 </div>
 </div>
 <script>
@@ -125,15 +154,15 @@ mk.innerHTML = "&#x25ba;";
 
 <h1 id="getting_started"><span>1. </span>Getting Started</h1>
 
-<p>The SQLite project provides a simple command-line utility named
+<p>The SQLite project provides a simple command-line program named
 <b>sqlite3</b> (or <b>sqlite3.exe</b> on Windows)
 that allows the user to manually enter and execute SQL
 statements against an SQLite database.  This document provides a brief
 introduction on how to use the <b>sqlite3</b> program.
 
-</p><p>To start the <b>sqlite3</b> program, simply type "sqlite3" at the
-command prompt.  The "sqlite3" command may be optionally
-followed by the name the file that holds the SQLite database.  If the 
+</p><p>Start the <b>sqlite3</b> program by typing "sqlite3" at the
+command prompt, optionally followed 
+by the name the file that holds the SQLite database.  If the named
 file does not exist, a new database file with the given name will be
 created automatically.  If no database file is specified on the
 command-line, a temporary database is created, then deleted when 
@@ -158,7 +187,7 @@ goodbye|20
 sqlite&gt;
 </pre></div>
 
-<p>You can terminate the sqlite3 program by typing your system
+<p>Terminate the sqlite3 program by typing your system
 End-Of-File character (usually a Control-D).  Use the interrupt
 character (usually a Control-C) to stop a long-running SQL statement.</p>
 
@@ -199,7 +228,8 @@ sqlite&gt;
 </pre></div>
 
 <p>The example above causes the database file named "ex1.db" to be opened
-and used, and created if it does not previously exist.  You might want to
+and used.  The "ex1.db" file is created if it does not previously exist.
+You might want to
 use a full pathname to ensure that the file is in the directory that you
 think it is in.  Use forward-slashes as the directory separator character.
 In other words use "c:/work/ex1.db", not "c:\work\ex1.db".</p>
@@ -235,85 +265,71 @@ of queries, or to execute certain prepackaged query statements.
 </p>
 
 <p>
-For a listing of the available dot commands, you can enter ".help"
-at any time.  For example:
+For a listing of the available dot commands, you can enter ".help" with
+no arguments.  Or enter ".help TOPIC" for detailed information about TOPIC.
+The list of available dot-commands follows:
 </p>
 
 <div class="codeblock"><pre>sqlite&gt; <b>.help</b>
-.auth ON|OFF           Show authorizer callbacks
-.backup ?DB? FILE      Backup DB (default "main") to FILE
-.bail on|off           Stop after hitting an error.  Default OFF
-.binary on|off         Turn binary output on or off.  Default OFF
-.changes on|off        Show number of rows changed by SQL
-.check GLOB            Fail if output since .testcase does not match
-.clone NEWDB           Clone data into NEWDB from the existing database
-.databases             List names and files of attached databases
-.dbinfo ?DB?           Show status information about the database
-.dump ?TABLE? ...      Dump the database in an SQL text format
-                         If TABLE specified, only dump tables matching
-                         LIKE pattern TABLE.
-.echo on|off           Turn command echo on or off
-.eqp on|off|full       Enable or disable automatic EXPLAIN QUERY PLAN
-.exit                  Exit this program
-.explain ?on|off|auto? Turn EXPLAIN output mode on or off or to automatic
-.fullschema ?--indent? Show schema and the content of sqlite_stat tables
-.headers on|off        Turn display of headers on or off
-.help                  Show this message
-.import FILE TABLE     Import data from FILE into TABLE
-.imposter INDEX TABLE  Create imposter table TABLE on index INDEX
-.indexes ?TABLE?       Show names of all indexes
-                         If TABLE specified, only show indexes for tables
-                         matching LIKE pattern TABLE.
-.iotrace FILE          Enable I/O diagnostic logging to FILE
-.limit ?LIMIT? ?VAL?   Display or change the value of an SQLITE_LIMIT
-.lint OPTIONS          Report potential schema issues. Options:
-                         fkey-indexes     Find missing foreign key indexes
-.load FILE ?ENTRY?     Load an extension library
-.log FILE|off          Turn logging on or off.  FILE can be stderr/stdout
-.mode MODE ?TABLE?     Set output mode where MODE is one of:
-                         ascii    Columns/rows delimited by 0x1F and 0x1E
-                         csv      Comma-separated values
-                         column   Left-aligned columns.  (See .width)
-                         html     HTML &lt;table&gt; code
-                         insert   SQL insert statements for TABLE
-                         line     One value per line
-                         list     Values delimited by .separator strings
-                         quote    Escape answers as for SQL
-                         tabs     Tab-separated values
-                         tcl      TCL list elements
-.nullvalue STRING      Use STRING in place of NULL values
-.once FILENAME         Output for the next SQL command only to FILENAME
-.open ?--new? ?FILE?   Close existing database and reopen FILE
-                         The --new starts with an empty file
-.output ?FILENAME?     Send output to FILENAME or stdout
-.print STRING...       Print literal STRING
-.prompt MAIN CONTINUE  Replace the standard prompts
-.quit                  Exit this program
-.read FILENAME         Execute SQL in FILENAME
-.restore ?DB? FILE     Restore content of DB (default "main") from FILE
-.save FILE             Write in-memory database into FILE
-.scanstats on|off      Turn sqlite3_stmt_scanstatus() metrics on or off
-.schema ?PATTERN?      Show the CREATE statements matching PATTERN
-                          Add --indent for pretty-printing
-.separator COL ?ROW?   Change the column separator and optionally the row
-                         separator for both the output mode and .import
-.session CMD ...       Create or control sessions
-.shell CMD ARGS...     Run CMD ARGS... in a system shell
-.show                  Show the current values for various settings
-.stats ?on|off?        Show stats or turn stats on or off
-.system CMD ARGS...    Run CMD ARGS... in a system shell
-.tables ?TABLE?        List names of tables
-                         If TABLE specified, only list tables matching
-                         LIKE pattern TABLE.
-.testcase NAME         Begin redirecting output to 'testcase-out.txt'
-.timeout MS            Try opening locked tables for MS milliseconds
-.timer on|off          Turn SQL timer on or off
-.trace FILE|off        Output each SQL statement as it is run
-.vfsinfo ?AUX?         Information about the top-level VFS
-.vfslist               List all available VFSes
-.vfsname ?AUX?         Print the name of the VFS stack
-.width NUM1 NUM2 ...   Set column widths for "column" mode
-                         Negative values right-justify
+.archive ...             Manage SQL archives
+.auth ON|OFF             Show authorizer callbacks
+.backup ?DB? FILE        Backup DB (default "main") to FILE
+.bail on|off             Stop after hitting an error.  Default OFF
+.binary on|off           Turn binary output on or off.  Default OFF
+.cd DIRECTORY            Change the working directory to DIRECTORY
+.changes on|off          Show number of rows changed by SQL
+.check GLOB              Fail if output since .testcase does not match
+.clone NEWDB             Clone data into NEWDB from the existing database
+.databases               List names and files of attached databases
+.dbconfig ?op? ?val?     List or change sqlite3_db_config() options
+.dbinfo ?DB?             Show status information about the database
+.dump ?TABLE? ...        Render all database content as SQL
+.echo on|off             Turn command echo on or off
+.eqp on|off|full         Enable or disable automatic EXPLAIN QUERY PLAN
+.excel                   Display the output of next command in a spreadsheet
+.exit ?CODE?             Exit this program with return-code CODE
+.expert                  EXPERIMENTAL. Suggest indexes for specified queries
+.fullschema ?--indent?   Show schema and the content of sqlite_stat tables
+.headers on|off          Turn display of headers on or off
+.help ?-all? ?PATTERN?   Show help text for PATTERN
+.import FILE TABLE       Import data from FILE into TABLE
+.imposter INDEX TABLE    Create imposter table TABLE on index INDEX
+.indexes ?TABLE?         Show names of indexes
+.iotrace FILE            Enable I/O diagnostic logging to FILE
+.limit ?LIMIT? ?VAL?     Display or change the value of an SQLITE_LIMIT
+.lint OPTIONS            Report potential schema issues.
+.load FILE ?ENTRY?       Load an extension library
+.log FILE|off            Turn logging on or off.  FILE can be stderr/stdout
+.mode MODE ?TABLE?       Set output mode
+.nullvalue STRING        Use STRING in place of NULL values
+.once (-e|-x|FILE)       Output for the next SQL command only to FILE
+.open ?OPTIONS? ?FILE?   Close existing database and reopen FILE
+.output ?FILE?           Send output to FILE or stdout if FILE is omitted
+.print STRING...         Print literal STRING
+.prompt MAIN CONTINUE    Replace the standard prompts
+.quit                    Exit this program
+.read FILE               Read input from FILE
+.restore ?DB? FILE       Restore content of DB (default "main") from FILE
+.save FILE               Write in-memory database into FILE
+.scanstats on|off        Turn sqlite3_stmt_scanstatus() metrics on or off
+.schema ?PATTERN?        Show the CREATE statements matching PATTERN
+.selftest ?OPTIONS?      Run tests defined in the SELFTEST table
+.separator COL ?ROW?     Change the column and row separators
+.session ?NAME? CMD ...  Create or control sessions
+.sha3sum ...             Compute a SHA3 hash of database content
+.shell CMD ARGS...       Run CMD ARGS... in a system shell
+.show                    Show the current values for various settings
+.stats ?on|off?          Show stats or turn stats on or off
+.system CMD ARGS...      Run CMD ARGS... in a system shell
+.tables ?TABLE?          List names of tables matching LIKE pattern TABLE
+.testcase NAME           Begin redirecting output to 'testcase-out.txt'
+.timeout MS              Try opening locked tables for MS milliseconds
+.timer on|off            Turn SQL timer on or off
+.trace FILE|off          Output each SQL statement as it is run
+.vfsinfo ?AUX?           Information about the top-level VFS
+.vfslist                 List all available VFSes
+.vfsname ?AUX?           Print the name of the VFS stack
+.width NUM1 NUM2 ...     Set column widths for "column" mode
 sqlite&gt;
 </pre></div>
 
@@ -323,7 +339,7 @@ sqlite&gt;
 
 <p>Ordinary SQL statements are free-form, and can be
 spread across multiple lines, and can have whitespace and
-comments anywhere.  But dot-commands are
+comments anywhere.  Dot-commands are
 more restrictive:
 
 </p><ul>
@@ -336,7 +352,7 @@ more restrictive:
 </li><li>Dot-commands do not recognize comments.
 </li></ul>
 
-<p>And, of course, it is important to remember that the dot-commands
+<p>The dot-commands
 are interpreted by the sqlite3.exe command-line program, not by
 SQLite itself.  So none of the dot-commands will work as an argument
 to SQLite interfaces like <a href="c3ref/prepare.html">sqlite3_prepare()</a> or <a href="c3ref/exec.html">sqlite3_exec()</a>.
@@ -347,13 +363,13 @@ to SQLite interfaces like <a href="c3ref/prepare.html">sqlite3_prepare()</a> or 
 
 <p>The sqlite3 program is able to show the results of a query
 in eight different formats: "csv", "column", "html", "insert",
-"line", "list", "tabs", and "tcl".
+"line", "list", "quote", "tabs", and "tcl".
 You can use the ".mode" dot command to switch between these output
 formats.</p>
 
 <p>The default output mode is "list".  In
-list mode, each record of a query result is written on one line of
-output and each column within that record is separated by a specific
+list mode, each row of a query result is written on one line of
+output and each column within that row is separated by a specific
 separator string.  The default separator is a pipe symbol ("|").
 List mode is especially useful when you are going to send the output
 of a query to another program (such as AWK) for additional processing.</p>
@@ -365,14 +381,32 @@ goodbye|20
 sqlite&gt;
 </pre></div>
 
-<p>You can use the ".separator" dot command to change the separator
-for list mode.  For example, to change the separator to a comma and
+<p>Use the ".separator" dot command to change the separator.
+For example, to change the separator to a comma and
 a space, you could do this:</p>
 
 <div class="codeblock"><pre>sqlite&gt; <b>.separator ", "</b>
 sqlite&gt; <b>select * from tbl1;</b>
 hello, 10
 goodbye, 20
+sqlite&gt;
+</pre></div>
+
+<p>The next ".mode" command will reset the ".separator" back to its default.
+So you will need repeat the ".separator" command whenever you change
+modes if you want to continue using a non-standard separator.
+
+</p><p>In "quote" mode, the output is formatted as SQL literals.  Strings are
+enclosed in single-quotes and internal single-quotes are escaped by doubling.
+Blobs are displayed in hexadecimal blob literal notation (Ex: x'abcd').
+Numbers are displayed as ASCII text and NULL values are shown as "NULL".
+All columns are separated from each other by a comma (or whatever alternative
+character is selected using ".separator").
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>.mode quote</b>
+sqlite&gt; <b>select * from tbl1;</b>
+'hello',10
+'goodbye',20
 sqlite&gt;
 </pre></div>
 
@@ -406,8 +440,8 @@ sqlite&gt;
 
 <p>By default, each column is between 1 and 10 characters wide, depending
 on the column header name and the width of the first column of data.
-Data that is too wide to fit in a column is truncated.  You can
-adjust the column widths using the ".width" command.  Like this:</p>
+Data that is too wide to fit in a column is truncated.  Use the
+".width" dot-command to adjust column widths, like this:</p>
 
 <div class="codeblock"><pre>sqlite&gt; <b>.width 12 6</b>
 sqlite&gt; <b>select * from tbl1;</b>
@@ -431,8 +465,7 @@ first row of data.  This makes the column width self-adjusting.
 The default width setting for every column is this 
 auto-adjusting 0 value.</p>
 
-<p>You can specify a negative column width to get
-right-justified columns.</p>
+<p>Use a negative column width for right-justified columns.</p>
 
 <p>The column labels that appear on the first two lines of output
 can be turned on and off using the ".header" dot command.  In the
@@ -447,7 +480,7 @@ sqlite&gt;
 </pre></div>
 
 <p>Another useful output mode is "insert".  In insert mode, the output
-is formatted to look like SQL INSERT statements.  You can use insert
+is formatted to look like SQL INSERT statements.  Use insert
 mode to generate text that can later be used to input data into a 
 different database.</p>
 
@@ -469,21 +502,9 @@ all of the intervening &lt;TR&gt;s, &lt;TH&gt;s, and &lt;TD&gt;s
 are.  The html output mode is envisioned as being useful for
 CGI.</p>
 
-<a name="explain"></a>
-
-<p>The ".explain" dot command can be used to set the output mode
-to "column" and to set the column widths to values that are reasonable
-for looking at the output of an <a href="lang_explain.html">EXPLAIN</a> command.
-
-</p><p>Beginning with <a href="releaselog/3_11_0.html">Version 3.11.0</a> (2016-02-15), 
-the command-line shell defaults to
-"auto-explain" mode, in which the EXPLAIN commands are automatically
-detected and the output is automatically formatted.  So the ".explain"
-command has become superfluous.
-
 <a name="dotoutput"></a>
 
-</p><h1 id="writing_results_to_a_file"><span>6. </span>Writing results to a file</h1>
+<h1 id="writing_results_to_a_file"><span>6. </span>Writing results to a file</h1>
 
 <p>By default, sqlite3 sends query results to standard output.  You
 can change this using the ".output" and ".once" commands.  Just put 
@@ -516,9 +537,28 @@ in a text editor, one could type:</p>
 sqlite3&gt; <b>SELECT * FROM bigTable;</b>
 </pre></div>
 
+<p>If the ".output" or ".once" commands have an argument of "-e" then
+output is collected into a temporary file and the system text editor is
+invoked on that text file.  Thus, the command ".once -e" achieves the
+same result as ".once '|open -f'" but with the benefit of being portable
+across all systems.
+
+</p><p>If the ".output" or ".once" commands have a "-x" argument, that causes
+them to accumulate output as Comma-Separated-Values (CSV) in a temporary
+file, then invoke the default system utility for viewing CSV files
+(usually a spreadsheet program) on the result.  This is a quick way of
+sending the result of a query to a spreadsheet for easy viewing:
+
+</p><div class="codeblock"><pre>sqlite3&gt; <b>.once -x</b>
+sqlite3&gt; <b>SELECT * FROM bigTable;</b>
+</pre></div>
+
+<p>The ".excel" command is an alias for ".once -x".  It does exactly the same
+thing.
+
 <a name="fileio"></a>
 
-<h2 id="file_i_o_functions"><span>6.1. </span>File I/O Functions</h2>
+</p><h2 id="file_i_o_functions"><span>6.1. </span>File I/O Functions</h2>
 
 <p>The command-line shell adds two <a href="c3ref/create_function.html">application-defined SQL functions</a> that
 facilitate reading content from a file into a table column, and writing the
@@ -546,14 +586,53 @@ are available as a <a href="loadext.html">loadable extension</a> in the
 <a href="http://www.sqlite.org/src/artifact?ci=trunk&filename=ext/misc/fileio.c">ext/misc/fileio.c</a>
 source file in the <a href="download.html#srctree">SQLite source code repositories</a>.
 
+<a name="editfunc"></a>
+
+</p><h2 id="the_edit_sql_function"><span>6.2. </span>The edit() SQL function</h2>
+
+<p>The CLI has another build-in SQL function named edit().  Edit() takes
+one or two arguments.  The first argument is a value - usually a large
+multi-line string to be edited.  The second argument is the name of a
+text editor.  If the second argument is omitted, the VISUAL environment
+variable is used.  The edit() function writes its first argument into a
+temporary file, invokes the editor on the temporary file, rereads the file
+back into memory after the editor is done, then returns the edited text.
+
+</p><p>The edit() function can be used to make changes to large text
+values.  For example:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>UPDATE docs SET body=edit(body) WHERE name='report-15';</b>
+</pre></div>
+
+<p>In this example, the content of the docs.body field for the entry where
+docs.name is "report-15" will be sent to the editor.  After the editor returns,
+the result will be written back into the docs.body field.
+
+</p><p>The default operation of edit() is to invoke a text editor.  But by using
+an alternative edit program in the second argument, you can also get it to edit
+images or other non-text resources.  For example, if you want to modify a JPEG
+image that happens to be stored in a field of a table, you could run:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>UPDATE pics SET img=edit(img,'gimp') WHERE id='pic-1542';</b>
+</pre></div>
+
+<p>The edit program can also be used as a viewer, by simply ignoring the
+return value.  For example, to merely look at the image above, you might run:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>SELECT length(edit(img,'gimp')) WHERE id='pic-1542';</b>
+</pre></div>
+
+
 <a name="schema"></a>
 
-</p><h1 id="querying_the_database_schema"><span>7. </span>Querying the database schema</h1>
+<h1 id="querying_the_database_schema"><span>7. </span>Querying the database schema</h1>
 
 <p>The sqlite3 program provides several convenience commands that
 are useful for looking at the schema of the database.  There is
 nothing that these commands do that cannot be done by some other
 means.  These commands are provided purely as a shortcut.</p>
+
+<a name="dtables"></a>
 
 <p>For example, to see a list of the tables in the database, you
 can enter ".tables".</p>
@@ -574,17 +653,20 @@ WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%'
 ORDER BY 1
 </pre></div>
 
-<p>The ".indices" command works in a similar way to list all of
-the indices for a particular table.  The ".indices" command takes
-a single argument which is the name of the table for which the
-indices are desired.  Last, but not least, is the ".schema" command.
-With no arguments, the ".schema" command shows the original CREATE TABLE
-and CREATE INDEX statements that were used to build the current database.
-If you give the name of a table to ".schema", it shows the original
-CREATE statement used to make that table and all if its indices.
-We have:</p>
+<p>But the ".tables" command does more.  It queries the sqlite_master table
+for all <a href="lang_attach.html">attached</a> databases, not just the primary database.  And it arranges
+its output into neat columns.
 
-<div class="codeblock"><pre>sqlite&gt; <b>.schema</b>
+</p><p>The ".indexes" command works in a similar way to list all of
+the indexes. If the ".indexes" command is given an argument which is
+the name of a table, then it shows just indexes on that table.
+
+<a name="dschema"></a>
+
+</p><p>The ".schema" command shows the complete schema for the database,
+or for a single table if an optional tablename argument is provided:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>.schema</b>
 create table tbl1(one varchar(10), two smallint)
 CREATE TABLE tbl2 (
   f1 varchar(30) primary key,
@@ -608,42 +690,19 @@ list mode, then entering the following query:</p>
 ORDER BY tbl_name, type DESC, name
 </pre></div>
 
-<p>Or, if you give an argument to ".schema" because you only
-want the schema for a single table, the query looks like this:</p>
+<p>As with ".tables", the ".schema" command shows the schema for
+all <a href="lang_attach.html">attached</a> databases.  If you only want to see the schema for
+a single database (perhaps "main") then you can add an argument
+to ".schema" to restrict its output:
 
-<div class="codeblock"><pre>SELECT sql FROM sqlite_master
-WHERE type!='meta' AND sql NOT NULL AND name NOT LIKE 'sqlite_%'
-ORDER BY substr(type,2,1), name
+</p><div class="codeblock"><pre>sqlite&gt; <b>.schema main.*</b>
 </pre></div>
 
-<p>
-You can supply an argument to the .schema command.  If you do, the
-query looks like this:
-</p>
+<p>The ".schema" command can be augmented with the "--indent" option,
+in which case it tries to reformat the various CREATE statements of
+the schema so that they are more easily readable by humans.
 
-<div class="codeblock"><pre>SELECT sql FROM sqlite_master
-WHERE tbl_name LIKE '%s'
-  AND type!='meta' AND sql NOT NULL AND name NOT LIKE 'sqlite_%'
-ORDER BY substr(type,2,1), name
-</pre></div>
-
-<p>The "%s" in the query is replace by your argument.  This allows you
-to view the schema for some subset of the database.</p>
-
-
-<div class="codeblock"><pre>sqlite&gt; <b>.schema %abc%</b>
-</pre></div>
-
-
-<p>
-Along these same lines,
-the ".table" command also accepts a pattern as its first argument.
-If you give an argument to the .table command, a "%" is both
-appended and prepended and a LIKE clause is added to the query.
-This allows you to list only those tables that match a particular
-pattern.</p>
-
-<p>The ".databases" command shows a list of all databases open in
+</p><p>The ".databases" command shows a list of all databases open in
 the current connection.  There will always be at least 2.  The first
 one is "main", the original database opened.  The second is "temp",
 the database used for temporary tables. There may be additional 
@@ -732,11 +791,51 @@ above, that line causes the CSV content to be written into a file named
 </p><p>The final line of the example (the ".system c:/work/dataout.csv")
 has the same effect as double-clicking on the c:/work/dataout.csv file
 in windows.  This will typically bring up a spreadsheet program to display
-the CSV file.  That command only works as shown on Windows.  The
-equivalent line on a Mac would be ".system open /work/dataout.csv".
-On Linux and other unix systems you will need to enter something like
-".system libreoffice /work/dataout.csv", substituting your preferred
-CSV viewing program for "libreoffice".
+the CSV file.
+
+</p><p>That command only works as written on Windows.  
+The equivalent line on a Mac would be:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>.system open dataout.csv</b>
+</pre></div>
+
+<p>On Linux and other unix systems you will need to enter something like:
+
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>.system xdg-open dataout.csv</b>
+</pre></div>
+
+<a name="exexcel*"></a>
+
+<h2 id="_export_to_excel_"><span>9.1. </span> Export to Excel </h2>
+
+<p>To simplify export to a spreadsheet, the CLI provides the
+".excel" command which captures the output of a single query and sends
+that output to the default spreadsheet program on the host computer.
+Use it like this:
+
+</p><div class="codeblock"><pre>sqlite&gt; <b>.excel</b>
+sqlite&gt; <b>SELECT * FROM tab;</b>
+</pre></div>
+
+<p>
+The command above writes the output of the query as CSV into a temporary
+file, invokes the default handler for CSV files (usually the preferred
+spreadsheet program such as Excel or LibreOffice), then deletes the
+temporary file.  This is essentially a short-hand method of doing
+the sequence of ".csv", ".once", and ".system" commands described above.
+
+</p><p>
+The ".excel" command is really an alias for ".once -x".  The -x option
+to .once causes it to writes results as CSV into a temporary file that
+is named with a ".csv" suffix, then invoke the systems default handler
+for CSV files.
+
+</p><p>
+There is also a ".once -e" command which works similarly, except that
+it names the temporary file with a ".txt" suffix so that the default
+text editor for the system will be invoked, instead of the default
+spreadsheet.
 
 <a name="dump"></a>
 
@@ -749,7 +848,7 @@ back into a database by piping it back into <b>sqlite3</b>.</p>
 <p>A good way to make an archival copy of a database is this:</p>
 
 
-<div class="codeblock"><pre>$ <b>echo '.dump' | sqlite3 ex1 | gzip -c &gt;ex1.dump.gz</b>
+<div class="codeblock"><pre>$ <b>sqlite3 ex1 .dump | gzip -c &gt;ex1.dump.gz</b>
 </pre></div>
 
 
@@ -799,9 +898,316 @@ subdirectory of the SQLite source tree.  You can use these extensions
 as-is, or as a basis for creating your own custom extensions to address
 your own particular needs.
 
+<a name="sha3sum"></a>
+
+</p><h1 id="cryptographic_hashes_of_database_content"><span>12. </span>Cryptographic Hashes Of Database Content</h1>
+
+<p>The ".sha3sum" dot-command computes a
+<a href="https://en.wikipedia.org/wiki/SHA-3">SHA3</a> hash of the <em>content</em>
+of the database.  To be clear, the hash is computed over the database content,
+not its representation on disk.  This means, for example, that a <a href="lang_vacuum.html">VACUUM</a>
+or similar data-preserving transformation does not change the hash.
+
+</p><p>The ".sha3sum" command supports options "--sha3-224", "--sha3-256", 
+"--sha3-384", and "--sha3-512" to define which variety of SHA3 to use
+for the hash.  The default is SHA3-256.
+
+</p><p>The database schema (in the <a href="fileformat2.html#sqlite_master">sqlite_master</a> table) is not normally
+included in the hash, but can be added by the "--schema" option.
+
+</p><p>The ".sha3sum" command takes a single optional argument which is a
+<a href="lang_expr.html#like">LIKE</a> pattern.  If this option is present, only tables whose names match
+the <a href="lang_expr.html#like">LIKE</a> pattern will be hashed.
+
+</p><p>The ".sha3sum" command is implemented with the help of the
+<a href="https://www.sqlite.org/src/file/ext/misc/shathree.c">extension function "sha3_query()"</a>
+that is included with the command-line shell.
+
+<a name="selftest"></a>
+
+</p><h1 id="database_content_self_tests"><span>13. </span>Database Content Self-Tests</h1>
+
+<p>The ".selftest" command attempts to verify that a database is
+intact and is not corrupt.  
+The .selftest command looks for a table in schema named "selftest"
+and defined as follows:
+
+</p><div class="codeblock"><pre>CREATE TABLE selftest(
+  tno INTEGER PRIMARY KEY,  -- Test number
+  op TEXT,                  -- 'run' or 'memo'
+  cmd TEXT,                 -- SQL command to run, or text of "memo"
+  ans TEXT                  -- Expected result of the SQL command
+);
+</pre></div>
+
+<p>The .selftest command reads the rows of the selftest table in
+selftest.tno order.
+For each 'memo' row, it writes the text in 'cmd' to the output.  For
+each 'run' row, it runs the 'cmd' text as SQL and compares the result
+to the value in 'ans', and shows an error message if the results differ.
+
+</p><p>If there is no selftest table, the ".selftest" command runs
+<a href="pragma.html#pragma_integrity_check">PRAGMA integrity_check</a>.
+
+</p><p>The ".selftest --init" command creates the selftest table if it
+does not already exists, then appends entries that check the SHA3
+hash of the content of all tables.  Subsequent runs of ".selftest"
+will verify that the database has not been changed in any way.  To
+generates tests to verify that a subset of the tables are unchanged,
+simply run ".selftest --init" then <a href="lang_delete.html">DELETE</a> the selftest rows that
+refer to tables that are not constant.  
+
+<a name="sqlar"></a>
+
+</p><h1 id="sqlite_archive_support"><span>14. </span>SQLite Archive Support</h1>
+
+<p>The ".archive" dot-command and the "-A" command-line option
+provide built-in support for the 
+<a href="sqlar.html">SQLite Archive format</a>. The interface is similar to
+that of the "tar" command on unix systems. Each invocation of the ".ar"
+command must specify a single command option. The following commands
+are available for ".archive":
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+  <tr style="text-align:left"><th style="width:15ex">Option</th><th style="width:17ex">Long&nbsp;Option</th><th>Purpose
+  </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-c</td><td>--create</td><td>Create a new archive containing specified files.
+  </td></tr><tr style="text-align:left"><td>-x</td><td>--extract</td><td>Extract specified files from archive.
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-t</td><td>--list</td><td>List the files in the archive.
+  </td></tr><tr style="text-align:left"><td>-u</td><td>--update</td><td>Add files to existing archive.
+</td></tr></table>
+
+<p>As well as the command option, each invocation of ".ar" may specify
+one or more modifier options. Some modifier options require an argument,
+some do not. The following modifier options are available:
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+  <tr style="text-align:left"><th style="width:15ex">Option</th><th style="width:17ex">Long&nbsp;Option</th><th>Purpose
+  </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-v</td><td>--verbose</td><td>List each file as it is processed.
+  </td></tr><tr style="text-align:left"><td>-f FILE</td><td>--file FILE</td><td>If specified, use file FILE as the
+  archive. Otherwise, assume that the current "main" database is the 
+  archive to be operated on.
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-a FILE</td><td>--append FILE</td><td>Like --file, use file FILE as the
+  archive, but open the file using the 
+  <a href="https://sqlite.org/src/file/ext/misc/appendvfs.c">apndvfs VFS</a> so that
+  the archive will be appended to the end of FILE if FILE already exists.
+  </td></tr><tr style="text-align:left"><td>-C DIR</td><td>--directory DIR</td><td>If specified, interpret all relative
+  paths as relative to DIR, instead of the current working directory.
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-n</td><td>--dryrun</td><td>Show the SQL that would be run to carry out the
+                       archive operation, but do not actually change anything.
+  </td></tr><tr style="text-align:left"><td>--</td><td>--</td><td>All subsequent command line words are command arguments,
+  not options.
+</td></tr></table>
+
+<p>
+For command-line usage, add the short style command-line options immediately
+following the "-A", without an intervening space.  All subsequent arguments
+are considered to be part of the .archive command.  For example, the following 
+commands are equivalent:
+
+</p><div class="codeblock"><pre>sqlite3 new_archive.db -Acv file1 file2 file3
+sqlite3 new_archive.db ".ar -cv file1 file2 file3"
+</pre></div>
+
+<p>
+Long and short style options may be mixed. For example, the following are
+equivalent:
+
+</p><div class="codeblock"><pre><i>-- Two ways to create a new archive named "new_archive.db" containing</i>
+<i>-- files "file1", "file2" and "file3".</i>
+.ar -c --file new_archive.db file1 file2 file3
+.ar -f new_archive.db --create file1 file2 file3
+</pre></div>
+
+<p>Alternatively, the first argument following to ".ar" may be the concatenation
+of the short form of all required options (without the "-" characters). In 
+this case arguments for options requiring them are read from the command line
+next, and any remaining words are considered command arguments. For example:
+
+</p><div class="codeblock"><pre><i>-- Create a new archive "new_archive.db" containing files "file1" and</i>
+<i>-- "file2" from directory "dir1".</i>
+.ar cCf dir1 new_archive.db file1 file2 file3
+</pre></div>
+
+<h2 id="_sqlite_archive_create_command_"><span>14.1. </span> SQLite Archive Create Command </h2>
+
+<p>Create a new archive, overwriting any existing archive (either in the current
+"main" db or in the file specified by a --file option). Each argument following
+the options is a file to add to the archive. Directories are imported
+recursively. See above for examples.
+
+</p><h2 id="_sqlite_archive_extract_command_"><span>14.2. </span> SQLite Archive Extract Command </h2>
+
+<p>Extract files from the archive (either to the current working directory or
+to the directory specified by a --directory option). If there are no arguments
+following the options all files are extracted from the archive. Or, if there
+are arguments, they are the names of files to extract from the archive. Any
+specified directories are extracted recursively. It is an error if any
+specified files are not part of the archive.
+
+</p><div class="codeblock"><pre><i>-- Extract all files from the archive in the current "main" db to the</i>
+<i>-- current working directory. List files as they are extracted. </i>
+.ar --extract --verbose
+
+<i>-- Extract file "file1" from archive "ar.db" to directory "dir1".</i>
+.ar fCx ar.db dir1 file1
+</pre></div>
+
+<h2 id="_sqlite_archive_list_command_"><span>14.3. </span> SQLite Archive List Command </h2>
+
+<p>List the contents of the archive. If no arguments are specified, then all
+files are listed. Otherwise, only those specified as arguments are. Currently,
+the --verbose option does not change the behaviour of this command. That may
+change in the future.
+
+</p><div class="codeblock"><pre><i>-- List contents of archive in current "main" db.</i>.
+.ar --list
+</pre></div>
+
+<h2 id="_sqlite_archive_update_command_"><span>14.4. </span> SQLite Archive Update Command </h2>
+
+<p> This command works the same way as the --create command, except that 
+it does not delete the current archive before commencing. New versions of
+files silently replace existing files with the same names, but otherwise
+the initial contents of the archive (if any) remain intact.
+
+
+</p><h2 id="_operations_on_zip_archives_"><span>14.5. </span> Operations On ZIP Archives </h2>
+
+<p>If FILE is a ZIP archive rather than an SQLite Archive, the ".archive"
+command and the "-A" command-line option still work.  This is accomplished
+using of the <a href="zipfile.html">zipfile</a> extension.
+Hence, the following commands are roughly equivalent,
+differing only in output formatting:
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+  <tr style="text-align:left"><th>Traditional Command</th><th>Equivalent sqlite3.exe Command
+  </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>unzip archive.zip</td><td>sqlite3 -Axf archive.zip
+  </td></tr><tr style="text-align:left"><td>unzip -l archive.zip</td><td>sqlite3 -Atvf archive.zip
+  </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>zip -r archive2.zip dir</td><td>sqlite3 -Acf archive2.zip dir
+</td></tr></table>
+
+<h2 id="_sql_used_to_implement_sqlite_archive_operations_"><span>14.6. </span> SQL Used To Implement SQLite Archive Operations </h2>
+
+<p>The various SQLite Archive Archive commands are implemented using SQL statements.
+Application developers can easily add SQLite Archive Archive reading and writing
+support to their own projects by running the appropriate SQL.
+
+</p><p>To see what SQL statements are used to implement an SQLite Archive
+operation, add the --dryrun or -n option.  This causes the SQL to be
+displayed but inhibits the execution of the SQL.
+
+</p><p>The SQL statements used to implement SQLite Archive operations make use of
+various <a href="loadext.html">loadable extensions</a>.  These extensions are all available in
+the <a href="https://sqlite.org/src">SQLite source tree</a> in the
+<a href="https://sqlite.org/src/file/ext/misc">ext/misc/ subfolder</a>.
+The extensions needed for full SQLite Archive support include:
+
+</p><ol>
+<li><p>
+<a href="https://sqlite.org/src/file/ext/misc/fileio.c">fileio.c</a> &mdash;
+This extension adds SQL functions readfile() and writefile() for
+reading and writing content from files on disk.  The fileio.c
+extension also includes fsdir() table-valued function for listing
+the contents of a directory and the lsname() function for converting
+numeric st_mode integers from the stat() system call into human-readable
+strings after the fashion of the "ls -l" command.
+
+</p></li><li><p>
+<a href="https://sqlite.org/src/file/ext/misc/sqlar.c">sqlar.c</a> &mdash;
+This extension adds the sqlar_compress() and sqlar_uncompress()
+functions that are needed to compress and uncompress file content
+as it is insert and extracted from an SQLite Archive.
+
+</p></li><li><p>
+<a href="zipfile.html">zipfile.c</a> &mdash;
+This extension implements the "zipfile(FILE)" table-valued function
+which is used to read ZIP archives.  This extension is only needed
+when reading ZIP archives instead of SQLite archives.
+
+</p></li><li><p>
+<a href="https://sqlite.org/src/file/ext/misc/appendvfs.c">appendvfs.c</a> &mdash;
+This extension implements a new <a href="vfs.html">VFS</a> that allows an SQLite database
+to be appended to some other file, such as an executable.  This
+extension is only needed if the --append option to the .archive
+command is used.
+</p></li></ol>
+
+<a name="expert"></a>
+
+<h1 id="index_recommendations_sqlite_expert_"><span>15. </span>Index Recommendations (SQLite Expert)</h1>
+
+<p><b>Note: This command is experimental. It may be removed or the 
+interface modified in incompatible ways at some point in the future.
+
+</b></p><p>For most non-trivial SQL databases, the key to performance is creating
+the right SQL indexes. In this context "the right SQL indexes" means those
+that cause the queries that an application needs to optimize run fast. The
+".expert" command can assist with this by proposing indexes that might
+assist with specific queries, were they present in the database.
+
+</p><p>The ".expert" command is issued first, followed by the SQL query 
+on a separate line. For example, consider the following session:
+
+</p><div class="codeblock"><pre>sqlite&gt; CREATE TABLE x1(a, b, c);                  <i>-- Create table in database </i>
+sqlite&gt; .expert
+sqlite&gt; SELECT * FROM x1 WHERE a=? AND b&gt;?;        <i>-- Analyze this SELECT </i>
+CREATE INDEX x1_idx_000123a7 ON x1(a, b);
+
+0|0|0|SEARCH TABLE x1 USING INDEX x1_idx_000123a7 (a=? AND b&gt;?)
+
+sqlite&gt; CREATE INDEX x1ab ON x1(a, b);             <i>-- Create the recommended index </i>
+sqlite&gt; .expert
+sqlite&gt; SELECT * FROM x1 WHERE a=? AND b&gt;?;        <i>-- Re-analyze the same SELECT </i>
+(no new indexes)
+
+0|0|0|SEARCH TABLE x1 USING INDEX x1ab (a=? AND b&gt;?)
+</pre></div>
+
+<p>In the above, the user creates the database schema (a single table - "x1"),
+and then uses the ".expert" command to analyze a query, in this case 
+"SELECT * FROM x1 WHERE a=? AND b&gt;?". The shell tool recommends that the
+user create a new index (index "x1_idx_000123a7") and outputs the plan
+that the query would use in <a href="eqp.html">EXPLAIN QUERY PLAN</a> format. The user then creates
+an index with an equivalent schema and runs the analysis on the same query
+again. This time the shell tool does not recommend any new indexes, and 
+outputs the plan that SQLite will use for the query given the existing 
+indexes.
+
+</p><p>The ".expert" command accepts the following options:
+
+</p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
+<tr style="text-align:left"><th> Option </th><th> Purpose
+</th></tr><tr style="text-align:left;background-color:#DDDDDD"><td> --verbose 
+    </td><td> If present, output a more verbose report for each query analyzed.
+</td></tr><tr style="text-align:left"><td> --sample&nbsp;PERCENT 
+    </td><td> By default, the ".expert" command recommends indexes based on the
+         query and database schema alone. This is similar to the way the
+         <a href="optoverview.html">SQLite query planner</a> selects indexes for queries if the user has not
+         run the <a href="lang_analyze.html">ANALYZE</a> command on the database to generate data
+         distribution statistics. 
+         <div style="margin-top:1ex">
+         If this option is passed a non-zero argument, the ".expert" command
+         generates similar data distribution statistics for all indexes
+         considered based on PERCENT percent of the rows currently stored in
+         each database table. For databases with unusual data distributions,
+         this may lead to better index recommendations, particularly if the
+         application intends to run ANALYZE.
+         <div style="margin-top:1ex">
+         For small databases and modern CPUs, there is usually no reason not
+         to pass "--sample 100". However, gathering data distribution
+         statistics can be expensive for large database tables. If the
+         operation is too slow, try passing a smaller value for the --sample
+         option.
+</div></div></td></tr></table>
+
+<p>Th functionality described in this section may be integrated into other
+applications or tools using the 
+<a href="http://www.sqlite.org/src/dir?ci=trunk&name=ext/expert">
+SQLite expert extension</a> code.
+
 <a name="dotother"></a>
 
-</p><h1 id="other_dot_commands"><span>12. </span>Other Dot Commands</h1>
+</p><h1 id="other_dot_commands"><span>16. </span>Other Dot Commands</h1>
 
 <p>There are many other dot-commands available in the command-line
 shell.  See the ".help" command for a complete list for any particular
@@ -809,7 +1215,7 @@ version and build of SQLite.
 
 <a name="insh"></a>
 
-</p><h1 id="using_sqlite3_in_a_shell_script"><span>13. </span>Using sqlite3 in a shell script</h1>
+</p><h1 id="using_sqlite3_in_a_shell_script"><span>17. </span>Using sqlite3 in a shell script</h1>
 
 <p>
 One way to use sqlite3 in a shell script is to use "echo" or
@@ -834,7 +1240,7 @@ $
 
 <a name="endsh"></a>
 
-<h1 id="ending_shell_commands"><span>14. </span>Ending shell commands</h1>
+<h1 id="ending_shell_commands"><span>18. </span>Ending shell commands</h1>
 
 <p>
 SQLite commands are normally terminated by a semicolon.  In the shell 
@@ -847,17 +1253,74 @@ to that function.</p>
 
 <a name="compiling"></a>
 
-<h1 id="compiling_the_sqlite3_program_from_sources"><span>15. </span>Compiling the sqlite3 program from sources</h1>
+<h1 id="compiling_the_sqlite3_program_from_sources"><span>19. </span>Compiling the sqlite3 program from sources</h1>
+
+<p>
+To compile the command-line shell on unix systems and on Windows with MinGW,
+the usual configure-make command works:
+
+</p><div class="codeblock"><pre>sh configure; make
+</pre></div>
+
+<p>
+The configure-make works whether your are building from the canonical sources
+from the source tree, or from an amalgamated bundle.  There are few
+dependencies.  When building from canonical sources, a working 
+<a href="https://www.tcl.tk/man/tcl8.3/UserCmd/tclsh.htm">tclsh</a> is required.
+If using an amalgamation bundle, all the preprocessing work normally 
+done by tclsh will have already been carried out and only normal build
+tools are required.
+
+</p><p>
+A working <a href="https://zlib.net">zlib compression library</a> is
+needed in order for the <a href="cli.html#sqlar">.archive command</a> to operate.
+
+</p><p>
+On Windows with MSVC, use nmake with the Makefile.msc:
+
+</p><div class="codeblock"><pre>nmake /f Makefile.msc
+</pre></div>
+
+<p>
+For correct operation of the <a href="cli.html#sqlar">.archive command</a>, make a copy of the
+<a href="https://zlib.net">zlib source code</a> into the compat/zlib subdirectory 
+of the source tree and compile this way:
+
+</p><div class="codeblock"><pre>nmake /f Makefile.msc USE_ZLIB=1
+</pre></div>
+
+<h2 id="_do_it_yourself_builds_"><span>19.1. </span> Do-It-Yourself Builds </h2>
 
 <p>
 The source code to the sqlite3 command line interface is in a single
-file named "shell.c" which you can
-<a href="http://www.sqlite.org/src/finfo?name=src/shell.c">
-download</a> from the SQLite website.  
-<a href="howtocompile.html">Compile</a> this file (together
+file named "shell.c".  The shell.c source file is generated from other
+sources, but most of the code for shell.c can be found in
+<a href="https://sqlite.org/src/file/src/shell.c.in">src/shell.c.in</a>.
+(Regenerate shell.c by typing "make shell.c" from the canonical source tree.)
+<a href="howtocompile.html">Compile</a> the shell.c file (together
 with the <a href="amalgamation.html">sqlite3 library source code</a>) to generate
 the executable.  For example:</p>
 
-<div class="codeblock"><pre>gcc -o sqlite3 shell.c sqlite3.c -ldl -lpthread
+<div class="codeblock"><pre>gcc -o sqlite3 shell.c sqlite3.c -ldl -lpthread -lz -lm
 </pre></div>
+
+<p>
+The following additional compile-time options are recommended in order to
+provide a full-featured command-line shell:
+
+</p><ul>
+<li> <a href="compile.html#threadsafe">-DSQLITE_THREADSAFE=0</a>
+</li><li> <a href="compile.html#enable_explain_comments">-DSQLITE_ENABLE_EXPLAIN_COMMENTS</a>
+</li><li> <a href="compile.html#use_zlib">-DSQLITE_USE_ZLIB</a>
+</li><li> <a href="compile.html#introspection_pragmas">-DSQLITE_INTROSPECTION_PRAGMAS</a>
+</li><li> <a href="compile.html#enable_unknown_sql_function">-DSQLITE_ENABLE_UNKNOWN_SQL_FUNCTION</a>
+</li><li> <a href="compile.html#enable_stmtvtab">-DSQLITE_ENABLE_STMTVTAB</a>
+</li><li> <a href="compile.html#enable_dbpage_vtab">-DSQLITE_ENABLE_DBPAGE_VTAB</a>
+</li><li> <a href="compile.html#enable_dbstat_vtab">-DSQLITE_ENABLE_DBSTAT_VTAB</a>
+</li><li> <a href="compile.html#enable_offset_sql_func">-DSQLITE_ENABLE_OFFSET_SQL_FUNC</a>
+</li><li> <a href="compile.html#enable_json1">-DSQLITE_ENABLE_JSON1</a>
+</li><li> <a href="compile.html#enable_rtree">-DSQLITE_ENABLE_RTREE</a>
+</li><li> <a href="compile.html#enable_fts4">-DSQLITE_ENABLE_FTS4</a>
+</li><li> <a href="compile.html#enable_fts5">-DSQLITE_ENABLE_FTS5</a>
+</li></ul>
 

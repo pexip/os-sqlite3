@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Run-Time Loadable Extensions</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -89,6 +105,7 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#loading_an_extension">2. Loading An Extension</a></div>
 <div class="fancy-toc1"><a href="#compiling_a_loadable_extension">3. Compiling A Loadable Extension</a></div>
 <div class="fancy-toc1"><a href="#programming_loadable_extensions">4. Programming Loadable Extensions</a></div>
+<div class="fancy-toc2"><a href="#example_extensions">4.1. Example Extensions</a></div>
 <div class="fancy-toc1"><a href="#persistent_loadable_extensions">5. Persistent Loadable Extensions</a></div>
 <div class="fancy-toc1"><a href="#statically_linking_a_run_time_loadable_extension">6. Statically Linking A Run-Time Loadable Extension</a></div>
 <div class="fancy-toc1"><a href="#implementation_details">7. Implementation Details</a></div>
@@ -169,7 +186,7 @@ would be "sqlite3_mathfunc_init".  Or if the filename is
 </p><p>For security reasons, extension loading is turned off by default.
 In order to use either the C-language or SQL extension loading functions,
 one must first enable extension loading using the
-<a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_enable_fkey.html">SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION</a>,1,NULL)
+<a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigenableloadextension">SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION</a>,1,NULL)
 C-language API in your application.</p>
 
 <p>From the <a href="cli.html">command-line shell</a>, extensions can be loaded using the
@@ -320,14 +337,50 @@ int sqlite3_extension_init(
 }
 </pre></div>
 
-<p>Many examples of complete and working loadable extensions can be seen in the
-SQLite source tree in the
-<a href="http://www.sqlite.org/src/tree?name=ext/misc&ci=trunk">ext/misc</a>
-subdirectory.</p>
+<h2 id="example_extensions"><span>4.1. </span>Example Extensions</h2>
+
+<p>Many examples of complete and working loadable extensions can be 
+seen in the SQLite source tree in the
+<a href="https://www.sqlite.org/src/file/ext/misc">ext/misc</a> subdirectory.
+Each file in that directory is a separate extension.  Documentation
+is provided by a header comment on the file.
+Here are brief notes on a few of the extensions in 
+the <a href="https://www.sqlite.org/src/file/ext/misc">ext/misc</a> subdirectory:
+
+</p><ul>
+<li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/carray.c">carray.c</a> &mdash;
+Implementation of the <a href="carray.html">carray table-valued function</a>.
+</p></li><li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/compress.c">compress.c</a> &mdash;
+Implementation of <a href="c3ref/create_function.html">application-defined SQL functions</a> compress() and
+uncompress() that do zLib compression of text or blob content.
+</p></li><li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/json1.c">json1.c</a> &mdash;
+Implementation of <a href="json1.html">JSON SQL functions</a> and <a href="vtab.html#tabfunc2">table-valued functions</a>.
+This is a larger and more complex extension.
+</p></li><li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/memvfs.c">memvfs.c</a> &mdash;
+Implementation of a new <a href="vfs.html">VFS</a> that stores all content in-memory.
+</p></li><li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/rot13.c">rot13.c</a> &mdash;
+Implementation of a <a href="https://en.wikipedia.org/wiki/ROT13">rot13()</a> 
+SQL function.  This is a very simple example of an extension function
+and is useful as a template for creating new extensions.
+</p></li><li><p>
+<a href="https://www.sqlite.org/src/file/ext/misc/series.c">series.c</a> &mdash;
+Implementation of the generate_series <a href="vtab.html">virtual table</a> and
+<a href="vtab.html#tabfunc2">table-valued function</a>.  This is a relatively simple example of a
+virtual table implementation which can serve as a template for writing
+new virtual tables.
+</p></li></ul>
+
+<p>Other and more complex extensions can be found in subfolders
+under <a href="https://www.sqlite.org/src/file/ext">ext/</a> other than ext/misc/.
 
 <a name="persist"></a>
 
-<h1 id="persistent_loadable_extensions"><span>5. </span>Persistent Loadable Extensions</h1>
+</p><h1 id="persistent_loadable_extensions"><span>5. </span>Persistent Loadable Extensions</h1>
 
 <p>The default behavior for a loadable extension is that it is unloaded
 from process memory when the database connection that originally invoked
@@ -338,6 +391,30 @@ connection closes.)  However, if the initialization procedure returns
 not be unloaded (xDlClose will not be invoked) and the extension will remain
 in process memory indefinitely.  The SQLITE_OK_LOAD_PERMANENTLY return
 value is useful for extensions that want to register new <a href="vfs.html">VFSes</a>.
+
+</p><p>To clarify: an extension for which the initialization function returns
+SQLITE_OK_LOAD_PERMANENTLY continues to exist in memory after the database
+connection closes.  However, the extension is <em>not</em> automatically
+registered with subsequent database connections.  This makes it possible
+to load extensions that implement new <a href="vfs.html">VFSes</a>.
+To persistently load and register an extension that implements new SQL
+functions, collating sequences, and/or virtual tables, such that those
+added capabilities are available to all subsequent database connections,
+then the initialization routine should also invoke <a href="c3ref/auto_extension.html">sqlite3_auto_extension()</a>
+on a subfunction that will register those services.
+
+</p><p>The <a href="https://sqlite.org/src/file/ext/misc/vfsstat.c">vfsstat.c</a> extension
+show an example of a loadable extension that persistently registers both
+a new VFS and a new virtual table.  The
+<a href="https://sqlite.org/src/info/77b5b4235c9f7f11?ln=801-819">sqlite3_vfsstat_init()</a>
+initialization routine in that extension is called only once, when the
+extension is first loaded.  It registers the new "vfslog" VFS just that
+one time, and it returns SQLITE_OK_LOAD_PERMANENTLY so that the code used
+to implement the "vfslog" VFS will remain in memory. The initialization routine
+also invokes <a href="c3ref/auto_extension.html">sqlite3_auto_extension()</a> on a pointer to the "vstatRegister()"
+function so that all subsequent database connections will invoke the
+"vstatRegister()" function as they start up, and hence register the
+"vfsstat" virtual table.  
 
 </p><h1 id="statically_linking_a_run_time_loadable_extension"><span>6. </span>Statically Linking A Run-Time Loadable Extension</h1>
 
@@ -367,7 +444,7 @@ is opened.  You only have to register each extension once, and you can
 do so near the beginning of your main() routine.  Using the
 <a href="c3ref/auto_extension.html">sqlite3_auto_extension()</a> interface to register your extensions makes
 your extensions work as if they were built into the core SQLite - they
-are automatically there whenever you open a new database connection
+automatically exist whenever you open a new database connection
 without needing to be initialized.  Just be sure to complete any
 configuration you need to accomplish using <a href="c3ref/config.html">sqlite3_config()</a> before
 registering your extensions, since the <a href="c3ref/auto_extension.html">sqlite3_auto_extension()</a>

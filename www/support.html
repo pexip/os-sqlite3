@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite Support Options</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -87,7 +103,7 @@ return false;
 sqlite-users</a>
 &mdash; General discussion for programmers using SQLite in their applications.  
 <i>This is probably the mailing list you want!</i>
-<a class="button" href='http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-users'>Sign-up</a>
+<a class="button" href='http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-users'>Sign-up</a>
 <a class="button" href="http://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/">Archives</a>
 </li>
 
@@ -96,14 +112,14 @@ sqlite-users</a>
 sqlite-dev</a>
 &mdash; Conversations about SQLite internals, for those who work
 directly on enhancing SQLite itself.
-<a class="button" href="http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-dev">Sign-up</a>
+<a class="button" href="http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-dev">Sign-up</a>
 </li>
 
 <li><p>
 <a href="http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-announce">
 <nobr>sqlite-announce</nobr></a>
 &mdash; Announcements of new SQLite releases.</td>
-<a class="button" href="http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-announce">Sign-up</a>
+<a class="button" href="http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-announce">Sign-up</a>
 </li>
 </ul>
 
@@ -136,17 +152,17 @@ proprietary, licensed extensions to SQLite.</p>
 
 <ul>
 <li><p>
-The <a href="http://www.hwaci.com/sw/sqlite/see.html">SQLite Encryption Extension (SEE)</a>
+The <a href="https://www.hwaci.com/sw/sqlite/see.html">SQLite Encryption Extension (SEE)</a>
 will read and write database file encrypted using
 128-bit or 256-bit AES.</p></li>
 
 <li><p>
-The <a href="http://www.hwaci.com/sw/sqlite/cerod.html">SQLite Compressed and Encrypted Read-Only Database (CEROD)</a>
+The <a href="https://www.hwaci.com/sw/sqlite/cerod.html">SQLite Compressed and Encrypted Read-Only Database (CEROD)</a>
 extension will read a database file that is both compressed
 and encrypted.</p></li>
 
 <li><p>
-The <a href="http://www.hwaci.com/sw/sqlite/zipvfs.html">ZIPVFS</a>
+The <a href="https://www.hwaci.com/sw/sqlite/zipvfs.html">ZIPVFS</a>
 extension will both read and write database files that is both compressed and optionally
 encrypted using application-supplied compression and encryption routines.</p></li>
 

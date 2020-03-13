@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Database Connection Handle</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -101,11 +117,11 @@ sqlite3 object.
  <a href="../c3ref/close.html">sqlite3_close()</a>,
 <a href="../c3ref/close.html">sqlite3_close_v2()</a></p>
 <style>
-#listtab22 tr td {vertical-align:top;}
+#listtab26 tr td {vertical-align:top;}
 </style>
-<table id='listtab22' width='100%'></table>
+<table id='listtab26' width='100%'></table>
 <script>
-var listitems22 = [{"u":"../c3ref/blob_open.html","x":"sqlite3_blob_open","s":0},
+var listitems26 = [{"u":"../c3ref/blob_open.html","x":"sqlite3_blob_open","s":0},
 {"u":"../c3ref/busy_handler.html","x":"sqlite3_busy_handler","s":0},
 {"u":"../c3ref/busy_timeout.html","x":"sqlite3_busy_timeout","s":0},
 {"u":"../c3ref/changes.html","x":"sqlite3_changes","s":0},
@@ -120,6 +136,7 @@ var listitems22 = [{"u":"../c3ref/blob_open.html","x":"sqlite3_blob_open","s":0}
 {"u":"../c3ref/create_function.html","x":"sqlite3_create_function_v2","s":0},
 {"u":"../c3ref/create_module.html","x":"sqlite3_create_module","s":0},
 {"u":"../c3ref/create_module.html","x":"sqlite3_create_module_v2","s":0},
+{"u":"../c3ref/create_function.html","x":"sqlite3_create_window_function","s":0},
 {"u":"../c3ref/db_config.html","x":"sqlite3_db_config","s":0},
 {"u":"../c3ref/db_filename.html","x":"sqlite3_db_filename","s":0},
 {"u":"../c3ref/db_mutex.html","x":"sqlite3_db_mutex","s":0},
@@ -147,11 +164,14 @@ var listitems22 = [{"u":"../c3ref/blob_open.html","x":"sqlite3_blob_open","s":0}
 {"u":"../c3ref/prepare.html","x":"sqlite3_prepare","s":0},
 {"u":"../c3ref/prepare.html","x":"sqlite3_prepare16","s":0},
 {"u":"../c3ref/prepare.html","x":"sqlite3_prepare16_v2","s":0},
+{"u":"../c3ref/prepare.html","x":"sqlite3_prepare16_v3","s":0},
 {"u":"../c3ref/prepare.html","x":"sqlite3_prepare_v2","s":0},
+{"u":"../c3ref/prepare.html","x":"sqlite3_prepare_v3","s":0},
 {"u":"../c3ref/profile.html","x":"sqlite3_profile","s":0},
 {"u":"../c3ref/progress_handler.html","x":"sqlite3_progress_handler","s":0},
 {"u":"../c3ref/commit_hook.html","x":"sqlite3_rollback_hook","s":0},
 {"u":"../c3ref/set_authorizer.html","x":"sqlite3_set_authorizer","s":0},
+{"u":"../c3ref/set_last_insert_rowid.html","x":"sqlite3_set_last_insert_rowid","s":0},
 {"u":"../c3ref/table_column_metadata.html","x":"sqlite3_table_column_metadata","s":0},
 {"u":"../c3ref/total_changes.html","x":"sqlite3_total_changes","s":0},
 {"u":"../c3ref/profile.html","x":"sqlite3_trace","s":0},
@@ -166,34 +186,34 @@ var j = 0;
 var w = Math.max(document.documentElement.clientWidth,  window.innerWidth || 0);
 var nCol = Math.floor(w/350);
 if(nCol<=0) nCol=1;
-var nRow = Math.ceil((listitems22.length+1)/nCol);
+var nRow = Math.ceil((listitems26.length+1)/nCol);
 var h="<tr><td colspan="+nCol;
 h += ">Methods:</td></tr><tr><td><ul class='multicol_list'>"
 var ea
-for(var i=0; i<listitems22.length; i++){
+for(var i=0; i<listitems26.length; i++){
   if( (++j)>nRow ){
     h += "</ul></td>\n<td><ul class='multicol_list'>\n";
     j = 1;
   }
-  if(listitems22[i].u=="" || listitems22[i].s==2){
+  if(listitems26[i].u=="" || listitems26[i].s==2){
     h += "<li>"
     ea = ""
   }else{
     h += "<li><a href='";
-    h += listitems22[i].u;
+    h += listitems26[i].u;
     h += "'>";
     ea = "</a>"
   }
-  if(listitems22[i].s==2 || listitems22[i].s==3) h += "<s>"
-  h += listitems22[i].x;
-  if(listitems22[i].s==2 || listitems22[i].s==3) h += "</s>"
+  if(listitems26[i].s==2 || listitems26[i].s==3) h += "<s>"
+  h += listitems26[i].x;
+  if(listitems26[i].s==2 || listitems26[i].s==3) h += "</s>"
   h += ea
-  if(listitems22[i].s==1) h += "<small><i>(exp)</i></small>\n";
-  if(listitems22[i].s==3) h += "&sup1\n";
-  if(listitems22[i].s==4) h += "&sup2\n";
-  if(listitems22[i].s==5) h += "&sup3\n";
+  if(listitems26[i].s==1) h += "<small><i>(exp)</i></small>\n";
+  if(listitems26[i].s==3) h += "&sup1\n";
+  if(listitems26[i].s==4) h += "&sup2\n";
+  if(listitems26[i].s==5) h += "&sup3\n";
 }
-document.getElementById("listtab22").innerHTML = h;
+document.getElementById("listtab26").innerHTML = h;
 </script>
 </p>
 <p>See also lists of

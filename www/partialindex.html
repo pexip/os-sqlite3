@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Partial Indexes</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -133,82 +149,102 @@ ordinary <a href="lang_createindex.html">CREATE INDEX</a> statement.
 </p>
 
 <p><b><a href="syntax/create-index-stmt.html">create-index-stmt:</a></b>
-<button id='x1445' onclick='hideorshow("x1445","x1446")'>hide</button></p>
- <div id='x1446' class='imgcontainer'>
+<button id='x1995' onclick='hideorshow("x1995","x1996")'>hide</button></p>
+ <div id='x1996' class='imgcontainer'>
  <img alt="syntax diagram create-index-stmt" src="images/syntax/create-index-stmt.gif" />
 <p><b><a href="syntax/expr.html">expr:</a></b>
-<button id='x1447' onclick='hideorshow("x1447","x1448")'>show</button></p>
- <div id='x1448' style='display:none;' class='imgcontainer'>
+<button id='x1997' onclick='hideorshow("x1997","x1998")'>show</button></p>
+ <div id='x1998' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram expr" src="images/syntax/expr.gif" />
+<p><b><a href="syntax/filter.html">filter:</a></b>
+<button id='x1999' onclick='hideorshow("x1999","x2000")'>show</button></p>
+ <div id='x2000' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram filter" src="images/syntax/filter.gif" />
+</div>
 <p><b><a href="syntax/literal-value.html">literal-value:</a></b>
-<button id='x1449' onclick='hideorshow("x1449","x1450")'>show</button></p>
- <div id='x1450' style='display:none;' class='imgcontainer'>
+<button id='x2001' onclick='hideorshow("x2001","x2002")'>show</button></p>
+ <div id='x2002' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram literal-value" src="images/syntax/literal-value.gif" />
 </div>
 <p><b><a href="syntax/raise-function.html">raise-function:</a></b>
-<button id='x1451' onclick='hideorshow("x1451","x1452")'>show</button></p>
- <div id='x1452' style='display:none;' class='imgcontainer'>
+<button id='x2003' onclick='hideorshow("x2003","x2004")'>show</button></p>
+ <div id='x2004' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram raise-function" src="images/syntax/raise-function.gif" />
 </div>
 <p><b><a href="syntax/select-stmt.html">select-stmt:</a></b>
-<button id='x1453' onclick='hideorshow("x1453","x1454")'>show</button></p>
- <div id='x1454' style='display:none;' class='imgcontainer'>
+<button id='x2005' onclick='hideorshow("x2005","x2006")'>show</button></p>
+ <div id='x2006' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram select-stmt" src="images/syntax/select-stmt.gif" />
 <p><b><a href="syntax/common-table-expression.html">common-table-expression:</a></b>
-<button id='x1455' onclick='hideorshow("x1455","x1456")'>show</button></p>
- <div id='x1456' style='display:none;' class='imgcontainer'>
+<button id='x2007' onclick='hideorshow("x2007","x2008")'>show</button></p>
+ <div id='x2008' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram common-table-expression" src="images/syntax/common-table-expression.gif" />
 </div>
 <p><b><a href="syntax/compound-operator.html">compound-operator:</a></b>
-<button id='x1457' onclick='hideorshow("x1457","x1458")'>show</button></p>
- <div id='x1458' style='display:none;' class='imgcontainer'>
+<button id='x2009' onclick='hideorshow("x2009","x2010")'>show</button></p>
+ <div id='x2010' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram compound-operator" src="images/syntax/compound-operator.gif" />
 </div>
 <p><b><a href="syntax/join-clause.html">join-clause:</a></b>
-<button id='x1459' onclick='hideorshow("x1459","x1460")'>show</button></p>
- <div id='x1460' style='display:none;' class='imgcontainer'>
+<button id='x2011' onclick='hideorshow("x2011","x2012")'>show</button></p>
+ <div id='x2012' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-clause" src="images/syntax/join-clause.gif" />
 <p><b><a href="syntax/join-constraint.html">join-constraint:</a></b>
-<button id='x1461' onclick='hideorshow("x1461","x1462")'>show</button></p>
- <div id='x1462' style='display:none;' class='imgcontainer'>
+<button id='x2013' onclick='hideorshow("x2013","x2014")'>show</button></p>
+ <div id='x2014' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-constraint" src="images/syntax/join-constraint.gif" />
 </div>
 <p><b><a href="syntax/join-operator.html">join-operator:</a></b>
-<button id='x1463' onclick='hideorshow("x1463","x1464")'>show</button></p>
- <div id='x1464' style='display:none;' class='imgcontainer'>
+<button id='x2015' onclick='hideorshow("x2015","x2016")'>show</button></p>
+ <div id='x2016' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram join-operator" src="images/syntax/join-operator.gif" />
 </div>
 </div>
 <p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
-<button id='x1465' onclick='hideorshow("x1465","x1466")'>show</button></p>
- <div id='x1466' style='display:none;' class='imgcontainer'>
+<button id='x2017' onclick='hideorshow("x2017","x2018")'>show</button></p>
+ <div id='x2018' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 <p><b><a href="syntax/result-column.html">result-column:</a></b>
-<button id='x1467' onclick='hideorshow("x1467","x1468")'>show</button></p>
- <div id='x1468' style='display:none;' class='imgcontainer'>
+<button id='x2019' onclick='hideorshow("x2019","x2020")'>show</button></p>
+ <div id='x2020' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram result-column" src="images/syntax/result-column.gif" />
 </div>
 <p><b><a href="syntax/table-or-subquery.html">table-or-subquery:</a></b>
-<button id='x1469' onclick='hideorshow("x1469","x1470")'>show</button></p>
- <div id='x1470' style='display:none;' class='imgcontainer'>
+<button id='x2021' onclick='hideorshow("x2021","x2022")'>show</button></p>
+ <div id='x2022' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram table-or-subquery" src="images/syntax/table-or-subquery.gif" />
 </div>
 </div>
 <p><b><a href="syntax/type-name.html">type-name:</a></b>
-<button id='x1471' onclick='hideorshow("x1471","x1472")'>show</button></p>
- <div id='x1472' style='display:none;' class='imgcontainer'>
+<button id='x2023' onclick='hideorshow("x2023","x2024")'>show</button></p>
+ <div id='x2024' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram type-name" src="images/syntax/type-name.gif" />
 <p><b><a href="syntax/signed-number.html">signed-number:</a></b>
-<button id='x1473' onclick='hideorshow("x1473","x1474")'>show</button></p>
- <div id='x1474' style='display:none;' class='imgcontainer'>
+<button id='x2025' onclick='hideorshow("x2025","x2026")'>show</button></p>
+ <div id='x2026' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram signed-number" src="images/syntax/signed-number.gif" />
+</div>
+</div>
+<p><b><a href="syntax/window-defn.html">window-defn:</a></b>
+<button id='x2027' onclick='hideorshow("x2027","x2028")'>show</button></p>
+ <div id='x2028' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram window-defn" src="images/syntax/window-defn.gif" />
+<p><b><a href="syntax/frame-spec.html">frame-spec:</a></b>
+<button id='x2029' onclick='hideorshow("x2029","x2030")'>show</button></p>
+ <div id='x2030' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram frame-spec" src="images/syntax/frame-spec.gif" />
+</div>
+<p><b><a href="syntax/ordering-term.html">ordering-term:</a></b>
+<button id='x2031' onclick='hideorshow("x2031","x2032")'>show</button></p>
+ <div id='x2032' style='display:none;' class='imgcontainer'>
+ <img alt="syntax diagram ordering-term" src="images/syntax/ordering-term.gif" />
 </div>
 </div>
 </div>
 <p><b><a href="syntax/indexed-column.html">indexed-column:</a></b>
-<button id='x1475' onclick='hideorshow("x1475","x1476")'>show</button></p>
- <div id='x1476' style='display:none;' class='imgcontainer'>
+<button id='x2033' onclick='hideorshow("x2033","x2034")'>show</button></p>
+ <div id='x2034' style='display:none;' class='imgcontainer'>
  <img alt="syntax diagram indexed-column" src="images/syntax/indexed-column.gif" />
 </div>
 </div>
@@ -225,12 +261,7 @@ statements) are ordinary full indexes.
 The expression following the WHERE clause may contain operators,
 literal values, and names of columns in the table being indexed.
 The WHERE clause may <em>not</em> contain subqueries, references to other
-tables, <a href="deterministic.html">non-deterministic functions</a>, or <a href="lang_expr.html#varparam">bound parameters</a>.
-The LIKE, GLOB, MATCH,
-and REGEXP operators in SQLite are implemented as functions by the same name.
-Since functions are prohibited in the 
-WHERE clause of a CREATE INDEX statement, so too are the LIKE, GLOB,
-MATCH, and REGEXP operators.</p>
+tables, <a href="deterministic.html">non-deterministic functions</a>, or <a href="lang_expr.html#varparam">bound parameters</a>.</p>
 
 <p>
 Only rows of the table for which the WHERE clause evaluates to true

@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>Benefits of SQLite As A File Format</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -105,14 +121,15 @@ including:
 <ol type="1">
 <li><b>Better performance</b>
 <ul>
+<li> Reading and writing from an SQLite database
+     is often faster than reading and writing individual files from disk.
+     See <a href="fasterthanfs.html">35% Faster Than The Filesystem</a>
+     and <a href="intern-v-extern-blob.html">Internal Versus External BLOBs</a>.
 <li> The application only has to load the data it needs, rather
      than reading the entire file and holding a complete parse
      in memory.
 <li> Small edits only overwrite the parts of the file that change,
      reducing write time and wear on SSD drives.
-<li> In many cases, loading content from an SQLite database
-     is faster than reading individual files from disk.
-     See <a href="intern-v-extern-blob.html">Internal Versus External BLOBs</a>.
 </ul>
 <li><b>Reduced application cost and complexity</b>
 <ul>
@@ -157,6 +174,8 @@ including:
 <li> Content stored in an SQLite database is more likely to be 
      recoverable decades in the future, long after all traces of
      the original application have been lost. Data lives longer than code.
+<li> SQLite database files are <a href="locrsf.html">recommended by the US Library of Congress</a>
+     as a storage format for long-term preservation of digital content.
 </ul>
 </ol>
 

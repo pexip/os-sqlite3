@@ -42,18 +42,20 @@ export CFLAGS += -O2 -fno-strict-aliasing \
 	-DSQLITE_LIKE_DOESNT_MATCH_BLOBS \
 	-DSQLITE_THREADSAFE=1 \
 	-DSQLITE_ENABLE_FTS3_TOKENIZER=1 \
+	-DSQLITE_USE_URI=1 \
 	-DSQLITE_MAX_SCHEMA_RETRY=25 \
 	-DSQLITE_ENABLE_PREUPDATE_HOOK \
 	-DSQLITE_ENABLE_SESSION \
+	-DSQLITE_ENABLE_STMTVTAB \
 	-DSQLITE_MAX_VARIABLE_NUMBER=250000 \
 	-DSQLITE_ENABLE_ICU=1
-export LIBS += $(shell icu-config --ldflags)
+export LIBS += $(shell pkg-config --libs icu-uc)
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	dh_autoreconf --as-needed
-	dh_autotools-dev_updateconfig
+	dh_update_autotools_config
 	./configure --prefix=/usr --mandir="/usr/share/man" \
 	  $(confflags) --enable-threadsafe \
 	  --enable-load-extension \
@@ -81,6 +83,7 @@ build-stamp: configure
 ifneq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 	$(MAKE) lemon
 endif
+	cd ext/misc && $(CC) -g -fPIC -I../.. -shared csv.c -o csv.so
 
 	touch $@
 
@@ -90,9 +93,8 @@ clean:
 	rm -f configure-stamp build-stamp
 	rm -f config.log config.h pkgIndex.tcl configure
 	[ ! -f Makefile ] || $(MAKE) distclean
-	rm -f config.h sqlite3session.h
-	rm -f debian/libsqlite3-0.install debian/libsqlite3-dev.install
-	dh_autotools-dev_restoreconfig
+	rm -f config.h sqlite3session.h mksourceid
+	rm -f ext/misc/csv.so
 	dh_autoreconf_clean
 	dh_clean
 
@@ -106,8 +108,11 @@ install: build
 	install -m 0664 libtclsqlite3.la $(DESTDIR)/usr/lib/tcltk/sqlite3/
 	install -d $(DESTDIR)/usr/share/lemon
 	install -m 0664 tool/lempar.c $(DESTDIR)/usr/share/lemon/
-	install -m 0775 sqldiff $(DESTDIR)/usr/bin
-	install -m 0775 lemon $(DESTDIR)/usr/bin
+	install -m 0775 sqldiff $(DESTDIR)/usr/bin/
+	install -m 0775 lemon $(DESTDIR)/usr/bin/
+	install -d $(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH)/sqlite/
+	install -m 0775 ext/misc/csv.so \
+		$(DESTDIR)/usr/lib/$(DEB_HOST_MULTIARCH)/sqlite/
 
 	# Remove *.la files per policy 3.9.1.0
 	sed -i "/dependency_libs/ s/'.*'/''/" `find $(DESTDIR) -name '*.la'`
@@ -143,15 +148,11 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 
-	for file in libsqlite3-0.install libsqlite3-dev.install; do \
-		sed -e"s,\$${DEB_HOST_MULTIARCH},${DEB_HOST_MULTIARCH},g" \
-			debian/$${file}.in > debian/$$file; \
-	done
 	dh_install -a --sourcedir=$(DESTDIR)
 	dh_installman -a
 	dh_installdocs -a
 	dh_installchangelogs -a www/changes.html
-	dh_strip -a --dbg-package=libsqlite3-0-dbg
+	dh_strip -a
 	dh_compress -a
 	dh_fixperms -a
 	dh_makeshlibs -a

@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>SQLite As An Application File Format</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -211,7 +227,7 @@ component part.
 </ol>
 
 <p>The purpose of this document is to argue in favor of a fourth
-new catagory of application file format: An SQLite database file.
+new category of application file format: An SQLite database file.
 
 <h2>SQLite As The Application File Format</h2>
 
@@ -222,7 +238,7 @@ like this:
 <blockquote><pre>
 CREATE TABLE files(filename TEXT PRIMARY KEY, content BLOB);
 </pre></blockquote>
-If the content is compressed, then such an SQLite database is
+If the content is compressed, then such an <a href="sqlar.html">SQLite Archive</a> database is
 <a href="affcase1.html#smaller">the same size</a> (&#177;1%)
 as an equivalent ZIP archive, and it has the advantage
 of being able to update individual "files" without rewriting
@@ -330,6 +346,9 @@ SQLite database files is particularly important to bespoke applications,
 since it allows the document content to be accessed far in the
 future, long after all traces of the original application have been lost.
 Data lives longer than code.
+SQLite databases are <a href="locrsf.html">recommended by the US Library of Congress</a>
+as a storage format for long-term preservation of digital content.
+
 
 <li><p><b>Cross-Platform.</b>
 SQLite database files are portable between 32-bit and 64-bit machines and
@@ -393,9 +412,11 @@ code that accesses the corresponding table must be located and modified to
 take into account the new columns.
 
 <li><p><b>Performance.</b>
-In many cases, an SQLite application file format will be faster than a
-custom or pile-of-files format.  In the case of a custom format, SQLite
-often dramatically improves start-up times because instead of having to
+In many cases, an SQLite application file format will be 
+<a href="fasterthanfs.html">faster than a pile-of-files format</a> or
+a custom format.  In addition to being faster for raw read and
+writes, SQLite can often dramatically improves start-up times because 
+instead of having to
 read and parse the entire document into memory, the application can
 do queries to extract only the information needed for the initial screen.
 As the application progresses, it only needs to load as much material as
@@ -407,8 +428,10 @@ footprint of the application under control.
 But many developers are surprised to learn that SQLite can read and 
 write smaller BLOBs (less than about 100KB in size) from its database 
 faster than those same blobs can be read or written as separate files 
-from the filesystem.  (See <a href="intern-v-extern-blob.html">Internal Versus External BLOBs</a> for further 
-information.)  There is overhead associated with operating a relational
+from the filesystem.  (See
+<a href="fasterthanfs.html">35% Faster Than The Filesystem</a> and
+<a href="intern-v-extern-blob.html">Internal Versus External BLOBs</a> for further information.)
+There is overhead associated with operating a relational
 database engine, however one should not assume that direct file I/O
 is faster than SQLite database I/O, as often it is not.
 

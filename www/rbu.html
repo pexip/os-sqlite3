@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
 <title>The RBU Extension</title>
+<!-- path= -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="support.html">Support</a>
 <li class='desktoponly'><a href="prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -39,7 +40,11 @@ Small. Fast. Reliable.<br>Choose any three.
 </div>
 <div class="searchmenu" id="searchmenu">
 <form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -88,7 +104,7 @@ Table Of Contents
 <div id="toc_sub"><div class="fancy-toc1"><a href="#the_rbu_extension">1. The RBU Extension</a></div>
 <div class="fancy-toc1"><a href="#rbu_updates">2. RBU Updates</a></div>
 <div class="fancy-toc2"><a href="#rbu_update_limitations">2.1. RBU Update Limitations</a></div>
-<div class="fancy-toc2"><a href="#preparing_an_rbu_update_file">2.2. Preparing An RBU Update File</a></div>
+<div class="fancy-toc2"><a href="#preparing_an_rbu_update_file">2.2. Preparing an RBU Update File</a></div>
 <div class="fancy-toc3"><a href="#the_rbu_database_schema">2.2.1. The RBU Database Schema</a></div>
 <div class="fancy-toc3"><a href="#rbu_database_contents">2.2.2. RBU Database Contents</a></div>
 <div class="fancy-toc3"><a href="#using_rbu_with_fts3_4_tables">2.2.3. Using RBU with FTS3/4 Tables</a></div>
@@ -166,7 +182,7 @@ twice that to disk.
 
 </p><p>On the other hand, an RBU Vacuum uses more CPU than a regular SQLite
 VACUUM - in one test as much as five times as much. For this reason, an RBU
-Vaccum is often significantly slower than an SQLite VACUUM under the same
+Vacuum is often significantly slower than an SQLite VACUUM under the same
 conditions.
 
 </p></li><li><b>RBU runs in the background</b>
@@ -218,7 +234,7 @@ then later resumed.
 </ul>
 
 
-<h2 id="preparing_an_rbu_update_file"><span>2.2. </span>Preparing An RBU Update File</h2>
+<h2 id="preparing_an_rbu_update_file"><span>2.2. </span>Preparing an RBU Update File</h2>
 
 <p>All changes to be applied by RBU are stored in a separate SQLite database
 called the "RBU database".  The database that is to be modified is called
@@ -311,6 +327,14 @@ with the "rbu_control" column set to contain integer value 0. The
 other columns should be set to the values that make up the new record 
 to insert. 
 
+</p><p>The "rbu_control" column may also be set to integer value 2 for 
+an INSERT. In this case, the new row silently replaces any existing row that
+has the same primary key values. This is equivalent to a DELETE followed by an
+INSERT with the same primary key values. It is not the same as an SQL REPLACE
+command, as in that case the new row may replace any conflicting rows (i.e.
+those that conflict due to UNIQUE constraints or indexes), not just those with
+conflicting primary keys.
+
 </p><p>If the target database table has an INTEGER PRIMARY KEY, it is not 
 possible to insert a NULL value into the IPK column. Attempting to 
 do so results in an SQLITE_MISMATCH error.
@@ -345,7 +369,7 @@ above, the update statement:
 </pre></div>
 
 <p>If RBU is used to update a large BLOB value within a target database, it
-may be be more efficient to store a patch or delta that can be used to modify
+may be more efficient to store a patch or delta that can be used to modify
 the existing BLOB instead of an entirely new value within the RBU database. 
 RBU allows deltas to be specified in two ways:
 

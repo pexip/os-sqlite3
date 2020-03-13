@@ -4,6 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
 <title>Function Auxiliary Data</title>
+<!-- path=../ -->
 </head>
 <body>
 <div class=nosearch>
@@ -25,7 +26,7 @@ Small. Fast. Reliable.<br>Choose any three.
 <li class='desktoponly'><a href="../support.html">Support</a>
 <li class='desktoponly'><a href="../prosupport.html">Purchase</a>
 <li class='search' id='search_menubutton'>
-<a href="javascript:void(0)" onclick='toggle_div("searchmenu")'>Search</a>
+<a href="javascript:void(0)" onclick='toggle_search()'>Search</a>
 </ul>
 </div>
 <div class="menu submenu" id="submenu">
@@ -38,8 +39,12 @@ Small. Fast. Reliable.<br>Choose any three.
 </ul>
 </div>
 <div class="searchmenu" id="searchmenu">
-<form method="GET" action="search">
-<span class="desktoponly">Search for:</span> <input type="text" name="q">
+<form method="GET" action="../search">
+<select name="s" id="searchtype">
+<option value="d">Search Documentation</option>
+<option value="c">Search Changelog</option>
+</select>
+<input type="text" name="q" id="searchbox" value="">
 <input type="submit" value="Go">
 </form>
 </div>
@@ -51,6 +56,17 @@ if( w.style.display=="block" ){
 w.style.display = "none";
 }else{
 w.style.display = "block";
+}
+}
+function toggle_search() {
+var w = document.getElementById("searchmenu");
+if( w.style.display=="block" ){
+w.style.display = "none";
+} else {
+w.style.display = "block";
+setTimeout(function(){
+document.getElementById("searchbox").focus()
+}, 30);
 }
 }
 function div_off(nm){document.getElementById(nm).style.display="none";}
@@ -96,10 +112,11 @@ Then as long as the pattern string remains the same,
 the compiled regular expression can be reused on multiple
 invocations of the same function.</p>
 
-<p>The sqlite3_get_auxdata() interface returns a pointer to the metadata
-associated by the sqlite3_set_auxdata() function with the Nth argument
-value to the application-defined function. If there is no metadata
-associated with the function argument, this sqlite3_get_auxdata() interface
+<p>The sqlite3_get_auxdata(C,N) interface returns a pointer to the metadata
+associated by the sqlite3_set_auxdata(C,N,P,X) function with the Nth argument
+value to the application-defined function.  N is zero for the left-most
+function argument.  If there is no metadata
+associated with the function argument, the sqlite3_get_auxdata(C,N) interface
 returns a NULL pointer.</p>
 
 <p>The sqlite3_set_auxdata(C,N,P,X) interface saves P as metadata for the N-th
@@ -129,6 +146,10 @@ sqlite3_set_auxdata() has been called.</p>
 <p>In practice, metadata is preserved between function calls for
 function parameters that are compile-time constants, including literal
 values and <a href="../lang_expr.html#varparam">parameters</a> and expressions composed from the same.</p>
+
+<p>The value of the N parameter to these interfaces should be non-negative.
+Future enhancements may make use of negative N values to define new
+kinds of function caching behavior.</p>
 
 <p>These routines must be called from the same thread in which
 the SQL function is running.
