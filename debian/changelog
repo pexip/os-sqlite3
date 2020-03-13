@@ -1,3 +1,9 @@
+sqlite3 (3.27.2-3pexip1) pexip; urgency=medium
+
+  * Migrate to Buster
+
+ -- Vincent Sanders <vince@pexip.com>  Fri, 13 Mar 2020 14:44:06 +0000
+
 sqlite3 (3.27.2-3) unstable; urgency=high
 
   * Backport security related patches:
