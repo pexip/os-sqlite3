@@ -36,6 +36,7 @@ void sqlite3Fts5Parser(void*, int, Fts5Token, Fts5Parse*);
 #include <stdio.h>
 void sqlite3Fts5ParserTrace(FILE*, char*);
 #endif
+int sqlite3Fts5ParserFallback(int);
 
 
 struct Fts5Expr {
@@ -87,7 +88,8 @@ struct Fts5ExprNode {
 ** or term prefix.
 */
 struct Fts5ExprTerm {
-  int bPrefix;                    /* True for a prefix term */
+  u8 bPrefix;                     /* True for a prefix term */
+  u8 bFirst;                      /* True if token must be first in column */
   char *zTerm;                    /* nul-terminated term */
   Fts5IndexIter *pIter;           /* Iterator for this term */
   Fts5ExprTerm *pSynonym;         /* Pointer to first in list of synonyms */
@@ -168,6 +170,7 @@ static int fts5ExprGetToken(
     case '+':  tok = FTS5_PLUS;  break;
     case '*':  tok = FTS5_STAR;  break;
     case '-':  tok = FTS5_MINUS; break;
+    case '^':  tok = FTS5_CARET; break;
     case '\0': tok = FTS5_EOF;   break;
 
     case '"': {
@@ -208,11 +211,12 @@ static int fts5ExprGetToken(
   return tok;
 }
 
-static void *fts5ParseAlloc(u64 t){ return sqlite3_malloc((int)t); }
+static void *fts5ParseAlloc(u64 t){ return sqlite3_malloc64((sqlite3_int64)t);}
 static void fts5ParseFree(void *p){ sqlite3_free(p); }
 
 int sqlite3Fts5ExprNew(
   Fts5Config *pConfig,            /* FTS5 Configuration */
+  int iCol,
   const char *zExpr,              /* Expression text */
   Fts5Expr **ppNew, 
   char **pzErr
@@ -236,6 +240,18 @@ int sqlite3Fts5ExprNew(
     sqlite3Fts5Parser(pEngine, t, token, &sParse);
   }while( sParse.rc==SQLITE_OK && t!=FTS5_EOF );
   sqlite3Fts5ParserFree(pEngine, fts5ParseFree);
+
+  /* If the LHS of the MATCH expression was a user column, apply the
+  ** implicit column-filter.  */
+  if( iCol<pConfig->nCol && sParse.pExpr && sParse.rc==SQLITE_OK ){
+    int n = sizeof(Fts5Colset);
+    Fts5Colset *pColset = (Fts5Colset*)sqlite3Fts5MallocZero(&sParse.rc, n);
+    if( pColset ){
+      pColset->nCol = 1;
+      pColset->aiCol[0] = iCol;
+      sqlite3Fts5ParseSetColset(&sParse, sParse.pExpr, pColset);
+    }
+  }
 
   assert( sParse.rc!=SQLITE_OK || sParse.zErr==0 );
   if( sParse.rc==SQLITE_OK ){
@@ -340,8 +356,8 @@ static int fts5ExprSynonymList(
     if( sqlite3Fts5IterEof(pIter)==0 && pIter->iRowid==iRowid ){
       if( pIter->nData==0 ) continue;
       if( nIter==nAlloc ){
-        int nByte = sizeof(Fts5PoslistReader) * nAlloc * 2;
-        Fts5PoslistReader *aNew = (Fts5PoslistReader*)sqlite3_malloc(nByte);
+        sqlite3_int64 nByte = sizeof(Fts5PoslistReader) * nAlloc * 2;
+        Fts5PoslistReader *aNew = (Fts5PoslistReader*)sqlite3_malloc64(nByte);
         if( aNew==0 ){
           rc = SQLITE_NOMEM;
           goto synonym_poslist_out;
@@ -414,14 +430,15 @@ static int fts5ExprPhraseIsMatch(
   Fts5PoslistReader *aIter = aStatic;
   int i;
   int rc = SQLITE_OK;
+  int bFirst = pPhrase->aTerm[0].bFirst;
   
   fts5BufferZero(&pPhrase->poslist);
 
   /* If the aStatic[] array is not large enough, allocate a large array
   ** using sqlite3_malloc(). This approach could be improved upon. */
   if( pPhrase->nTerm>ArraySize(aStatic) ){
-    int nByte = sizeof(Fts5PoslistReader) * pPhrase->nTerm;
-    aIter = (Fts5PoslistReader*)sqlite3_malloc(nByte);
+    sqlite3_int64 nByte = sizeof(Fts5PoslistReader) * pPhrase->nTerm;
+    aIter = (Fts5PoslistReader*)sqlite3_malloc64(nByte);
     if( !aIter ) return SQLITE_NOMEM;
   }
   memset(aIter, 0, sizeof(Fts5PoslistReader) * pPhrase->nTerm);
@@ -468,8 +485,10 @@ static int fts5ExprPhraseIsMatch(
     }while( bMatch==0 );
 
     /* Append position iPos to the output */
-    rc = sqlite3Fts5PoslistWriterAppend(&pPhrase->poslist, &writer, iPos);
-    if( rc!=SQLITE_OK ) goto ismatch_out;
+    if( bFirst==0 || FTS5_POS2OFFSET(iPos)==0 ){
+      rc = sqlite3Fts5PoslistWriterAppend(&pPhrase->poslist, &writer, iPos);
+      if( rc!=SQLITE_OK ) goto ismatch_out;
+    }
 
     for(i=0; i<pPhrase->nTerm; i++){
       if( sqlite3Fts5PoslistReaderNext(&aIter[i]) ) goto ismatch_out;
@@ -553,7 +572,7 @@ static int fts5ExprNearIsMatch(int *pRc, Fts5ExprNearset *pNear){
   /* If the aStatic[] array is not large enough, allocate a large array
   ** using sqlite3_malloc(). This approach could be improved upon. */
   if( pNear->nPhrase>ArraySize(aStatic) ){
-    int nByte = sizeof(Fts5NearTrimmer) * pNear->nPhrase;
+    sqlite3_int64 nByte = sizeof(Fts5NearTrimmer) * pNear->nPhrase;
     a = (Fts5NearTrimmer*)sqlite3Fts5MallocZero(&rc, nByte);
   }else{
     memset(aStatic, 0, sizeof(aStatic));
@@ -723,7 +742,9 @@ static int fts5ExprNearTest(
     ** phrase is not a match, break out of the loop early.  */
     for(i=0; rc==SQLITE_OK && i<pNear->nPhrase; i++){
       Fts5ExprPhrase *pPhrase = pNear->apPhrase[i];
-      if( pPhrase->nTerm>1 || pPhrase->aTerm[0].pSynonym || pNear->pColset ){
+      if( pPhrase->nTerm>1 || pPhrase->aTerm[0].pSynonym 
+       || pNear->pColset || pPhrase->aTerm[0].bFirst
+      ){
         int bMatch = 0;
         rc = fts5ExprPhraseIsMatch(pNode, pPhrase, &bMatch);
         if( bMatch==0 ) break;
@@ -904,6 +925,7 @@ static int fts5ExprNodeTest_STRING(
   assert( pNear->nPhrase>1 
        || pNear->apPhrase[0]->nTerm>1 
        || pNear->apPhrase[0]->aTerm[0].pSynonym
+       || pNear->apPhrase[0]->aTerm[0].bFirst
   );
 
   /* Initialize iLast, the "lastest" rowid any iterator points to. If the
@@ -1110,7 +1132,10 @@ static int fts5ExprNodeNext_OR(
        || (bFromValid && fts5RowidCmp(pExpr, p1->iRowid, iFrom)<0)
       ){
         int rc = fts5ExprNodeNext(pExpr, p1, bFromValid, iFrom);
-        if( rc!=SQLITE_OK ) return rc;
+        if( rc!=SQLITE_OK ){
+          pNode->bNomatch = 0;
+          return rc;
+        }
       }
     }
   }
@@ -1141,7 +1166,10 @@ static int fts5ExprNodeTest_AND(
       if( cmp>0 ){
         /* Advance pChild until it points to iLast or laster */
         rc = fts5ExprNodeNext(pExpr, pChild, 1, iLast);
-        if( rc!=SQLITE_OK ) return rc;
+        if( rc!=SQLITE_OK ){
+          pAnd->bNomatch = 0;
+          return rc;
+        }
       }
 
       /* If the child node is now at EOF, so is the parent AND node. Otherwise,
@@ -1180,6 +1208,8 @@ static int fts5ExprNodeNext_AND(
   int rc = fts5ExprNodeNext(pExpr, pNode->apChild[0], bFromValid, iFrom);
   if( rc==SQLITE_OK ){
     rc = fts5ExprNodeTest_AND(pExpr, pNode);
+  }else{
+    pNode->bNomatch = 0;
   }
   return rc;
 }
@@ -1221,6 +1251,9 @@ static int fts5ExprNodeNext_NOT(
   int rc = fts5ExprNodeNext(pExpr, pNode->apChild[0], bFromValid, iFrom);
   if( rc==SQLITE_OK ){
     rc = fts5ExprNodeTest_NOT(pExpr, pNode);
+  }
+  if( rc!=SQLITE_OK ){
+    pNode->bNomatch = 0;
   }
   return rc;
 }
@@ -1418,6 +1451,16 @@ static void fts5ExprPhraseFree(Fts5ExprPhrase *pPhrase){
 }
 
 /*
+** Set the "bFirst" flag on the first token of the phrase passed as the
+** only argument.
+*/
+void sqlite3Fts5ParseSetCaret(Fts5ExprPhrase *pPhrase){
+  if( pPhrase && pPhrase->nTerm ){
+    pPhrase->aTerm[0].bFirst = 1;
+  }
+}
+
+/*
 ** If argument pNear is NULL, then a new Fts5ExprNearset object is allocated
 ** and populated with pPhrase. Or, if pNear is not NULL, phrase pPhrase is
 ** appended to it and the results returned.
@@ -1438,8 +1481,9 @@ Fts5ExprNearset *sqlite3Fts5ParseNearset(
       return pNear;
     }
     if( pNear==0 ){
-      int nByte = sizeof(Fts5ExprNearset) + SZALLOC * sizeof(Fts5ExprPhrase*);
-      pRet = sqlite3_malloc(nByte);
+      sqlite3_int64 nByte;
+      nByte = sizeof(Fts5ExprNearset) + SZALLOC * sizeof(Fts5ExprPhrase*);
+      pRet = sqlite3_malloc64(nByte);
       if( pRet==0 ){
         pParse->rc = SQLITE_NOMEM;
       }else{
@@ -1447,9 +1491,10 @@ Fts5ExprNearset *sqlite3Fts5ParseNearset(
       }
     }else if( (pNear->nPhrase % SZALLOC)==0 ){
       int nNew = pNear->nPhrase + SZALLOC;
-      int nByte = sizeof(Fts5ExprNearset) + nNew * sizeof(Fts5ExprPhrase*);
+      sqlite3_int64 nByte;
 
-      pRet = (Fts5ExprNearset*)sqlite3_realloc(pNear, nByte);
+      nByte = sizeof(Fts5ExprNearset) + nNew * sizeof(Fts5ExprPhrase*);
+      pRet = (Fts5ExprNearset*)sqlite3_realloc64(pNear, nByte);
       if( pRet==0 ){
         pParse->rc = SQLITE_NOMEM;
       }
@@ -1513,8 +1558,8 @@ static int fts5ParseTokenize(
 
   if( pPhrase && pPhrase->nTerm>0 && (tflags & FTS5_TOKEN_COLOCATED) ){
     Fts5ExprTerm *pSyn;
-    int nByte = sizeof(Fts5ExprTerm) + sizeof(Fts5Buffer) + nToken+1;
-    pSyn = (Fts5ExprTerm*)sqlite3_malloc(nByte);
+    sqlite3_int64 nByte = sizeof(Fts5ExprTerm) + sizeof(Fts5Buffer) + nToken+1;
+    pSyn = (Fts5ExprTerm*)sqlite3_malloc64(nByte);
     if( pSyn==0 ){
       rc = SQLITE_NOMEM;
     }else{
@@ -1530,7 +1575,7 @@ static int fts5ParseTokenize(
       Fts5ExprPhrase *pNew;
       int nNew = SZALLOC + (pPhrase ? pPhrase->nTerm : 0);
 
-      pNew = (Fts5ExprPhrase*)sqlite3_realloc(pPhrase, 
+      pNew = (Fts5ExprPhrase*)sqlite3_realloc64(pPhrase, 
           sizeof(Fts5ExprPhrase) + sizeof(Fts5ExprTerm) * nNew
       );
       if( pNew==0 ){
@@ -1601,7 +1646,7 @@ Fts5ExprPhrase *sqlite3Fts5ParseTerm(
 
   rc = fts5ParseStringFromToken(pToken, &z);
   if( rc==SQLITE_OK ){
-    int flags = FTS5_TOKENIZE_QUERY | (bPrefix ? FTS5_TOKENIZE_QUERY : 0);
+    int flags = FTS5_TOKENIZE_QUERY | (bPrefix ? FTS5_TOKENIZE_PREFIX : 0);
     int n;
     sqlite3Fts5Dequote(z);
     n = (int)strlen(z);
@@ -1616,9 +1661,9 @@ Fts5ExprPhrase *sqlite3Fts5ParseTerm(
 
     if( pAppend==0 ){
       if( (pParse->nPhrase % 8)==0 ){
-        int nByte = sizeof(Fts5ExprPhrase*) * (pParse->nPhrase + 8);
+        sqlite3_int64 nByte = sizeof(Fts5ExprPhrase*) * (pParse->nPhrase + 8);
         Fts5ExprPhrase **apNew;
-        apNew = (Fts5ExprPhrase**)sqlite3_realloc(pParse->apPhrase, nByte);
+        apNew = (Fts5ExprPhrase**)sqlite3_realloc64(pParse->apPhrase, nByte);
         if( apNew==0 ){
           pParse->rc = SQLITE_NOMEM;
           fts5ExprPhraseFree(sCtx.pPhrase);
@@ -1634,7 +1679,7 @@ Fts5ExprPhrase *sqlite3Fts5ParseTerm(
       ** no token characters at all. (e.g ... MATCH '""'). */
       sCtx.pPhrase = sqlite3Fts5MallocZero(&pParse->rc, sizeof(Fts5ExprPhrase));
     }else if( sCtx.pPhrase->nTerm ){
-      sCtx.pPhrase->aTerm[sCtx.pPhrase->nTerm-1].bPrefix = bPrefix;
+      sCtx.pPhrase->aTerm[sCtx.pPhrase->nTerm-1].bPrefix = (u8)bPrefix;
     }
     pParse->apPhrase[pParse->nPhrase-1] = sCtx.pPhrase;
   }
@@ -1673,8 +1718,10 @@ int sqlite3Fts5ExprClonePhrase(
   if( rc==SQLITE_OK ){
     Fts5Colset *pColsetOrig = pOrig->pNode->pNear->pColset;
     if( pColsetOrig ){
-      int nByte = sizeof(Fts5Colset) + (pColsetOrig->nCol-1) * sizeof(int);
-      Fts5Colset *pColset = (Fts5Colset*)sqlite3Fts5MallocZero(&rc, nByte);
+      sqlite3_int64 nByte;
+      Fts5Colset *pColset;
+      nByte = sizeof(Fts5Colset) + (pColsetOrig->nCol-1) * sizeof(int);
+      pColset = (Fts5Colset*)sqlite3Fts5MallocZero(&rc, nByte);
       if( pColset ){ 
         memcpy(pColset, pColsetOrig, nByte);
       }
@@ -1695,6 +1742,7 @@ int sqlite3Fts5ExprClonePhrase(
       }
       if( rc==SQLITE_OK ){
         sCtx.pPhrase->aTerm[i].bPrefix = pOrig->aTerm[i].bPrefix;
+        sCtx.pPhrase->aTerm[i].bFirst = pOrig->aTerm[i].bFirst;
       }
     }
   }else{
@@ -1713,7 +1761,10 @@ int sqlite3Fts5ExprClonePhrase(
     pNew->pRoot->pNear->nPhrase = 1;
     sCtx.pPhrase->pNode = pNew->pRoot;
 
-    if( pOrig->nTerm==1 && pOrig->aTerm[0].pSynonym==0 ){
+    if( pOrig->nTerm==1 
+     && pOrig->aTerm[0].pSynonym==0 
+     && pOrig->aTerm[0].bFirst==0 
+    ){
       pNew->pRoot->eType = FTS5_TERM;
       pNew->pRoot->xNext = fts5ExprNodeNext_TERM;
     }else{
@@ -1790,7 +1841,7 @@ static Fts5Colset *fts5ParseColset(
   assert( pParse->rc==SQLITE_OK );
   assert( iCol>=0 && iCol<pParse->pConfig->nCol );
 
-  pNew = sqlite3_realloc(p, sizeof(Fts5Colset) + sizeof(int)*nCol);
+  pNew = sqlite3_realloc64(p, sizeof(Fts5Colset) + sizeof(int)*nCol);
   if( pNew==0 ){
     pParse->rc = SQLITE_NOMEM;
   }else{
@@ -1875,25 +1926,110 @@ Fts5Colset *sqlite3Fts5ParseColset(
   return pRet;
 }
 
+/*
+** If argument pOrig is NULL, or if (*pRc) is set to anything other than
+** SQLITE_OK when this function is called, NULL is returned. 
+**
+** Otherwise, a copy of (*pOrig) is made into memory obtained from
+** sqlite3Fts5MallocZero() and a pointer to it returned. If the allocation
+** fails, (*pRc) is set to SQLITE_NOMEM and NULL is returned.
+*/
+static Fts5Colset *fts5CloneColset(int *pRc, Fts5Colset *pOrig){
+  Fts5Colset *pRet;
+  if( pOrig ){
+    sqlite3_int64 nByte = sizeof(Fts5Colset) + (pOrig->nCol-1) * sizeof(int);
+    pRet = (Fts5Colset*)sqlite3Fts5MallocZero(pRc, nByte);
+    if( pRet ){ 
+      memcpy(pRet, pOrig, nByte);
+    }
+  }else{
+    pRet = 0;
+  }
+  return pRet;
+}
+
+/*
+** Remove from colset pColset any columns that are not also in colset pMerge.
+*/
+static void fts5MergeColset(Fts5Colset *pColset, Fts5Colset *pMerge){
+  int iIn = 0;          /* Next input in pColset */
+  int iMerge = 0;       /* Next input in pMerge */
+  int iOut = 0;         /* Next output slot in pColset */
+
+  while( iIn<pColset->nCol && iMerge<pMerge->nCol ){
+    int iDiff = pColset->aiCol[iIn] - pMerge->aiCol[iMerge];
+    if( iDiff==0 ){
+      pColset->aiCol[iOut++] = pMerge->aiCol[iMerge];
+      iMerge++;
+      iIn++;
+    }else if( iDiff>0 ){
+      iMerge++;
+    }else{
+      iIn++;
+    }
+  }
+  pColset->nCol = iOut;
+}
+
+/*
+** Recursively apply colset pColset to expression node pNode and all of
+** its decendents. If (*ppFree) is not NULL, it contains a spare copy
+** of pColset. This function may use the spare copy and set (*ppFree) to
+** zero, or it may create copies of pColset using fts5CloneColset().
+*/
+static void fts5ParseSetColset(
+  Fts5Parse *pParse, 
+  Fts5ExprNode *pNode, 
+  Fts5Colset *pColset,
+  Fts5Colset **ppFree
+){
+  if( pParse->rc==SQLITE_OK ){
+    assert( pNode->eType==FTS5_TERM || pNode->eType==FTS5_STRING 
+         || pNode->eType==FTS5_AND  || pNode->eType==FTS5_OR
+         || pNode->eType==FTS5_NOT  || pNode->eType==FTS5_EOF
+    );
+    if( pNode->eType==FTS5_STRING || pNode->eType==FTS5_TERM ){
+      Fts5ExprNearset *pNear = pNode->pNear;
+      if( pNear->pColset ){
+        fts5MergeColset(pNear->pColset, pColset);
+        if( pNear->pColset->nCol==0 ){
+          pNode->eType = FTS5_EOF;
+          pNode->xNext = 0;
+        }
+      }else if( *ppFree ){
+        pNear->pColset = pColset;
+        *ppFree = 0;
+      }else{
+        pNear->pColset = fts5CloneColset(&pParse->rc, pColset);
+      }
+    }else{
+      int i;
+      assert( pNode->eType!=FTS5_EOF || pNode->nChild==0 );
+      for(i=0; i<pNode->nChild; i++){
+        fts5ParseSetColset(pParse, pNode->apChild[i], pColset, ppFree);
+      }
+    }
+  }
+}
+
+/*
+** Apply colset pColset to expression node pExpr and all of its descendents.
+*/
 void sqlite3Fts5ParseSetColset(
   Fts5Parse *pParse, 
-  Fts5ExprNearset *pNear, 
+  Fts5ExprNode *pExpr, 
   Fts5Colset *pColset 
 ){
+  Fts5Colset *pFree = pColset;
   if( pParse->pConfig->eDetail==FTS5_DETAIL_NONE ){
     pParse->rc = SQLITE_ERROR;
     pParse->zErr = sqlite3_mprintf(
       "fts5: column queries are not supported (detail=none)"
     );
-    sqlite3_free(pColset);
-    return;
-  }
-
-  if( pNear ){
-    pNear->pColset = pColset;
   }else{
-    sqlite3_free(pColset);
+    fts5ParseSetColset(pParse, pExpr, pColset, &pFree);
   }
+  sqlite3_free(pFree);
 }
 
 static void fts5ExprAssignXNext(Fts5ExprNode *pNode){
@@ -1902,6 +2038,7 @@ static void fts5ExprAssignXNext(Fts5ExprNode *pNode){
       Fts5ExprNearset *pNear = pNode->pNear;
       if( pNear->nPhrase==1 && pNear->apPhrase[0]->nTerm==1 
        && pNear->apPhrase[0]->aTerm[0].pSynonym==0
+       && pNear->apPhrase[0]->aTerm[0].bFirst==0
       ){
         pNode->eType = FTS5_TERM;
         pNode->xNext = fts5ExprNodeNext_TERM;
@@ -1954,7 +2091,7 @@ Fts5ExprNode *sqlite3Fts5ParseNode(
 
   if( pParse->rc==SQLITE_OK ){
     int nChild = 0;               /* Number of children of returned node */
-    int nByte;                    /* Bytes of space to allocate for this node */
+    sqlite3_int64 nByte;          /* Bytes of space to allocate for this node */
  
     assert( (eType!=FTS5_STRING && !pNear)
          || (eType==FTS5_STRING && !pLeft && !pRight)
@@ -1988,20 +2125,23 @@ Fts5ExprNode *sqlite3Fts5ParseNode(
           }
         }
 
-        if( pParse->pConfig->eDetail!=FTS5_DETAIL_FULL 
-         && (pNear->nPhrase!=1 || pNear->apPhrase[0]->nTerm>1)
-        ){
-          assert( pParse->rc==SQLITE_OK );
-          pParse->rc = SQLITE_ERROR;
-          assert( pParse->zErr==0 );
-          pParse->zErr = sqlite3_mprintf(
-              "fts5: %s queries are not supported (detail!=full)", 
-              pNear->nPhrase==1 ? "phrase": "NEAR"
-          );
-          sqlite3_free(pRet);
-          pRet = 0;
+        if( pParse->pConfig->eDetail!=FTS5_DETAIL_FULL ){
+          Fts5ExprPhrase *pPhrase = pNear->apPhrase[0];
+          if( pNear->nPhrase!=1 
+           || pPhrase->nTerm>1
+           || (pPhrase->nTerm>0 && pPhrase->aTerm[0].bFirst)
+          ){
+            assert( pParse->rc==SQLITE_OK );
+            pParse->rc = SQLITE_ERROR;
+            assert( pParse->zErr==0 );
+            pParse->zErr = sqlite3_mprintf(
+                "fts5: %s queries are not supported (detail!=full)", 
+                pNear->nPhrase==1 ? "phrase": "NEAR"
+                );
+            sqlite3_free(pRet);
+            pRet = 0;
+          }
         }
-
       }else{
         fts5ExprAddChildren(pRet, pLeft);
         fts5ExprAddChildren(pRet, pRight);
@@ -2083,7 +2223,7 @@ Fts5ExprNode *sqlite3Fts5ParseImplicitAnd(
 }
 
 static char *fts5ExprTermPrint(Fts5ExprTerm *pTerm){
-  int nByte = 0;
+  sqlite3_int64 nByte = 0;
   Fts5ExprTerm *p;
   char *zQuoted;
 
@@ -2091,7 +2231,7 @@ static char *fts5ExprTermPrint(Fts5ExprTerm *pTerm){
   for(p=pTerm; p; p=p->pSynonym){
     nByte += (int)strlen(pTerm->zTerm) * 2 + 3 + 2;
   }
-  zQuoted = sqlite3_malloc(nByte);
+  zQuoted = sqlite3_malloc64(nByte);
 
   if( zQuoted ){
     int i = 0;
@@ -2331,7 +2471,7 @@ static void fts5ExprFunction(
   }
 
   nConfig = 3 + (nArg-iArg);
-  azConfig = (const char**)sqlite3_malloc(sizeof(char*) * nConfig);
+  azConfig = (const char**)sqlite3_malloc64(sizeof(char*) * nConfig);
   if( azConfig==0 ){
     sqlite3_result_error_nomem(pCtx);
     return;
@@ -2347,7 +2487,7 @@ static void fts5ExprFunction(
 
   rc = sqlite3Fts5ConfigParse(pGlobal, db, nConfig, azConfig, &pConfig, &zErr);
   if( rc==SQLITE_OK ){
-    rc = sqlite3Fts5ExprNew(pConfig, zExpr, &pExpr, &zErr);
+    rc = sqlite3Fts5ExprNew(pConfig, pConfig->nCol, zExpr, &pExpr, &zErr);
   }
   if( rc==SQLITE_OK ){
     char *zText;
@@ -2405,14 +2545,19 @@ static void fts5ExprIsAlnum(
   sqlite3_value **apVal           /* Function arguments */
 ){
   int iCode;
+  u8 aArr[32];
   if( nArg!=1 ){
     sqlite3_result_error(pCtx, 
         "wrong number of arguments to function fts5_isalnum", -1
     );
     return;
   }
+  memset(aArr, 0, sizeof(aArr));
+  sqlite3Fts5UnicodeCatParse("L*", aArr);
+  sqlite3Fts5UnicodeCatParse("N*", aArr);
+  sqlite3Fts5UnicodeCatParse("Co", aArr);
   iCode = sqlite3_value_int(apVal[0]);
-  sqlite3_result_int(pCtx, sqlite3Fts5UnicodeIsalnum(iCode));
+  sqlite3_result_int(pCtx, aArr[sqlite3Fts5UnicodeCategory((u32)iCode)]);
 }
 
 static void fts5ExprFold(
@@ -2456,10 +2601,12 @@ int sqlite3Fts5ExprInit(Fts5Global *pGlobal, sqlite3 *db){
     rc = sqlite3_create_function(db, p->z, -1, SQLITE_UTF8, pCtx, p->x, 0, 0);
   }
 
-  /* Avoid a warning indicating that sqlite3Fts5ParserTrace() is unused */
+  /* Avoid warnings indicating that sqlite3Fts5ParserTrace() and
+  ** sqlite3Fts5ParserFallback() are unused */
 #ifndef NDEBUG
   (void)sqlite3Fts5ParserTrace;
 #endif
+  (void)sqlite3Fts5ParserFallback;
 
   return rc;
 }
@@ -2505,7 +2652,7 @@ struct Fts5PoslistPopulator {
 
 Fts5PoslistPopulator *sqlite3Fts5ExprClearPoslists(Fts5Expr *pExpr, int bLive){
   Fts5PoslistPopulator *pRet;
-  pRet = sqlite3_malloc(sizeof(Fts5PoslistPopulator)*pExpr->nPhrase);
+  pRet = sqlite3_malloc64(sizeof(Fts5PoslistPopulator)*pExpr->nPhrase);
   if( pRet ){
     int i;
     memset(pRet, 0, sizeof(Fts5PoslistPopulator)*pExpr->nPhrase);
@@ -2704,4 +2851,3 @@ int sqlite3Fts5ExprPhraseCollist(
 
   return rc;
 }
-

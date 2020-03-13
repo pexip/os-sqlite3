@@ -73,13 +73,10 @@ static int fts5_api_from_db(sqlite3 *db, fts5_api **ppApi){
   int rc;
 
   *ppApi = 0;
-  rc = sqlite3_prepare(db, "SELECT fts5()", -1, &pStmt, 0);
+  rc = sqlite3_prepare(db, "SELECT fts5(?1)", -1, &pStmt, 0);
   if( rc==SQLITE_OK ){
-    if( SQLITE_ROW==sqlite3_step(pStmt) 
-        && sizeof(fts5_api*)==sqlite3_column_bytes(pStmt, 0)
-      ){
-      memcpy(ppApi, sqlite3_column_blob(pStmt, 0), sizeof(fts5_api*));
-    }
+    sqlite3_bind_pointer(pStmt, 1, (void*)ppApi, "fts5_api_ptr", 0);
+    (void)sqlite3_step(pStmt);
     rc = sqlite3_finalize(pStmt);
   }
 
@@ -312,7 +309,7 @@ static Fts5MatchinfoCtx *fts5MatchinfoNew(
   int nPhrase;
   int i;
   int nInt;
-  int nByte;
+  sqlite3_int64 nByte;
   int rc;
 
   nCol = pApi->xColumnCount(pFts);
@@ -333,7 +330,7 @@ static Fts5MatchinfoCtx *fts5MatchinfoNew(
   nByte = sizeof(Fts5MatchinfoCtx)          /* The struct itself */
          + sizeof(u32) * nInt               /* The p->aRet[] array */
          + (i+1);                           /* The p->zArg string */
-  p = (Fts5MatchinfoCtx*)sqlite3_malloc(nByte);
+  p = (Fts5MatchinfoCtx*)sqlite3_malloc64(nByte);
   if( p==0 ){
     sqlite3_result_error_nomem(pCtx);
     return 0;
@@ -422,4 +419,3 @@ int sqlite3Fts5TestRegisterMatchinfo(sqlite3 *db){
 }
 
 #endif /* SQLITE_ENABLE_FTS5 */
-
