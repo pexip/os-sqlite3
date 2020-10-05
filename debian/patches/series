@@ -14,3 +14,13 @@
 46-probably_CVE-2019-5018.patch
 47-probably_CVE-2019-5827_part1.patch
 48-probably_CVE-2019-5827_part2.patch
+CVE-2019-19923.patch
+CVE-2019-19925.patch
+CVE-2019-19959.patch
+CVE-2019-20218.patch
+CVE-2020-13434.patch
+CVE-2020-13435.patch
+CVE-2020-13630.patch
+CVE-2020-13632.patch
+CVE-2020-15358.patch
+CVE-2019-16168.patch
