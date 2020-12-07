@@ -1,3 +1,24 @@
+sqlite3 (3.27.2-3+deb10u1pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 07 Dec 2020 16:16:34 +0000
+
+sqlite3 (3.27.2-3+deb10u1) buster; urgency=medium
+
+  * CVE-2019-19923
+  * CVE-2019-19925
+  * CVE-2019-19959
+  * CVE-2019-20218
+  * CVE-2020-13434
+  * CVE-2020-13435
+  * CVE-2020-13630
+  * CVE-2020-13632
+  * CVE-2020-15358
+  * CVE-2019-16168
+
+ -- Moritz Mühlenhoff <jmm@debian.org>  Mon, 05 Oct 2020 22:53:55 +0200
+
 sqlite3 (3.27.2-3pexip2) pexip; urgency=medium
 
   * Rebuild in buster environment
