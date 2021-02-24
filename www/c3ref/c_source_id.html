@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -97,9 +97,9 @@ return false;
 <h2>Compile-Time Library Version Numbers</h2>
 </div>
 <blockquote><pre>
-#define SQLITE_VERSION        "3.27.2"
-#define SQLITE_VERSION_NUMBER 3027002
-#define SQLITE_SOURCE_ID      "2019-02-25 16:06:06 bd49a8271d650fa89e446b42e513b595a717b9212c91dd384aab871fc1d0f6d7"
+#define SQLITE_VERSION        "3.34.1"
+#define SQLITE_VERSION_NUMBER 3034001
+#define SQLITE_SOURCE_ID      "2021-01-20 14:10:07 10e20c0b43500cfb9bbc0eaa061c57514f715d87238f4d835880cd846b9ebd1f"
 </pre></blockquote>
 <p>
 The <a href="../c3ref/c_source_id.html">SQLITE_VERSION</a> C preprocessor macro in the sqlite3.h header

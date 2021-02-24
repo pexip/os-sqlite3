@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -130,7 +130,7 @@ checked out.</dd></p>
 
 <p><a name="sqlitedbstatuslookasidehit"></a>
  <dt>SQLITE_DBSTATUS_LOOKASIDE_HIT</dt>
-<dd>This parameter returns the number malloc attempts that were
+<dd>This parameter returns the number of malloc attempts that were
 satisfied using lookaside memory. Only the high-water value is meaningful;
 the current value is always zero.</p>
 
@@ -222,7 +222,7 @@ been written to disk in the middle of a transaction due to the page
 cache overflowing. Transactions are more efficient if they are written
 to disk all at once. When pages spill mid-transaction, that introduces
 additional overhead. This parameter can be used help identify
-inefficiencies that can be resolve by increasing the cache size.
+inefficiencies that can be resolved by increasing the cache size.
 </dd></p>
 
 <p><a name="sqlitedbstatusdeferredfks"></a>

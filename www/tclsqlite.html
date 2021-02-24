@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -193,7 +193,7 @@ Use an alternative <a href="vfs.html">VFS</a> named by the argument.
 <p>
 Once an SQLite database is open, it can be controlled using 
 methods of the <i>dbcmd</i>.
-There are currently 38 methods
+There are currently 40 methods
 defined.</p>
 
 
@@ -201,6 +201,7 @@ defined.</p>
 <tr><td valign='top'><ul>
 <li><a href="#authorizer">authorizer</a></li>
 <li><a href="#backup">backup</a></li>
+<li><a href="#bind_fallback">bind_fallback</a></li>
 <li><a href="#busy">busy</a></li>
 <li><a href="#cache">cache</a></li>
 <li><a href="#changes">changes</a></li>
@@ -209,11 +210,12 @@ defined.</p>
 <li><a href="#collation_needed">collation_needed</a></li>
 <li><a href="#commit_hook">commit_hook</a></li>
 <li><a href="#complete">complete</a></li>
+<li><a href="#config">config</a></li>
 <li><a href="#copy">copy</a></li>
 <li><a href="#deserialize">deserialize</a></li>
-<li><a href="#enable_load_extension">enable_load_extension</a></li>
 </ul></td>
 <td valign='top'><ul>
+<li><a href="#enable_load_extension">enable_load_extension</a></li>
 <li><a href="#errorcode">errorcode</a></li>
 <li><a href="#eval">eval</a></li>
 <li><a href="#exists">exists</a></li>
@@ -521,6 +523,44 @@ in order to know when the user has finished entering a line of SQL code.
 This is really just an interface to the 
 <a href="c3ref/complete.html"><b>sqlite3_complete()</b></a> C
 function.
+<a name="config"></a>
+<h3>The "config" method</h3>
+
+
+<p>
+The "config" method queries or changes certain configuration settings for
+the database connection using the <a href="c3ref/db_config.html">sqlite3_db_config()</a> interface.
+Run this method with no arguments to get a TCL list of available
+configuration settings and their current values:
+
+<blockquote>
+<i>dbcmd</i>&nbsp;&nbsp;<b>config</b>
+</blockquote>
+
+<p>The above will return something like this:
+
+<blockquote>
+defensive 0 dqs_ddl 1 dqs_dml 1 enable_fkey 0 enable_qpsg 0 enable_trigger 1 enable_view 1 fts3_tokenizer 1 legacy_alter_table 0 legacy_file_format 0 load_extension 0 no_ckpt_on_close 0 reset_database 0 trigger_eqp 0 trusted_schema 1 writable_schema 0
+</blockquote>
+
+<p>Add the name of an individual configuration setting to query the current
+value of that setting.  Optionally add a boolean value to change a setting.
+
+<p>
+The following four configuration changes are recommended for maximum
+application security.  Turning off the trust_schema setting prevents
+virtual tables and dodgy SQL functions from being used inside of triggers,
+views, CHECK constraints, generated columns, and expression indexes.
+Turning off the dqs_dml and dqs_ddl settings prevents the use of 
+double-quoted strings.  Turning on defensive prevents direct writes
+to shadow tables.
+
+<blockquote><pre>
+db config trusted_schema 0
+db config defensive 1
+db config dqs_dml 0
+db config dqs_ddl 0
+</pre></blockquote>
 <a name="copy"></a>
 <h3>The "copy" method</h3>
 
@@ -621,6 +661,11 @@ this method.</p>
 <p>This method takes a single boolean argument which will turn the
 extension loading functionality on or off.</p>
 
+<p>For best security, do not use this method unless truly needed, 
+and run <a href="pragma.html#pragma_trusted_schema">PRAGMA trusted_schema=OFF</a> or the
+"<a href="#config">db config trusted_schema 0</a>" method <u>before</u>
+invoking this method.
+
 <p>This method maps to the <a href="c3ref/enable_load_extension.html">sqlite3_enable_load_extension()</a> C/C++
 interface.</p>
 <a name="exists"></a>
@@ -659,6 +704,12 @@ implements that function.  Arguments to the function are appended to the
 TCL command before it is invoked.</p>
 
 <p>
+For security reasons, it is recommended that applications first set
+<a href="pragma.html#pragma_trusted_schema">PRAGMA trusted_schema=OFF</a> or run the 
+"<a href="#config">db config trusted_schema 0</a>"
+method before using this method.
+
+<p>
 The following example creates a new SQL function named "hex" that converts
 its numeric argument in to a hexadecimal encoded string:
 </p>
@@ -683,7 +734,56 @@ answer given the same argument values.  The SQLite query optimizer
 uses this information to cache answers from function calls with 
 constant inputs and reuse the result rather than invoke the function
 repeatedly.
+</dd>
+
+<dt><b>-directonly</b>
+<dd><p>
+This option restricts the function to only be usable by direct
+top-level SQL statement.  The function will not be accessible to
+triggers, views, CHECK constraints, generated columns, or index
+expressions.  This option is recommended for all application-defined
+SQL functions, and is <u>highly recommended</u> for any SQL
+function that has side effects or that reveals internal state of
+the application.
+
+<p style="background-color:#ffff90;"><b>Security Warning:</b>
+Without this switch, an attacker might be able to change the
+schema of a database file to include the new function inside a trigger
+or view or CHECK constraint and thereby trick the application into
+running the function with parameters of the attacker's choosing.
+Hence, if the new function has side effects or reveals internal
+state about the application and the -directonly option is not
+used, that is a potential security vulnerability.</p>
+</dd>
+
+<dt><b>-innocuous</b>
+<dd><p>
+This option indicates that the function has no side effects and
+does not leak any information that cannot be computed directly
+from its input parameters.  When this option is specified, the
+function may be used in triggers, views, CHECK constraints,
+generated columns, and/or index expressions even if
+<a href="pragma.html#pragma_trusted_schema">PRAGMA trusted_schema=OFF</a>.  The use of this option is discouraged
+unless it is truly needed.
+</dd>
+
+<dt><b>-returntype integer|real|text|blob|any</b>
+<dd><p>
+This option is used to configure the type of the result returned by the
+function.  If this option is set to "any" (the default), SQLite attempts to
+determine the type of each value returned by the function implementation based
+on the Tcl value's internal type. Or, if it is set to "text" or "blob", the
+returned value is always a text or blob value, respectively. If this option is
+set to "integer", SQLite attempts to coerce the value returned by the function
+to an integer. If this is not possible without data loss, it attempts to coerce
+it to a real value, and finally falls back to text. If this option is set to
+"real", an attempt is made to return a real value, falling back to text if this
+is not possible.
+</dd>
 </dl>
+
+
+
 </blockquote>
 <a name="nullvalue"></a>
 <h3>The "nullvalue" method</h3>
@@ -744,6 +844,42 @@ then the compilation fails with an error.
 
 <p>If the argument is an empty string then the authorizer is disabled.
 If the argument is omitted, then the current authorizer is returned.</p>
+<a name="bind_fallback"></a>
+<h3>The "bind_fallback" method</h3>
+
+
+<p>The "bind_fallback" method gives the application control over how to
+handle parameter binding when no TCL variable matches the parameter name.
+
+<p>When the <a href="#eval">eval method</a> sees a named SQL
+parameter such as "$abc" or ":def" or "@ghi" in an SQL statement, it tries
+to look up a TCL variable with the same name, and it binds the value
+of that TCL variable to the SQL parameter.  If no such TCL variable exists,
+the default behavior is to bind an SQL NULL value to the parameter.  However,
+if a bind_fallback proc is specified, then that proc is invoked with the
+name of the SQL parameter and the return value from the proc is bound to
+the SQL parameter.  Or if the proc returns an error, then the SQL statement
+aborts with that error.  If the proc returns with some code other than
+TCL_OK or TCL_ERROR, then the SQL parameter is bound to NULL, as it would
+be by default.
+
+<p>The "bind_fallback" method has a single optional argument.  If the argument
+is an empty string, then the bind_fallback is cancelled and the default behavior
+is restored.  If the argument is a non-empty string, then the argument is a
+TCL command (usually the name of a proc) to invoke whenever an SQL parameter 
+is seen that does not match any TCL variable.  If the "bind_fallback" method 
+is given no arguments, then the current bind_fallback command is returned.
+
+<p>As an example, the following setup causes TCL to throw an error if
+an SQL statement contains an parameter that does not match any global
+TCL variable:
+
+<blockquote><pre><b>
+proc bind_error {nm} {
+  error "no such variable: $nm"
+}
+db bind_fallback bind_error
+</b></pre></blockquote>
 <a name="progress"></a>
 <h3>The "progress" method</h3>
 
@@ -769,12 +905,12 @@ sequence.
 "NOCASE" that sorts in text order without regard to case:
 </p>
 
-<blockquote><b>
-proc nocase_compare {a b} {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;return &#91;string compare &#91;string tolower $a&#93; &#91;string tolower $b&#93;&#93;<br>
-}<br>
-db collate NOCASE nocase_compare<br>
-</b></blockquote>
+<blockquote><pre><b>
+proc nocase_compare {a b} {
+  return &#91;string compare &#91;string tolower $a] &#91;string tolower $b]]
+}
+db collate NOCASE nocase_compare
+</b></pre></blockquote>
 <a name="collation_needed"></a>
 <h3>The "collation_needed" method</h3>
 

@@ -5,14 +5,14 @@ Description: increase the maximum possible value of the page size
  .
 Author: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Bug-Debian: http://bugs.debian.org/672573
+Forwarded: <not-needed>
+Last-Update: 2019-12-29
 
 ---
-Forwarded: <not-needed>
-Last-Update: <2012-05-16>
 
 --- sqlite3-3.7.12.orig/src/sqliteLimit.h
 +++ sqlite3-3.7.12/src/sqliteLimit.h
-@@ -169,7 +169,7 @@
+@@ -172,7 +172,7 @@
  ** SQLite will choose on its own.
  */
  #ifndef SQLITE_MAX_DEFAULT_PAGE_SIZE

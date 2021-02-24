@@ -1,0 +1,39 @@
+Index: sqlite3/src/func.c
+==================================================================
+--- a/src/func.c
++++ b/src/func.c
+@@ -692,11 +692,12 @@
+   while( (c = Utf8Read(zPattern))!=0 ){
+     if( c==matchAll ){  /* Match "*" */
+       /* Skip over multiple "*" characters in the pattern.  If there
+       ** are also "?" characters, skip those as well, but consume a
+       ** single character of the input string for each "?" skipped */
+-      while( (c=Utf8Read(zPattern)) == matchAll || c == matchOne ){
++      while( (c=Utf8Read(zPattern)) == matchAll 
++             || (c == matchOne && matchOne!=0) ){
+         if( c==matchOne && sqlite3Utf8Read(&zString)==0 ){
+           return SQLITE_NOWILDCARDMATCH;
+         }
+       }
+       if( c==0 ){
+
+Index: sqlite3/test/like.test
+==================================================================
+--- a/test/like.test
++++ b/test/like.test
+@@ -1128,7 +1128,14 @@
+   SELECT id FROM t1 WHERE x LIKE 'abc%%' ESCAPE '%';
+ } {4}
+ do_execsql_test 17.1 {
+   SELECT id FROM t1 WHERE x LIKE 'abc__' ESCAPE '_';
+ } {2}
++
++# 2021-02-15 ticket c0aeea67d58ae0fd
++#
++do_execsql_test 17.1 {
++  SELECT 'x' LIKE '%' ESCAPE '_';
++} {1}
++
+ 
+ finish_test
+

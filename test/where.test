@@ -490,12 +490,12 @@ ifcapable subquery {
     count {
       SELECT * FROM t1 WHERE x IN (1,7) AND y IN (9,10) ORDER BY 1;
     }
-  } {2 1 9 4}
+  } {2 1 9 5}
   do_test where-5.15 {
     count {
       SELECT * FROM t1 WHERE x IN (1,7) AND y IN (9,16) ORDER BY 1;
     }
-  } {2 1 9 3 1 16 8}
+  } {2 1 9 3 1 16 9}
   do_test where-5.100 {
     db eval {
       SELECT w, x, y FROM t1 WHERE x IN (1,5) AND y IN (9,8,3025,1000,3969)
@@ -1437,5 +1437,138 @@ do_execsql_test where-23.0 {
   INSERT INTO t2(y) VALUES(2),(3);
   SELECT * FROM t1, t2 WHERE a=y AND y=3;
 } {3 2 3}
+
+#-------------------------------------------------------------------------
+#
+reset_db
+do_execsql_test where-24.0 {
+  CREATE TABLE t1(a INTEGER PRIMARY KEY, b);
+  INSERT INTO t1 VALUES(1, 'one');
+  INSERT INTO t1 VALUES(2, 'two');
+  INSERT INTO t1 VALUES(3, 'three');
+  INSERT INTO t1 VALUES(4, 'four');
+}
+
+foreach {tn sql res} {
+  1 "SELECT b FROM t1"                   {one two three four}
+  2 "SELECT b FROM t1 WHERE a<4"         {one two three}
+  3 "SELECT b FROM t1 WHERE a>1"         {two three four}
+  4 "SELECT b FROM t1 WHERE a>1 AND a<4" {two three}
+
+  5 "SELECT b FROM t1 WHERE a>? AND a<4" {}
+  6 "SELECT b FROM t1 WHERE a>1 AND a<?" {}
+  7 "SELECT b FROM t1 WHERE a>? AND a<?" {}
+
+  7 "SELECT b FROM t1 WHERE a>=? AND a<=4" {}
+  8 "SELECT b FROM t1 WHERE a>=1 AND a<=?" {}
+  9 "SELECT b FROM t1 WHERE a>=? AND a<=?" {}
+} {
+  set rev [list]
+  foreach r $res { set rev [concat $r $rev] }
+
+  do_execsql_test where-24.$tn.1 "$sql"                     $res
+  do_execsql_test where-24.$tn.2 "$sql ORDER BY rowid"      $res
+  do_execsql_test where-24.$tn.3 "$sql ORDER BY rowid DESC" $rev
+
+  do_execsql_test where-24-$tn.4 "
+    BEGIN;
+      DELETE FROM t1;
+      $sql;
+      $sql ORDER BY rowid;
+      $sql ORDER BY rowid DESC;
+    ROLLBACK;
+  "
+}
+
+#-------------------------------------------------------------------------
+#
+reset_db
+do_execsql_test where-25.0 {
+  CREATE TABLE t1(a INTEGER PRIMARY KEY, b, c);
+  CREATE UNIQUE INDEX i1 ON t1(c);
+  INSERT INTO t1 VALUES(1, 'one', 'i');
+  INSERT INTO t1 VALUES(2, 'two', 'ii');
+
+  CREATE TABLE t2(a INTEGER PRIMARY KEY, b, c);
+  CREATE UNIQUE INDEX i2 ON t2(c);
+  INSERT INTO t2 VALUES(1, 'one', 'i');
+  INSERT INTO t2 VALUES(2, 'two', 'ii');
+  INSERT INTO t2 VALUES(3, 'three', 'iii');
+
+  PRAGMA writable_schema = 1;
+  UPDATE sqlite_schema SET rootpage = (
+    SELECT rootpage FROM sqlite_schema WHERE name = 'i2'
+  ) WHERE name = 'i1';
+}
+db close
+sqlite3 db test.db
+do_catchsql_test where-25.1 {
+  DELETE FROM t1 WHERE c='iii'
+} {1 {database disk image is malformed}}
+do_catchsql_test where-25.2 {
+  INSERT INTO t1 VALUES(4, 'four', 'iii') 
+    ON CONFLICT(c) DO UPDATE SET b=NULL
+} {1 {database disk image is malformed}}
+
+reset_db
+do_execsql_test where-25.3 {
+  CREATE TABLE t1(a PRIMARY KEY, b, c) WITHOUT ROWID;
+  CREATE UNIQUE INDEX i1 ON t1(c);
+  INSERT INTO t1 VALUES(1, 'one', 'i');
+  INSERT INTO t1 VALUES(2, 'two', 'ii');
+
+  CREATE TABLE t2(a INTEGER PRIMARY KEY, b, c);
+  CREATE UNIQUE INDEX i2 ON t2(c);
+  INSERT INTO t2 VALUES(1, 'one', 'i');
+  INSERT INTO t2 VALUES(2, 'two', 'ii');
+  INSERT INTO t2 VALUES(3, 'three', 'iii');
+
+  PRAGMA writable_schema = 1;
+  UPDATE sqlite_schema SET rootpage = (
+    SELECT rootpage FROM sqlite_schema WHERE name = 'i2'
+  ) WHERE name = 'i1';
+}
+db close
+sqlite3 db test.db
+do_catchsql_test where-25.4 {
+  SELECT * FROM t1 WHERE c='iii'
+} {0 {}}
+do_catchsql_test where-25.5 {
+  INSERT INTO t1 VALUES(4, 'four', 'iii') 
+    ON CONFLICT(c) DO UPDATE SET b=NULL
+} {1 {corrupt database}}
+
+# 2019-08-21 Ticket https://www.sqlite.org/src/info/d9f584e936c7a8d0
+#
+db close
+sqlite3 db :memory:
+do_execsql_test where-26.1 {
+  CREATE TABLE t0(c0 INTEGER PRIMARY KEY, c1 TEXT);
+  INSERT INTO t0(c0, c1) VALUES (1, 'a');
+  CREATE TABLE t1(c0 INT PRIMARY KEY, c1 TEXT);
+  INSERT INTO t1(c0, c1) VALUES (1, 'a');
+  SELECT * FROM t0 WHERE '-1' BETWEEN 0 AND t0.c0;
+} {1 a}
+do_execsql_test where-26.2 {
+  SELECT * FROM t1 WHERE '-1' BETWEEN 0 AND t1.c0;
+} {1 a}
+do_execsql_test where-26.3 {
+  SELECT * FROM t0 WHERE '-1'>=0 AND '-1'<=t0.c0;
+} {1 a}
+do_execsql_test where-26.4 {
+  SELECT * FROM t1 WHERE '-1'>=0 AND '-1'<=t1.c0;
+} {1 a}
+do_execsql_test where-26.5 {
+  SELECT '-1' BETWEEN 0 AND t0.c0 FROM t0;
+} {1}
+do_execsql_test where-26.6 {
+  SELECT '-1' BETWEEN 0 AND t1.c0 FROM t1;
+} {1}
+do_execsql_test where-26.7 {
+  SELECT '-1'>=0 AND '-1'<=t0.c0 FROM t0;
+} {1}
+do_execsql_test where-26.8 {
+  SELECT '-1'>=0 AND '-1'<=t1.c0 FROM t1;
+} {1}
 
 finish_test

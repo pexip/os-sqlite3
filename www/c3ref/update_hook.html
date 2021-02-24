@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -98,7 +98,7 @@ return false;
 </div>
 <blockquote><pre>
 void *sqlite3_update_hook(
-  sqlite3*, 
+  sqlite3*,
   void(*)(void *,int ,char const *,char const *,sqlite3_int64),
   void*
 );
@@ -124,7 +124,7 @@ The final callback parameter is the <a href="../lang_createtable.html#rowid">row
 In the case of an update, this is the <a href="../lang_createtable.html#rowid">rowid</a> after the update takes place.</p>
 
 <p>The update hook is not invoked when internal system tables are
-modified (i.e. sqlite_master and sqlite_sequence).
+modified (i.e. sqlite_sequence).
 The update hook is not invoked when <a href="../withoutrowid.html">WITHOUT ROWID</a> tables are modified.</p>
 
 <p>In the current implementation, the update hook
