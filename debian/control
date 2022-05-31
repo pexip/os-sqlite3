@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 11), autoconf (>= 2.59), libtool (>= 1.5.2), automa
 Build-Conflicts: tcl8.4, tcl8.4-dev, tcl8.5, tcl8.5-dev
 Homepage: https://www.sqlite.org/
 Standards-Version: 4.3.0
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ buster
+XS-Pexip-Upstream: http://deb.debian.org/debian/ bullseye
 
 Package: lemon
 Architecture: any
