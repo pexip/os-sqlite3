@@ -31,7 +31,7 @@
 */
 struct TableLock {
   int iDb;               /* The database containing the table to be locked */
-  int iTab;              /* The root page of the table to be locked */
+  Pgno iTab;             /* The root page of the table to be locked */
   u8 isWriteLock;        /* True for write lock.  False for a read lock */
   const char *zLockName; /* Name of the table */
 };
@@ -49,11 +49,11 @@ struct TableLock {
 void sqlite3TableLock(
   Parse *pParse,     /* Parsing context */
   int iDb,           /* Index of the database containing the table to lock */
-  int iTab,          /* Root page number of the table to be locked */
+  Pgno iTab,         /* Root page number of the table to be locked */
   u8 isWriteLock,    /* True for a write lock */
   const char *zName  /* Name of the table to be locked */
 ){
-  Parse *pToplevel = sqlite3ParseToplevel(pParse);
+  Parse *pToplevel;
   int i;
   int nBytes;
   TableLock *p;
@@ -61,6 +61,7 @@ void sqlite3TableLock(
 
   if( iDb==1 ) return;
   if( !sqlite3BtreeSharable(pParse->db->aDb[iDb].pBt) ) return;
+  pToplevel = sqlite3ParseToplevel(pParse);
   for(i=0; i<pToplevel->nTableLock; i++){
     p = &pToplevel->aTableLock[i];
     if( p->iDb==iDb && p->iTab==iTab ){
@@ -90,10 +91,8 @@ void sqlite3TableLock(
 */
 static void codeTableLocks(Parse *pParse){
   int i;
-  Vdbe *pVdbe; 
-
-  pVdbe = sqlite3GetVdbe(pParse);
-  assert( pVdbe!=0 ); /* sqlite3GetVdbe cannot fail: VDBE already allocated */
+  Vdbe *pVdbe = pParse->pVdbe; 
+  assert( pVdbe!=0 );
 
   for(i=0; i<pParse->nTableLock; i++){
     TableLock *p = &pParse->aTableLock[i];
@@ -207,12 +206,21 @@ void sqlite3FinishCoding(Parse *pParse){
       */
       sqlite3AutoincrementBegin(pParse);
 
-      /* Code constant expressions that where factored out of inner loops */
+      /* Code constant expressions that where factored out of inner loops.
+      **
+      ** The pConstExpr list might also contain expressions that we simply
+      ** want to keep around until the Parse object is deleted.  Such
+      ** expressions have iConstExprReg==0.  Do not generate code for
+      ** those expressions, of course.
+      */
       if( pParse->pConstExpr ){
         ExprList *pEL = pParse->pConstExpr;
         pParse->okConstFactor = 0;
         for(i=0; i<pEL->nExpr; i++){
-          sqlite3ExprCode(pParse, pEL->a[i].pExpr, pEL->a[i].u.iConstExprReg);
+          int iReg = pEL->a[i].u.iConstExprReg;
+          if( iReg>0 ){
+            sqlite3ExprCode(pParse, pEL->a[i].pExpr, iReg);
+          }
         }
       }
 
@@ -244,7 +252,7 @@ void sqlite3FinishCoding(Parse *pParse){
 ** outermost parser.
 **
 ** Not everything is nestable.  This facility is designed to permit
-** INSERT, UPDATE, and DELETE operations against SQLITE_MASTER.  Use
+** INSERT, UPDATE, and DELETE operations against the schema table.  Use
 ** care if you decide to try to use this routine for some other purposes.
 */
 void sqlite3NestedParse(Parse *pParse, const char *zFormat, ...){
@@ -260,7 +268,12 @@ void sqlite3NestedParse(Parse *pParse, const char *zFormat, ...){
   zSql = sqlite3VMPrintf(db, zFormat, ap);
   va_end(ap);
   if( zSql==0 ){
-    return;   /* A malloc must have failed */
+    /* This can result either from an OOM or because the formatted string
+    ** exceeds SQLITE_LIMIT_LENGTH.  In the latter case, we need to set
+    ** an error */
+    if( !db->mallocFailed ) pParse->rc = SQLITE_TOOBIG;
+    pParse->nErr++;
+    return;
   }
   pParse->nested++;
   memcpy(saveBuf, PARSE_TAIL(pParse), PARSE_TAIL_SZ);
@@ -307,22 +320,59 @@ Table *sqlite3FindTable(sqlite3 *db, const char *zName, const char *zDatabase){
     return 0;
   }
 #endif
-  while(1){
-    for(i=OMIT_TEMPDB; i<db->nDb; i++){
-      int j = (i<2) ? i^1 : i;   /* Search TEMP before MAIN */
-      if( zDatabase==0 || sqlite3StrICmp(zDatabase, db->aDb[j].zDbSName)==0 ){
-        assert( sqlite3SchemaMutexHeld(db, j, 0) );
-        p = sqlite3HashFind(&db->aDb[j].pSchema->tblHash, zName);
-        if( p ) return p;
+  if( zDatabase ){
+    for(i=0; i<db->nDb; i++){
+      if( sqlite3StrICmp(zDatabase, db->aDb[i].zDbSName)==0 ) break;
+    }
+    if( i>=db->nDb ){
+      /* No match against the official names.  But always match "main"
+      ** to schema 0 as a legacy fallback. */
+      if( sqlite3StrICmp(zDatabase,"main")==0 ){
+        i = 0;
+      }else{
+        return 0;
       }
     }
-    /* Not found.  If the name we were looking for was temp.sqlite_master
-    ** then change the name to sqlite_temp_master and try again. */
-    if( sqlite3StrICmp(zName, MASTER_NAME)!=0 ) break;
-    if( sqlite3_stricmp(zDatabase, db->aDb[1].zDbSName)!=0 ) break;
-    zName = TEMP_MASTER_NAME;
+    p = sqlite3HashFind(&db->aDb[i].pSchema->tblHash, zName);
+    if( p==0 && sqlite3StrNICmp(zName, "sqlite_", 7)==0 ){
+      if( i==1 ){
+        if( sqlite3StrICmp(zName+7, &ALT_TEMP_SCHEMA_TABLE[7])==0
+         || sqlite3StrICmp(zName+7, &ALT_SCHEMA_TABLE[7])==0
+         || sqlite3StrICmp(zName+7, &DFLT_SCHEMA_TABLE[7])==0
+        ){
+          p = sqlite3HashFind(&db->aDb[1].pSchema->tblHash, 
+                              DFLT_TEMP_SCHEMA_TABLE);
+        }
+      }else{
+        if( sqlite3StrICmp(zName+7, &ALT_SCHEMA_TABLE[7])==0 ){
+          p = sqlite3HashFind(&db->aDb[i].pSchema->tblHash,
+                              DFLT_SCHEMA_TABLE);
+        }
+      }
+    }
+  }else{
+    /* Match against TEMP first */
+    p = sqlite3HashFind(&db->aDb[1].pSchema->tblHash, zName);
+    if( p ) return p;
+    /* The main database is second */
+    p = sqlite3HashFind(&db->aDb[0].pSchema->tblHash, zName);
+    if( p ) return p;
+    /* Attached databases are in order of attachment */
+    for(i=2; i<db->nDb; i++){
+      assert( sqlite3SchemaMutexHeld(db, i, 0) );
+      p = sqlite3HashFind(&db->aDb[i].pSchema->tblHash, zName);
+      if( p ) break;
+    }
+    if( p==0 && sqlite3StrNICmp(zName, "sqlite_", 7)==0 ){
+      if( sqlite3StrICmp(zName+7, &ALT_SCHEMA_TABLE[7])==0 ){
+        p = sqlite3HashFind(&db->aDb[0].pSchema->tblHash, DFLT_SCHEMA_TABLE);
+      }else if( sqlite3StrICmp(zName+7, &ALT_TEMP_SCHEMA_TABLE[7])==0 ){
+        p = sqlite3HashFind(&db->aDb[1].pSchema->tblHash, 
+                            DFLT_TEMP_SCHEMA_TABLE);
+      }
+    }
   }
-  return 0;
+  return p;
 }
 
 /*
@@ -432,7 +482,7 @@ Index *sqlite3FindIndex(sqlite3 *db, const char *zName, const char *zDb){
     int j = (i<2) ? i^1 : i;  /* Search TEMP before MAIN */
     Schema *pSchema = db->aDb[j].pSchema;
     assert( pSchema );
-    if( zDb && sqlite3StrICmp(zDb, db->aDb[j].zDbSName) ) continue;
+    if( zDb && sqlite3DbIsNamed(db, j, zDb)==0 ) continue;
     assert( sqlite3SchemaMutexHeld(db, j, 0) );
     p = sqlite3HashFind(&pSchema->idxHash, zName);
     if( p ) break;
@@ -451,7 +501,7 @@ void sqlite3FreeIndex(sqlite3 *db, Index *p){
   sqlite3ExprListDelete(db, p->aColExpr);
   sqlite3DbFree(db, p->zColAff);
   if( p->isResized ) sqlite3DbFree(db, (void *)p->azColl);
-#ifdef SQLITE_ENABLE_STAT3_OR_STAT4
+#ifdef SQLITE_ENABLE_STAT4
   sqlite3_free(p->aiRowEst);
 #endif
   sqlite3DbFree(db, p);
@@ -585,6 +635,7 @@ void sqlite3DeleteColumnNames(sqlite3 *db, Table *pTable){
   assert( pTable!=0 );
   if( (pCol = pTable->aCol)!=0 ){
     for(i=0; i<pTable->nCol; i++, pCol++){
+      assert( pCol->zName==0 || pCol->hName==sqlite3StrIHash(pCol->zName) );
       sqlite3DbFree(db, pCol->zName);
       sqlite3ExprDelete(db, pCol->pDflt);
       sqlite3DbFree(db, pCol->zColl);
@@ -613,10 +664,14 @@ static void SQLITE_NOINLINE deleteTable(sqlite3 *db, Table *pTable){
 
 #ifdef SQLITE_DEBUG
   /* Record the number of outstanding lookaside allocations in schema Tables
-  ** prior to doing any free() operations.  Since schema Tables do not use
-  ** lookaside, this number should not change. */
+  ** prior to doing any free() operations. Since schema Tables do not use
+  ** lookaside, this number should not change. 
+  **
+  ** If malloc has already failed, it may be that it failed while allocating
+  ** a Table object that was going to be marked ephemeral. So do not check
+  ** that no lookaside memory is used in this case either. */
   int nLookaside = 0;
-  if( db && (pTable->tabFlags & TF_Ephemeral)==0 ){
+  if( db && !db->mallocFailed && (pTable->tabFlags & TF_Ephemeral)==0 ){
     nLookaside = sqlite3LookasideUsed(db, 0);
   }
 #endif
@@ -707,13 +762,13 @@ char *sqlite3NameFromToken(sqlite3 *db, Token *pName){
 }
 
 /*
-** Open the sqlite_master table stored in database number iDb for
+** Open the sqlite_schema table stored in database number iDb for
 ** writing. The table is opened using cursor 0.
 */
-void sqlite3OpenMasterTable(Parse *p, int iDb){
+void sqlite3OpenSchemaTable(Parse *p, int iDb){
   Vdbe *v = sqlite3GetVdbe(p);
-  sqlite3TableLock(p, iDb, MASTER_ROOT, 1, MASTER_NAME);
-  sqlite3VdbeAddOp4Int(v, OP_OpenWrite, 0, MASTER_ROOT, iDb, 5);
+  sqlite3TableLock(p, iDb, SCHEMA_ROOT, 1, DFLT_SCHEMA_TABLE);
+  sqlite3VdbeAddOp4Int(v, OP_OpenWrite, 0, SCHEMA_ROOT, iDb, 5);
   if( p->nTab==0 ){
     p->nTab = 1;
   }
@@ -820,13 +875,42 @@ int sqlite3WritableSchema(sqlite3 *db){
 ** trigger). All names are legal except those that begin with the string
 ** "sqlite_" (in upper, lower or mixed case). This portion of the namespace
 ** is reserved for internal use.
+**
+** When parsing the sqlite_schema table, this routine also checks to
+** make sure the "type", "name", and "tbl_name" columns are consistent
+** with the SQL.
 */
-int sqlite3CheckObjectName(Parse *pParse, const char *zName){
-  if( !pParse->db->init.busy && pParse->nested==0 
-          && sqlite3WritableSchema(pParse->db)==0
-          && 0==sqlite3StrNICmp(zName, "sqlite_", 7) ){
-    sqlite3ErrorMsg(pParse, "object name reserved for internal use: %s", zName);
-    return SQLITE_ERROR;
+int sqlite3CheckObjectName(
+  Parse *pParse,            /* Parsing context */
+  const char *zName,        /* Name of the object to check */
+  const char *zType,        /* Type of this object */
+  const char *zTblName      /* Parent table name for triggers and indexes */
+){
+  sqlite3 *db = pParse->db;
+  if( sqlite3WritableSchema(db)
+   || db->init.imposterTable
+   || !sqlite3Config.bExtraSchemaChecks
+  ){
+    /* Skip these error checks for writable_schema=ON */
+    return SQLITE_OK;
+  }
+  if( db->init.busy ){
+    if( sqlite3_stricmp(zType, db->init.azInit[0])
+     || sqlite3_stricmp(zName, db->init.azInit[1])
+     || sqlite3_stricmp(zTblName, db->init.azInit[2])
+    ){
+      sqlite3ErrorMsg(pParse, ""); /* corruptSchema() will supply the error */
+      return SQLITE_ERROR;
+    }
+  }else{
+    if( (pParse->nested==0 && 0==sqlite3StrNICmp(zName, "sqlite_", 7))
+     || (sqlite3ReadOnlyShadowTables(db) && sqlite3ShadowTableName(db, zName))
+    ){
+      sqlite3ErrorMsg(pParse, "object name reserved for internal use: %s",
+                      zName);
+      return SQLITE_ERROR;
+    }
+
   }
   return SQLITE_OK;
 }
@@ -841,16 +925,96 @@ Index *sqlite3PrimaryKeyIndex(Table *pTab){
 }
 
 /*
-** Return the column of index pIdx that corresponds to table
-** column iCol.  Return -1 if not found.
+** Convert an table column number into a index column number.  That is,
+** for the column iCol in the table (as defined by the CREATE TABLE statement)
+** find the (first) offset of that column in index pIdx.  Or return -1
+** if column iCol is not used in index pIdx.
 */
-i16 sqlite3ColumnOfIndex(Index *pIdx, i16 iCol){
+i16 sqlite3TableColumnToIndex(Index *pIdx, i16 iCol){
   int i;
   for(i=0; i<pIdx->nColumn; i++){
     if( iCol==pIdx->aiColumn[i] ) return i;
   }
   return -1;
 }
+
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+/* Convert a storage column number into a table column number.
+**
+** The storage column number (0,1,2,....) is the index of the value
+** as it appears in the record on disk.  The true column number
+** is the index (0,1,2,...) of the column in the CREATE TABLE statement.
+**
+** The storage column number is less than the table column number if
+** and only there are VIRTUAL columns to the left.
+**
+** If SQLITE_OMIT_GENERATED_COLUMNS, this routine is a no-op macro.
+*/
+i16 sqlite3StorageColumnToTable(Table *pTab, i16 iCol){
+  if( pTab->tabFlags & TF_HasVirtual ){
+    int i;
+    for(i=0; i<=iCol; i++){
+      if( pTab->aCol[i].colFlags & COLFLAG_VIRTUAL ) iCol++;
+    }
+  }
+  return iCol;
+}
+#endif
+
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+/* Convert a table column number into a storage column number.
+**
+** The storage column number (0,1,2,....) is the index of the value
+** as it appears in the record on disk.  Or, if the input column is
+** the N-th virtual column (zero-based) then the storage number is
+** the number of non-virtual columns in the table plus N.  
+**
+** The true column number is the index (0,1,2,...) of the column in
+** the CREATE TABLE statement.
+**
+** If the input column is a VIRTUAL column, then it should not appear
+** in storage.  But the value sometimes is cached in registers that
+** follow the range of registers used to construct storage.  This
+** avoids computing the same VIRTUAL column multiple times, and provides
+** values for use by OP_Param opcodes in triggers.  Hence, if the
+** input column is a VIRTUAL table, put it after all the other columns.
+**
+** In the following, N means "normal column", S means STORED, and
+** V means VIRTUAL.  Suppose the CREATE TABLE has columns like this:
+**
+**        CREATE TABLE ex(N,S,V,N,S,V,N,S,V);
+**                     -- 0 1 2 3 4 5 6 7 8
+**
+** Then the mapping from this function is as follows:
+**
+**    INPUTS:     0 1 2 3 4 5 6 7 8
+**    OUTPUTS:    0 1 6 2 3 7 4 5 8
+**
+** So, in other words, this routine shifts all the virtual columns to
+** the end.
+**
+** If SQLITE_OMIT_GENERATED_COLUMNS then there are no virtual columns and
+** this routine is a no-op macro.  If the pTab does not have any virtual
+** columns, then this routine is no-op that always return iCol.  If iCol
+** is negative (indicating the ROWID column) then this routine return iCol.
+*/
+i16 sqlite3TableColumnToStorage(Table *pTab, i16 iCol){
+  int i;
+  i16 n;
+  assert( iCol<pTab->nCol );
+  if( (pTab->tabFlags & TF_HasVirtual)==0 || iCol<0 ) return iCol;
+  for(i=0, n=0; i<iCol; i++){
+    if( (pTab->aCol[i].colFlags & COLFLAG_VIRTUAL)==0 ) n++;
+  }
+  if( pTab->aCol[i].colFlags & COLFLAG_VIRTUAL ){
+    /* iCol is a virtual column itself */
+    return pTab->nNVCol + i - n;
+  }else{
+    /* iCol is a normal or stored column */
+    return n;
+  }
+}
+#endif
 
 /*
 ** Begin constructing a new table representation in memory.  This is
@@ -885,7 +1049,7 @@ void sqlite3StartTable(
   Token *pName;    /* Unqualified name of the table to create */
 
   if( db->init.busy && db->init.newTnum==1 ){
-    /* Special case:  Parsing the sqlite_master or sqlite_temp_master schema */
+    /* Special case:  Parsing the sqlite_schema or sqlite_temp_schema schema */
     iDb = db->init.iDb;
     zName = sqlite3DbStrDup(db, SCHEMA_TABLE(iDb));
     pName = pName1;
@@ -907,7 +1071,7 @@ void sqlite3StartTable(
   }
   pParse->sNameToken = *pName;
   if( zName==0 ) return;
-  if( SQLITE_OK!=sqlite3CheckObjectName(pParse, zName) ){
+  if( sqlite3CheckObjectName(pParse, zName, isView?"view":"table", zName) ){
     goto begin_table_error;
   }
   if( db->init.iDb==1 ) isTemp = 1;
@@ -991,7 +1155,7 @@ void sqlite3StartTable(
 #endif
 
   /* Begin generating the code that will insert the table record into
-  ** the SQLITE_MASTER table.  Note in particular that we must go ahead
+  ** the schema table.  Note in particular that we must go ahead
   ** and allocate the record number for the table entry now.  Before any
   ** PRIMARY KEY or UNIQUE keywords are parsed.  Those keywords will cause
   ** indices to be created and the table record must come before the 
@@ -1027,7 +1191,7 @@ void sqlite3StartTable(
     sqlite3VdbeAddOp3(v, OP_SetCookie, iDb, BTREE_TEXT_ENCODING, ENC(db));
     sqlite3VdbeJumpHere(v, addr1);
 
-    /* This just creates a place-holder record in the sqlite_master table.
+    /* This just creates a place-holder record in the sqlite_schema table.
     ** The record created does not contain anything yet.  It will be replaced
     ** by the real entry in code generated at sqlite3EndTable().
     **
@@ -1045,7 +1209,7 @@ void sqlite3StartTable(
       pParse->addrCrTab =
          sqlite3VdbeAddOp3(v, OP_CreateBtree, iDb, reg2, BTREE_INTKEY);
     }
-    sqlite3OpenMasterTable(pParse, iDb);
+    sqlite3OpenSchemaTable(pParse, iDb);
     sqlite3VdbeAddOp2(v, OP_NewRowid, 0, reg1);
     sqlite3VdbeAddOp4(v, OP_Blob, 6, reg3, 0, nullRow, P4_STATIC);
     sqlite3VdbeAddOp3(v, OP_Insert, 0, reg3, reg1);
@@ -1121,6 +1285,7 @@ void sqlite3AddColumn(Parse *pParse, Token *pName, Token *pType){
   pCol = &p->aCol[p->nCol];
   memset(pCol, 0, sizeof(p->aCol[0]));
   pCol->zName = z;
+  pCol->hName = sqlite3StrIHash(z);
   sqlite3ColumnPropertiesFromName(p, pCol);
  
   if( pType->n==0 ){
@@ -1142,6 +1307,7 @@ void sqlite3AddColumn(Parse *pParse, Token *pName, Token *pType){
     pCol->colFlags |= COLFLAG_HASTYPE;
   }
   p->nCol++;
+  p->nNVCol++;
   pParse->constraintName.n = 0;
 }
 
@@ -1286,10 +1452,17 @@ void sqlite3AddDefaultValue(
   sqlite3 *db = pParse->db;
   p = pParse->pNewTable;
   if( p!=0 ){
+    int isInit = db->init.busy && db->init.iDb!=1;
     pCol = &(p->aCol[p->nCol-1]);
-    if( !sqlite3ExprIsConstantOrFunction(pExpr, db->init.busy) ){
+    if( !sqlite3ExprIsConstantOrFunction(pExpr, isInit) ){
       sqlite3ErrorMsg(pParse, "default value of column [%s] is not constant",
           pCol->zName);
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+    }else if( pCol->colFlags & COLFLAG_GENERATED ){
+      testcase( pCol->colFlags & COLFLAG_VIRTUAL );
+      testcase( pCol->colFlags & COLFLAG_STORED );
+      sqlite3ErrorMsg(pParse, "cannot use DEFAULT on a generated column");
+#endif
     }else{
       /* A copy of pExpr is used instead of the original, as pExpr contains
       ** tokens that point to volatile memory.
@@ -1324,7 +1497,7 @@ void sqlite3AddDefaultValue(
 ** accept it.  This routine does the necessary conversion.  It converts
 ** the expression given in its argument from a TK_STRING into a TK_ID
 ** if the expression is just a TK_STRING with an optional COLLATE clause.
-** If the epxression is anything other than TK_STRING, the expression is
+** If the expression is anything other than TK_STRING, the expression is
 ** unchanged.
 */
 static void sqlite3StringToId(Expr *p){
@@ -1333,6 +1506,21 @@ static void sqlite3StringToId(Expr *p){
   }else if( p->op==TK_COLLATE && p->pLeft->op==TK_STRING ){
     p->pLeft->op = TK_ID;
   }
+}
+
+/*
+** Tag the given column as being part of the PRIMARY KEY
+*/
+static void makeColumnPartOfPrimaryKey(Parse *pParse, Column *pCol){
+  pCol->colFlags |= COLFLAG_PRIMKEY;
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+  if( pCol->colFlags & COLFLAG_GENERATED ){
+    testcase( pCol->colFlags & COLFLAG_VIRTUAL );
+    testcase( pCol->colFlags & COLFLAG_STORED );
+    sqlite3ErrorMsg(pParse,
+      "generated columns cannot be part of the PRIMARY KEY");
+  }
+#endif          
 }
 
 /*
@@ -1374,7 +1562,7 @@ void sqlite3AddPrimaryKey(
   if( pList==0 ){
     iCol = pTab->nCol - 1;
     pCol = &pTab->aCol[iCol];
-    pCol->colFlags |= COLFLAG_PRIMKEY;
+    makeColumnPartOfPrimaryKey(pParse, pCol);
     nTerm = 1;
   }else{
     nTerm = pList->nExpr;
@@ -1387,7 +1575,7 @@ void sqlite3AddPrimaryKey(
         for(iCol=0; iCol<pTab->nCol; iCol++){
           if( sqlite3StrICmp(zCName, pTab->aCol[iCol].zName)==0 ){
             pCol = &pTab->aCol[iCol];
-            pCol->colFlags |= COLFLAG_PRIMKEY;
+            makeColumnPartOfPrimaryKey(pParse, pCol);
             break;
           }
         }
@@ -1400,13 +1588,15 @@ void sqlite3AddPrimaryKey(
    && sortOrder!=SQLITE_SO_DESC
   ){
     if( IN_RENAME_OBJECT && pList ){
-      sqlite3RenameTokenRemap(pParse, &pTab->iPKey, pList->a[0].pExpr);
+      Expr *pCExpr = sqlite3ExprSkipCollate(pList->a[0].pExpr);
+      sqlite3RenameTokenRemap(pParse, &pTab->iPKey, pCExpr);
     }
     pTab->iPKey = iCol;
     pTab->keyConf = (u8)onError;
     assert( autoInc==0 || autoInc==1 );
     pTab->tabFlags |= autoInc*TF_Autoincrement;
-    if( pList ) pParse->iPkSortOrder = pList->a[0].sortOrder;
+    if( pList ) pParse->iPkSortOrder = pList->a[0].sortFlags;
+    (void)sqlite3HasExplicitNulls(pParse, pList);
   }else if( autoInc ){
 #ifndef SQLITE_OMIT_AUTOINCREMENT
     sqlite3ErrorMsg(pParse, "AUTOINCREMENT is only allowed on an "
@@ -1427,8 +1617,10 @@ primary_key_exit:
 ** Add a new CHECK constraint to the table currently under construction.
 */
 void sqlite3AddCheckConstraint(
-  Parse *pParse,    /* Parsing context */
-  Expr *pCheckExpr  /* The check expression */
+  Parse *pParse,      /* Parsing context */
+  Expr *pCheckExpr,   /* The check expression */
+  const char *zStart, /* Opening "(" */
+  const char *zEnd    /* Closing ")" */
 ){
 #ifndef SQLITE_OMIT_CHECK
   Table *pTab = pParse->pNewTable;
@@ -1439,6 +1631,13 @@ void sqlite3AddCheckConstraint(
     pTab->pCheck = sqlite3ExprListAppend(pParse, pTab->pCheck, pCheckExpr);
     if( pParse->constraintName.n ){
       sqlite3ExprListSetName(pParse, pTab->pCheck, &pParse->constraintName, 1);
+    }else{
+      Token t;
+      for(zStart++; sqlite3Isspace(zStart[0]); zStart++){}
+      while( sqlite3Isspace(zEnd[-1]) ){ zEnd--; }
+      t.z = zStart;
+      t.n = (int)(zEnd - t.z);
+      sqlite3ExprListSetName(pParse, pTab->pCheck, &t, 1);    
     }
   }else
 #endif
@@ -1457,7 +1656,7 @@ void sqlite3AddCollateType(Parse *pParse, Token *pToken){
   char *zColl;              /* Dequoted name of collation sequence */
   sqlite3 *db;
 
-  if( (p = pParse->pNewTable)==0 ) return;
+  if( (p = pParse->pNewTable)==0 || IN_RENAME_OBJECT ) return;
   i = p->nCol-1;
   db = pParse->db;
   zColl = sqlite3NameFromToken(db, pToken);
@@ -1483,40 +1682,57 @@ void sqlite3AddCollateType(Parse *pParse, Token *pToken){
   }
 }
 
-/*
-** This function returns the collation sequence for database native text
-** encoding identified by the string zName, length nName.
-**
-** If the requested collation sequence is not available, or not available
-** in the database native encoding, the collation factory is invoked to
-** request it. If the collation factory does not supply such a sequence,
-** and the sequence is available in another text encoding, then that is
-** returned instead.
-**
-** If no versions of the requested collations sequence are available, or
-** another error occurs, NULL is returned and an error message written into
-** pParse.
-**
-** This routine is a wrapper around sqlite3FindCollSeq().  This routine
-** invokes the collation factory if the named collation cannot be found
-** and generates an error message.
-**
-** See also: sqlite3FindCollSeq(), sqlite3GetCollSeq()
+/* Change the most recently parsed column to be a GENERATED ALWAYS AS
+** column.
 */
-CollSeq *sqlite3LocateCollSeq(Parse *pParse, const char *zName){
-  sqlite3 *db = pParse->db;
-  u8 enc = ENC(db);
-  u8 initbusy = db->init.busy;
-  CollSeq *pColl;
-
-  pColl = sqlite3FindCollSeq(db, enc, zName, initbusy);
-  if( !initbusy && (!pColl || !pColl->xCmp) ){
-    pColl = sqlite3GetCollSeq(pParse, enc, pColl, zName);
+void sqlite3AddGenerated(Parse *pParse, Expr *pExpr, Token *pType){
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+  u8 eType = COLFLAG_VIRTUAL;
+  Table *pTab = pParse->pNewTable;
+  Column *pCol;
+  if( pTab==0 ){
+    /* generated column in an CREATE TABLE IF NOT EXISTS that already exists */
+    goto generated_done;
   }
+  pCol = &(pTab->aCol[pTab->nCol-1]);
+  if( IN_DECLARE_VTAB ){
+    sqlite3ErrorMsg(pParse, "virtual tables cannot use computed columns");
+    goto generated_done;
+  }
+  if( pCol->pDflt ) goto generated_error;
+  if( pType ){
+    if( pType->n==7 && sqlite3StrNICmp("virtual",pType->z,7)==0 ){
+      /* no-op */
+    }else if( pType->n==6 && sqlite3StrNICmp("stored",pType->z,6)==0 ){
+      eType = COLFLAG_STORED;
+    }else{
+      goto generated_error;
+    }
+  }
+  if( eType==COLFLAG_VIRTUAL ) pTab->nNVCol--;
+  pCol->colFlags |= eType;
+  assert( TF_HasVirtual==COLFLAG_VIRTUAL );
+  assert( TF_HasStored==COLFLAG_STORED );
+  pTab->tabFlags |= eType;
+  if( pCol->colFlags & COLFLAG_PRIMKEY ){
+    makeColumnPartOfPrimaryKey(pParse, pCol); /* For the error message */
+  }
+  pCol->pDflt = pExpr;
+  pExpr = 0;
+  goto generated_done;
 
-  return pColl;
+generated_error:
+  sqlite3ErrorMsg(pParse, "error in generated column \"%s\"",
+                  pCol->zName);
+generated_done:
+  sqlite3ExprDelete(pParse->db, pExpr);
+#else
+  /* Throw and error for the GENERATED ALWAYS AS clause if the
+  ** SQLITE_OMIT_GENERATED_COLUMNS compile-time option is used. */
+  sqlite3ErrorMsg(pParse, "generated columns not supported");
+  sqlite3ExprDelete(pParse->db, pExpr);
+#endif
 }
-
 
 /*
 ** Generate code that will increment the schema cookie.
@@ -1675,12 +1891,15 @@ static int resizeIndexObject(sqlite3 *db, Index *pIdx, int N){
   int nByte;
   if( pIdx->nColumn>=N ) return SQLITE_OK;
   assert( pIdx->isResized==0 );
-  nByte = (sizeof(char*) + sizeof(i16) + 1)*N;
+  nByte = (sizeof(char*) + sizeof(LogEst) + sizeof(i16) + 1)*N;
   zExtra = sqlite3DbMallocZero(db, nByte);
   if( zExtra==0 ) return SQLITE_NOMEM_BKPT;
   memcpy(zExtra, pIdx->azColl, sizeof(char*)*pIdx->nColumn);
   pIdx->azColl = (const char**)zExtra;
   zExtra += sizeof(char*)*N;
+  memcpy(zExtra, pIdx->aiRowLogEst, sizeof(LogEst)*(pIdx->nKeyCol+1));
+  pIdx->aiRowLogEst = (LogEst*)zExtra;
+  zExtra += sizeof(LogEst)*N;
   memcpy(zExtra, pIdx->aiColumn, sizeof(i16)*pIdx->nColumn);
   pIdx->aiColumn = (i16*)zExtra;
   zExtra += sizeof(i16)*N;
@@ -1720,10 +1939,51 @@ static void estimateIndexWidth(Index *pIdx){
   pIdx->szIdxRow = sqlite3LogEst(wIndex*4);
 }
 
-/* Return true if value x is found any of the first nCol entries of aiCol[]
+/* Return true if column number x is any of the first nCol entries of aiCol[].
+** This is used to determine if the column number x appears in any of the
+** first nCol entries of an index.
 */
 static int hasColumn(const i16 *aiCol, int nCol, int x){
-  while( nCol-- > 0 ) if( x==*(aiCol++) ) return 1;
+  while( nCol-- > 0 ){
+    assert( aiCol[0]>=0 );
+    if( x==*(aiCol++) ){
+      return 1;
+    }
+  }
+  return 0;
+}
+
+/*
+** Return true if any of the first nKey entries of index pIdx exactly
+** match the iCol-th entry of pPk.  pPk is always a WITHOUT ROWID
+** PRIMARY KEY index.  pIdx is an index on the same table.  pIdx may
+** or may not be the same index as pPk.
+**
+** The first nKey entries of pIdx are guaranteed to be ordinary columns,
+** not a rowid or expression.
+**
+** This routine differs from hasColumn() in that both the column and the
+** collating sequence must match for this routine, but for hasColumn() only
+** the column name must match.
+*/
+static int isDupColumn(Index *pIdx, int nKey, Index *pPk, int iCol){
+  int i, j;
+  assert( nKey<=pIdx->nColumn );
+  assert( iCol<MAX(pPk->nColumn,pPk->nKeyCol) );
+  assert( pPk->idxType==SQLITE_IDXTYPE_PRIMARYKEY );
+  assert( pPk->pTable->tabFlags & TF_WithoutRowid );
+  assert( pPk->pTable==pIdx->pTable );
+  testcase( pPk==pIdx );
+  j = pPk->aiColumn[iCol];
+  assert( j!=XN_ROWID && j!=XN_EXPR );
+  for(i=0; i<nKey; i++){
+    assert( pIdx->aiColumn[i]>=0 || j>=0 );
+    if( pIdx->aiColumn[i]==j 
+     && sqlite3StrICmp(pIdx->azColl[i], pPk->azColl[iCol])==0
+    ){
+      return 1;
+    }
+  }
   return 0;
 }
 
@@ -1734,15 +1994,24 @@ static int hasColumn(const i16 *aiCol, int nCol, int x){
 ** high-order bit of colNotIdxed is always 1.  All unindexed columns
 ** of the table have a 1.
 **
+** 2019-10-24:  For the purpose of this computation, virtual columns are
+** not considered to be covered by the index, even if they are in the
+** index, because we do not trust the logic in whereIndexExprTrans() to be
+** able to find all instances of a reference to the indexed table column
+** and convert them into references to the index.  Hence we always want
+** the actual table at hand in order to recompute the virtual column, if
+** necessary.
+**
 ** The colNotIdxed mask is AND-ed with the SrcList.a[].colUsed mask
 ** to determine if the index is covering index.
 */
 static void recomputeColumnsNotIndexed(Index *pIdx){
   Bitmask m = 0;
   int j;
+  Table *pTab = pIdx->pTable;
   for(j=pIdx->nColumn-1; j>=0; j--){
     int x = pIdx->aiColumn[j];
-    if( x>=0 ){
+    if( x>=0 && (pTab->aCol[x].colFlags & COLFLAG_VIRTUAL)==0 ){
       testcase( x==BMS-1 );
       testcase( x==BMS-2 );
       if( x<BMS-1 ) m |= MASKBIT(x);
@@ -1762,9 +2031,9 @@ static void recomputeColumnsNotIndexed(Index *pIdx){
 **     (1)  Set all columns of the PRIMARY KEY schema object to be NOT NULL.
 **     (2)  Convert P3 parameter of the OP_CreateBtree from BTREE_INTKEY 
 **          into BTREE_BLOBKEY.
-**     (3)  Bypass the creation of the sqlite_master table entry
+**     (3)  Bypass the creation of the sqlite_schema table entry
 **          for the PRIMARY KEY as the primary key index is now
-**          identified by the sqlite_master table entry of the table itself.
+**          identified by the sqlite_schema table entry of the table itself.
 **     (4)  Set the Index.tnum of the PRIMARY KEY Index object in the
 **          schema to the rootpage from the main table.
 **     (5)  Add all table columns to the PRIMARY KEY Index object
@@ -1780,6 +2049,7 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
   Index *pIdx;
   Index *pPk;
   int nPk;
+  int nExtra;
   int i, j;
   sqlite3 *db = pParse->db;
   Vdbe *v = pParse->pVdbe;
@@ -1792,6 +2062,7 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
         pTab->aCol[i].notNull = OE_Abort;
       }
     }
+    pTab->tabFlags |= TF_HasNotNull;
   }
 
   /* Convert the P3 operand of the OP_CreateBtree opcode from BTREE_INTKEY
@@ -1812,15 +2083,20 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
     pList = sqlite3ExprListAppend(pParse, 0, 
                   sqlite3ExprAlloc(db, TK_ID, &ipkToken, 0));
     if( pList==0 ) return;
-    pList->a[0].sortOrder = pParse->iPkSortOrder;
+    if( IN_RENAME_OBJECT ){
+      sqlite3RenameTokenRemap(pParse, pList->a[0].pExpr, &pTab->iPKey);
+    }
+    pList->a[0].sortFlags = pParse->iPkSortOrder;
     assert( pParse->pNewTable==pTab );
+    pTab->iPKey = -1;
     sqlite3CreateIndex(pParse, 0, 0, 0, pList, pTab->keyConf, 0, 0, 0, 0,
                        SQLITE_IDXTYPE_PRIMARYKEY);
     if( db->mallocFailed || pParse->nErr ) return;
     pPk = sqlite3PrimaryKeyIndex(pTab);
-    pTab->iPKey = -1;
+    assert( pPk->nKeyCol==1 );
   }else{
     pPk = sqlite3PrimaryKeyIndex(pTab);
+    assert( pPk!=0 );
 
     /*
     ** Remove all redundant columns from the PRIMARY KEY.  For example, change
@@ -1828,9 +2104,12 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
     ** code assumes the PRIMARY KEY contains no repeated columns.
     */
     for(i=j=1; i<pPk->nKeyCol; i++){
-      if( hasColumn(pPk->aiColumn, j, pPk->aiColumn[i]) ){
+      if( isDupColumn(pPk, j, pPk, i) ){
         pPk->nColumn--;
       }else{
+        testcase( hasColumn(pPk->aiColumn, j, pPk->aiColumn[i]) );
+        pPk->azColl[j] = pPk->azColl[i];
+        pPk->aSortOrder[j] = pPk->aSortOrder[i];
         pPk->aiColumn[j++] = pPk->aiColumn[i];
       }
     }
@@ -1839,15 +2118,15 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
   assert( pPk!=0 );
   pPk->isCovering = 1;
   if( !db->init.imposterTable ) pPk->uniqNotNull = 1;
-  nPk = pPk->nKeyCol;
+  nPk = pPk->nColumn = pPk->nKeyCol;
 
-  /* Bypass the creation of the PRIMARY KEY btree and the sqlite_master
+  /* Bypass the creation of the PRIMARY KEY btree and the sqlite_schema
   ** table entry. This is only required if currently generating VDBE
   ** code for a CREATE TABLE (not when parsing one as part of reading
   ** a database schema).  */
   if( v && pPk->tnum>0 ){
     assert( db->init.busy==0 );
-    sqlite3VdbeChangeOpcode(v, pPk->tnum, OP_Goto);
+    sqlite3VdbeChangeOpcode(v, (int)pPk->tnum, OP_Goto);
   }
 
   /* The root page of the PRIMARY KEY is the table root page */
@@ -1860,7 +2139,10 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
     int n;
     if( IsPrimaryKeyIndex(pIdx) ) continue;
     for(i=n=0; i<nPk; i++){
-      if( !hasColumn(pIdx->aiColumn, pIdx->nKeyCol, pPk->aiColumn[i]) ) n++;
+      if( !isDupColumn(pIdx, pIdx->nKeyCol, pPk, i) ){
+        testcase( hasColumn(pIdx->aiColumn, pIdx->nKeyCol, pPk->aiColumn[i]) );
+        n++;
+      }
     }
     if( n==0 ){
       /* This index is a superset of the primary key */
@@ -1869,9 +2151,14 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
     }
     if( resizeIndexObject(db, pIdx, pIdx->nKeyCol+n) ) return;
     for(i=0, j=pIdx->nKeyCol; i<nPk; i++){
-      if( !hasColumn(pIdx->aiColumn, pIdx->nKeyCol, pPk->aiColumn[i]) ){
+      if( !isDupColumn(pIdx, pIdx->nKeyCol, pPk, i) ){
+        testcase( hasColumn(pIdx->aiColumn, pIdx->nKeyCol, pPk->aiColumn[i]) );
         pIdx->aiColumn[j] = pPk->aiColumn[i];
         pIdx->azColl[j] = pPk->azColl[i];
+        if( pPk->aSortOrder[i] ){
+          /* See ticket https://www.sqlite.org/src/info/bba7b69f9849b5bf */
+          pIdx->bAscKeyBug = 1;
+        }
         j++;
       }
     }
@@ -1881,23 +2168,48 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
 
   /* Add all table columns to the PRIMARY KEY index
   */
-  if( nPk<pTab->nCol ){
-    if( resizeIndexObject(db, pPk, pTab->nCol) ) return;
-    for(i=0, j=nPk; i<pTab->nCol; i++){
-      if( !hasColumn(pPk->aiColumn, j, i) ){
-        assert( j<pPk->nColumn );
-        pPk->aiColumn[j] = i;
-        pPk->azColl[j] = sqlite3StrBINARY;
-        j++;
-      }
-    }
-    assert( pPk->nColumn==j );
-    assert( pTab->nCol==j );
-  }else{
-    pPk->nColumn = pTab->nCol;
+  nExtra = 0;
+  for(i=0; i<pTab->nCol; i++){
+    if( !hasColumn(pPk->aiColumn, nPk, i)
+     && (pTab->aCol[i].colFlags & COLFLAG_VIRTUAL)==0 ) nExtra++;
   }
+  if( resizeIndexObject(db, pPk, nPk+nExtra) ) return;
+  for(i=0, j=nPk; i<pTab->nCol; i++){
+    if( !hasColumn(pPk->aiColumn, j, i)
+     && (pTab->aCol[i].colFlags & COLFLAG_VIRTUAL)==0
+    ){
+      assert( j<pPk->nColumn );
+      pPk->aiColumn[j] = i;
+      pPk->azColl[j] = sqlite3StrBINARY;
+      j++;
+    }
+  }
+  assert( pPk->nColumn==j );
+  assert( pTab->nNVCol<=j );
   recomputeColumnsNotIndexed(pPk);
 }
+
+
+#ifndef SQLITE_OMIT_VIRTUALTABLE
+/*
+** Return true if pTab is a virtual table and zName is a shadow table name
+** for that virtual table.
+*/
+int sqlite3IsShadowTableOf(sqlite3 *db, Table *pTab, const char *zName){
+  int nName;                    /* Length of zName */
+  Module *pMod;                 /* Module for the virtual table */
+
+  if( !IsVirtual(pTab) ) return 0;
+  nName = sqlite3Strlen30(pTab->zName);
+  if( sqlite3_strnicmp(zName, pTab->zName, nName)!=0 ) return 0;
+  if( zName[nName]!='_' ) return 0;
+  pMod = (Module*)sqlite3HashFind(&db->aModule, pTab->azModuleArg[0]);
+  if( pMod==0 ) return 0;
+  if( pMod->pModule->iVersion<3 ) return 0;
+  if( pMod->pModule->xShadowName==0 ) return 0;
+  return pMod->pModule->xShadowName(zName+nName+1);
+}
+#endif /* ifndef SQLITE_OMIT_VIRTUALTABLE */
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 /*
@@ -1907,11 +2219,9 @@ static void convertToWithoutRowidTable(Parse *pParse, Table *pTab){
 ** zName is temporarily modified while this routine is running, but is
 ** restored to its original value prior to this routine returning.
 */
-static int isShadowTableName(sqlite3 *db, char *zName){
+int sqlite3ShadowTableName(sqlite3 *db, const char *zName){
   char *zTail;                  /* Pointer to the last "_" in zName */
   Table *pTab;                  /* Table that zName is a shadow of */
-  Module *pMod;                 /* Module for the virtual table */
-
   zTail = strrchr(zName, '_');
   if( zTail==0 ) return 0;
   *zTail = 0;
@@ -1919,15 +2229,36 @@ static int isShadowTableName(sqlite3 *db, char *zName){
   *zTail = '_';
   if( pTab==0 ) return 0;
   if( !IsVirtual(pTab) ) return 0;
-  pMod = (Module*)sqlite3HashFind(&db->aModule, pTab->azModuleArg[0]);
-  if( pMod==0 ) return 0;
-  if( pMod->pModule->iVersion<3 ) return 0;
-  if( pMod->pModule->xShadowName==0 ) return 0;
-  return pMod->pModule->xShadowName(zTail+1);
+  return sqlite3IsShadowTableOf(db, pTab, zName);
+}
+#endif /* ifndef SQLITE_OMIT_VIRTUALTABLE */
+
+
+#ifdef SQLITE_DEBUG
+/*
+** Mark all nodes of an expression as EP_Immutable, indicating that
+** they should not be changed.  Expressions attached to a table or
+** index definition are tagged this way to help ensure that we do
+** not pass them into code generator routines by mistake.
+*/
+static int markImmutableExprStep(Walker *pWalker, Expr *pExpr){
+  ExprSetVVAProperty(pExpr, EP_Immutable);
+  return WRC_Continue;
+}
+static void markExprListImmutable(ExprList *pList){
+  if( pList ){
+    Walker w;
+    memset(&w, 0, sizeof(w));
+    w.xExprCallback = markImmutableExprStep;
+    w.xSelectCallback = sqlite3SelectWalkNoop;
+    w.xSelectCallback2 = 0;
+    sqlite3WalkExprList(&w, pList);
+  }
 }
 #else
-# define isShadowTableName(x,y) 0
-#endif /* ifndef SQLITE_OMIT_VIRTUALTABLE */
+#define markExprListImmutable(X)  /* no-op */
+#endif /* SQLITE_DEBUG */
+
 
 /*
 ** This routine is called to report the final ")" that terminates
@@ -1937,12 +2268,12 @@ static int isShadowTableName(sqlite3 *db, char *zName){
 ** is added to the internal hash tables, assuming no errors have
 ** occurred.
 **
-** An entry for the table is made in the master table on disk, unless
+** An entry for the table is made in the schema table on disk, unless
 ** this is a temporary table or db->init.busy==1.  When db->init.busy==1
-** it means we are reading the sqlite_master table because we just
-** connected to the database or because the sqlite_master table has
+** it means we are reading the sqlite_schema table because we just
+** connected to the database or because the sqlite_schema table has
 ** recently changed, so the entry for this table already exists in
-** the sqlite_master table.  We do not want to create it again.
+** the sqlite_schema table.  We do not want to create it again.
 **
 ** If the pSelect argument is not NULL, it means that this routine
 ** was called to create a table generated from a 
@@ -1968,17 +2299,17 @@ void sqlite3EndTable(
   p = pParse->pNewTable;
   if( p==0 ) return;
 
-  if( pSelect==0 && isShadowTableName(db, p->zName) ){
+  if( pSelect==0 && sqlite3ShadowTableName(db, p->zName) ){
     p->tabFlags |= TF_Shadow;
   }
 
   /* If the db->init.busy is 1 it means we are reading the SQL off the
-  ** "sqlite_master" or "sqlite_temp_master" table on the disk.
+  ** "sqlite_schema" or "sqlite_temp_schema" table on the disk.
   ** So do not write to the disk again.  Extract the root page number
   ** for the table from the db->init.newTnum field.  (The page number
   ** should have been put there by the sqliteOpenCb routine.)
   **
-  ** If the root page number is 1, that means this is the sqlite_master
+  ** If the root page number is 1, that means this is the sqlite_schema
   ** table itself.  So mark it read-only.
   */
   if( db->init.busy ){
@@ -1990,6 +2321,11 @@ void sqlite3EndTable(
     if( p->tnum==1 ) p->tabFlags |= TF_Readonly;
   }
 
+  assert( (p->tabFlags & TF_HasPrimaryKey)==0
+       || p->iPKey>=0 || sqlite3PrimaryKeyIndex(p)!=0 );
+  assert( (p->tabFlags & TF_HasPrimaryKey)!=0
+       || (p->iPKey<0 && sqlite3PrimaryKeyIndex(p)==0) );
+
   /* Special processing for WITHOUT ROWID Tables */
   if( tabOpts & TF_WithoutRowid ){
     if( (p->tabFlags & TF_Autoincrement) ){
@@ -1999,12 +2335,11 @@ void sqlite3EndTable(
     }
     if( (p->tabFlags & TF_HasPrimaryKey)==0 ){
       sqlite3ErrorMsg(pParse, "PRIMARY KEY missing on table %s", p->zName);
-    }else{
-      p->tabFlags |= TF_WithoutRowid | TF_NoVisibleRowid;
-      convertToWithoutRowidTable(pParse, p);
+      return;
     }
+    p->tabFlags |= TF_WithoutRowid | TF_NoVisibleRowid;
+    convertToWithoutRowidTable(pParse, p);
   }
-
   iDb = sqlite3SchemaToIndex(db, p->pSchema);
 
 #ifndef SQLITE_OMIT_CHECK
@@ -2012,8 +2347,47 @@ void sqlite3EndTable(
   */
   if( p->pCheck ){
     sqlite3ResolveSelfReference(pParse, p, NC_IsCheck, 0, p->pCheck);
+    if( pParse->nErr ){
+      /* If errors are seen, delete the CHECK constraints now, else they might
+      ** actually be used if PRAGMA writable_schema=ON is set. */
+      sqlite3ExprListDelete(db, p->pCheck);
+      p->pCheck = 0;
+    }else{
+      markExprListImmutable(p->pCheck);
+    }
   }
 #endif /* !defined(SQLITE_OMIT_CHECK) */
+#ifndef SQLITE_OMIT_GENERATED_COLUMNS
+  if( p->tabFlags & TF_HasGenerated ){
+    int ii, nNG = 0;
+    testcase( p->tabFlags & TF_HasVirtual );
+    testcase( p->tabFlags & TF_HasStored );
+    for(ii=0; ii<p->nCol; ii++){
+      u32 colFlags = p->aCol[ii].colFlags;
+      if( (colFlags & COLFLAG_GENERATED)!=0 ){
+        Expr *pX = p->aCol[ii].pDflt;
+        testcase( colFlags & COLFLAG_VIRTUAL );
+        testcase( colFlags & COLFLAG_STORED );
+        if( sqlite3ResolveSelfReference(pParse, p, NC_GenCol, pX, 0) ){
+          /* If there are errors in resolving the expression, change the
+          ** expression to a NULL.  This prevents code generators that operate
+          ** on the expression from inserting extra parts into the expression
+          ** tree that have been allocated from lookaside memory, which is
+          ** illegal in a schema and will lead to errors or heap corruption
+          ** when the database connection closes. */
+          sqlite3ExprDelete(db, pX);
+          p->aCol[ii].pDflt = sqlite3ExprAlloc(db, TK_NULL, 0, 0);
+        }
+      }else{
+        nNG++;
+      }
+    }
+    if( nNG==0 ){
+      sqlite3ErrorMsg(pParse, "must have at least one non-generated column");
+      return;
+    }
+  }
+#endif
 
   /* Estimate the average row size for the table and for all implied indices */
   estimateTableWidth(p);
@@ -2022,7 +2396,7 @@ void sqlite3EndTable(
   }
 
   /* If not initializing, then create a record for the new table
-  ** in the SQLITE_MASTER table of the database.
+  ** in the schema table of the database.
   **
   ** If this is a TEMPORARY table, write the entry into the auxiliary
   ** file instead of into the main database file.
@@ -2087,10 +2461,10 @@ void sqlite3EndTable(
       addrTop = sqlite3VdbeCurrentAddr(v) + 1;
       sqlite3VdbeAddOp3(v, OP_InitCoroutine, regYield, 0, addrTop);
       if( pParse->nErr ) return;
-      pSelTab = sqlite3ResultSetOfSelect(pParse, pSelect);
+      pSelTab = sqlite3ResultSetOfSelect(pParse, pSelect, SQLITE_AFF_BLOB);
       if( pSelTab==0 ) return;
       assert( p->aCol==0 );
-      p->nCol = pSelTab->nCol;
+      p->nCol = p->nNVCol = pSelTab->nCol;
       p->aCol = pSelTab->aCol;
       pSelTab->nCol = 0;
       pSelTab->aCol = 0;
@@ -2124,14 +2498,14 @@ void sqlite3EndTable(
     }
 
     /* A slot for the record has already been allocated in the 
-    ** SQLITE_MASTER table.  We just need to update that slot with all
+    ** schema table.  We just need to update that slot with all
     ** the information we've collected.
     */
     sqlite3NestedParse(pParse,
-      "UPDATE %Q.%s "
-         "SET type='%s', name=%Q, tbl_name=%Q, rootpage=#%d, sql=%Q "
-       "WHERE rowid=#%d",
-      db->aDb[iDb].zDbSName, MASTER_NAME,
+      "UPDATE %Q." DFLT_SCHEMA_TABLE
+      " SET type='%s', name=%Q, tbl_name=%Q, rootpage=#%d, sql=%Q"
+      " WHERE rowid=#%d",
+      db->aDb[iDb].zDbSName,
       zType,
       p->zName,
       p->zName,
@@ -2162,7 +2536,6 @@ void sqlite3EndTable(
     sqlite3VdbeAddParseSchemaOp(v, iDb,
            sqlite3MPrintf(db, "tbl_name='%q' AND type!='trigger'", p->zName));
   }
-
 
   /* Add the table to the in-memory representation of the database.
   */
@@ -2234,6 +2607,7 @@ void sqlite3CreateView(
   ** allocated rather than point to the input string - which means that
   ** they will persist after the current sqlite3_exec() call returns.
   */
+  pSelect->selFlags |= SF_View;
   if( IN_RENAME_OBJECT ){
     p->pSelect = pSelect;
     pSelect = 0;
@@ -2259,7 +2633,7 @@ void sqlite3CreateView(
   sEnd.z = &z[n-1];
   sEnd.n = 1;
 
-  /* Use sqlite3EndTable() to add the view to the SQLITE_MASTER table */
+  /* Use sqlite3EndTable() to add the view to the schema table */
   sqlite3EndTable(pParse, 0, &sEnd, 0, 0);
 
 create_view_fail:
@@ -2340,24 +2714,25 @@ int sqlite3ViewGetColumnNames(Parse *pParse, Table *pTable){
   assert( pTable->pSelect );
   pSel = sqlite3SelectDup(db, pTable->pSelect, 0);
   if( pSel ){
-#ifndef SQLITE_OMIT_ALTERTABLE
     u8 eParseMode = pParse->eParseMode;
     pParse->eParseMode = PARSE_MODE_NORMAL;
-#endif
     n = pParse->nTab;
     sqlite3SrcListAssignCursors(pParse, pSel->pSrc);
     pTable->nCol = -1;
-    db->lookaside.bDisable++;
+    DisableLookaside;
 #ifndef SQLITE_OMIT_AUTHORIZATION
     xAuth = db->xAuth;
     db->xAuth = 0;
-    pSelTab = sqlite3ResultSetOfSelect(pParse, pSel);
+    pSelTab = sqlite3ResultSetOfSelect(pParse, pSel, SQLITE_AFF_NONE);
     db->xAuth = xAuth;
 #else
-    pSelTab = sqlite3ResultSetOfSelect(pParse, pSel);
+    pSelTab = sqlite3ResultSetOfSelect(pParse, pSel, SQLITE_AFF_NONE);
 #endif
     pParse->nTab = n;
-    if( pTable->pCheck ){
+    if( pSelTab==0 ){
+      pTable->nCol = 0;
+      nErr++;
+    }else if( pTable->pCheck ){
       /* CREATE VIEW name(arglist) AS ...
       ** The names of the columns in the table are taken from
       ** arglist which is stored in pTable->pCheck.  The pCheck field
@@ -2370,9 +2745,10 @@ int sqlite3ViewGetColumnNames(Parse *pParse, Table *pTable){
        && pParse->nErr==0
        && pTable->nCol==pSel->pEList->nExpr
       ){
-        sqlite3SelectAddColumnTypeAndCollation(pParse, pTable, pSel);
+        sqlite3SelectAddColumnTypeAndCollation(pParse, pTable, pSel,
+                                               SQLITE_AFF_NONE);
       }
-    }else if( pSelTab ){
+    }else{
       /* CREATE VIEW name AS...  without an argument list.  Construct
       ** the column names from the SELECT statement that defines the view.
       */
@@ -2382,16 +2758,12 @@ int sqlite3ViewGetColumnNames(Parse *pParse, Table *pTable){
       pSelTab->nCol = 0;
       pSelTab->aCol = 0;
       assert( sqlite3SchemaMutexHeld(db, 0, pTable->pSchema) );
-    }else{
-      pTable->nCol = 0;
-      nErr++;
     }
+    pTable->nNVCol = pTable->nCol;
     sqlite3DeleteTable(db, pSelTab);
     sqlite3SelectDelete(db, pSel);
-    db->lookaside.bDisable--;
-#ifndef SQLITE_OMIT_ALTERTABLE
+    EnableLookaside;
     pParse->eParseMode = eParseMode;
-#endif
   } else {
     nErr++;
   }
@@ -2446,7 +2818,7 @@ static void sqliteViewResetAll(sqlite3 *db, int idx){
 ** in order to be certain that we got the right one.
 */
 #ifndef SQLITE_OMIT_AUTOVACUUM
-void sqlite3RootPageMoved(sqlite3 *db, int iDb, int iFrom, int iTo){
+void sqlite3RootPageMoved(sqlite3 *db, int iDb, Pgno iFrom, Pgno iTo){
   HashElem *pElem;
   Hash *pHash;
   Db *pDb;
@@ -2472,7 +2844,7 @@ void sqlite3RootPageMoved(sqlite3 *db, int iDb, int iFrom, int iTo){
 
 /*
 ** Write code to erase the table with root-page iTable from database iDb.
-** Also write code to modify the sqlite_master table and internal schema
+** Also write code to modify the sqlite_schema table and internal schema
 ** if a root-page of another table is moved by the btree-layer whilst
 ** erasing iTable (this can happen with an auto-vacuum database).
 */ 
@@ -2485,7 +2857,7 @@ static void destroyRootPage(Parse *pParse, int iTable, int iDb){
 #ifndef SQLITE_OMIT_AUTOVACUUM
   /* OP_Destroy stores an in integer r1. If this integer
   ** is non-zero, then it is the root page number of a table moved to
-  ** location iTable. The following code modifies the sqlite_master table to
+  ** location iTable. The following code modifies the sqlite_schema table to
   ** reflect this.
   **
   ** The "#NNN" in the SQL is a special constant that means whatever value
@@ -2493,15 +2865,16 @@ static void destroyRootPage(Parse *pParse, int iTable, int iDb){
   ** token for additional information.
   */
   sqlite3NestedParse(pParse, 
-     "UPDATE %Q.%s SET rootpage=%d WHERE #%d AND rootpage=#%d",
-     pParse->db->aDb[iDb].zDbSName, MASTER_NAME, iTable, r1, r1);
+     "UPDATE %Q." DFLT_SCHEMA_TABLE
+     " SET rootpage=%d WHERE #%d AND rootpage=#%d",
+     pParse->db->aDb[iDb].zDbSName, iTable, r1, r1);
 #endif
   sqlite3ReleaseTempReg(pParse, r1);
 }
 
 /*
 ** Write VDBE code to erase table pTab and all associated indices on disk.
-** Code to update the sqlite_master tables and internal schema definitions
+** Code to update the sqlite_schema tables and internal schema definitions
 ** in case a root-page belonging to another table is moved by the btree layer
 ** is also added (this can happen with an auto-vacuum database).
 */
@@ -2522,18 +2895,18 @@ static void destroyTable(Parse *pParse, Table *pTab){
   ** "OP_Destroy 4 0" opcode. The subsequent "OP_Destroy 5 0" would hit
   ** a free-list page.
   */
-  int iTab = pTab->tnum;
-  int iDestroyed = 0;
+  Pgno iTab = pTab->tnum;
+  Pgno iDestroyed = 0;
 
   while( 1 ){
     Index *pIdx;
-    int iLargest = 0;
+    Pgno iLargest = 0;
 
     if( iDestroyed==0 || iTab<iDestroyed ){
       iLargest = iTab;
     }
     for(pIdx=pTab->pIndex; pIdx; pIdx=pIdx->pNext){
-      int iIdx = pIdx->tnum;
+      Pgno iIdx = pIdx->tnum;
       assert( pIdx->pSchema==pTab->pSchema );
       if( (iDestroyed==0 || (iIdx<iDestroyed)) && iIdx>iLargest ){
         iLargest = iIdx;
@@ -2594,8 +2967,8 @@ void sqlite3CodeDropTable(Parse *pParse, Table *pTab, int iDb, int isView){
 #endif
 
   /* Drop all triggers associated with the table being dropped. Code
-  ** is generated to remove entries from sqlite_master and/or
-  ** sqlite_temp_master if required.
+  ** is generated to remove entries from sqlite_schema and/or
+  ** sqlite_temp_schema if required.
   */
   pTrigger = sqlite3TriggerList(pParse, pTab);
   while( pTrigger ){
@@ -2619,16 +2992,17 @@ void sqlite3CodeDropTable(Parse *pParse, Table *pTab, int iDb, int isView){
   }
 #endif
 
-  /* Drop all SQLITE_MASTER table and index entries that refer to the
-  ** table. The program name loops through the master table and deletes
+  /* Drop all entries in the schema table that refer to the
+  ** table. The program name loops through the schema table and deletes
   ** every row that refers to a table of the same name as the one being
   ** dropped. Triggers are handled separately because a trigger can be
   ** created in the temp database that refers to a table in another
   ** database.
   */
   sqlite3NestedParse(pParse, 
-      "DELETE FROM %Q.%s WHERE tbl_name=%Q and type!='trigger'",
-      pDb->zDbSName, MASTER_NAME, pTab->zName);
+      "DELETE FROM %Q." DFLT_SCHEMA_TABLE
+      " WHERE tbl_name=%Q and type!='trigger'",
+      pDb->zDbSName, pTab->zName);
   if( !isView && !IsVirtual(pTab) ){
     destroyTable(pParse, pTab);
   }
@@ -2643,6 +3017,37 @@ void sqlite3CodeDropTable(Parse *pParse, Table *pTab, int iDb, int isView){
   sqlite3VdbeAddOp4(v, OP_DropTable, iDb, 0, 0, pTab->zName, 0);
   sqlite3ChangeCookie(pParse, iDb);
   sqliteViewResetAll(db, iDb);
+}
+
+/*
+** Return TRUE if shadow tables should be read-only in the current
+** context.
+*/
+int sqlite3ReadOnlyShadowTables(sqlite3 *db){
+#ifndef SQLITE_OMIT_VIRTUALTABLE
+  if( (db->flags & SQLITE_Defensive)!=0
+   && db->pVtabCtx==0
+   && db->nVdbeExec==0
+  ){
+    return 1;
+  }
+#endif
+  return 0;
+}
+
+/*
+** Return true if it is not allowed to drop the given table
+*/
+static int tableMayNotBeDropped(sqlite3 *db, Table *pTab){
+  if( sqlite3StrNICmp(pTab->zName, "sqlite_", 7)==0 ){
+    if( sqlite3StrNICmp(pTab->zName+7, "stat", 4)==0 ) return 0;
+    if( sqlite3StrNICmp(pTab->zName+7, "parameters", 10)==0 ) return 0;
+    return 1;
+  }
+  if( (pTab->tabFlags & TF_Shadow)!=0 && sqlite3ReadOnlyShadowTables(db) ){
+    return 1;
+  }
+  return 0;
 }
 
 /*
@@ -2714,8 +3119,7 @@ void sqlite3DropTable(Parse *pParse, SrcList *pName, int isView, int noErr){
     }
   }
 #endif
-  if( sqlite3StrNICmp(pTab->zName, "sqlite_", 7)==0 
-    && sqlite3StrNICmp(pTab->zName, "sqlite_stat", 11)!=0 ){
+  if( tableMayNotBeDropped(db, pTab) ){
     sqlite3ErrorMsg(pParse, "table %s may not be dropped", pTab->zName);
     goto exit_drop_table;
   }
@@ -2734,7 +3138,7 @@ void sqlite3DropTable(Parse *pParse, SrcList *pName, int isView, int noErr){
   }
 #endif
 
-  /* Generate code to remove the table from the master table
+  /* Generate code to remove the table from the schema table
   ** on disk.
   */
   v = sqlite3GetVdbe(pParse);
@@ -2807,7 +3211,7 @@ void sqlite3CreateForeignKey(
   nByte = sizeof(*pFKey) + (nCol-1)*sizeof(pFKey->aCol[0]) + pTo->n + 1;
   if( pToCol ){
     for(i=0; i<pToCol->nExpr; i++){
-      nByte += sqlite3Strlen30(pToCol->a[i].zName) + 1;
+      nByte += sqlite3Strlen30(pToCol->a[i].zEName) + 1;
     }
   }
   pFKey = sqlite3DbMallocZero(db, nByte );
@@ -2832,7 +3236,7 @@ void sqlite3CreateForeignKey(
     for(i=0; i<nCol; i++){
       int j;
       for(j=0; j<p->nCol; j++){
-        if( sqlite3StrICmp(p->aCol[j].zName, pFromCol->a[i].zName)==0 ){
+        if( sqlite3StrICmp(p->aCol[j].zName, pFromCol->a[i].zEName)==0 ){
           pFKey->aCol[i].iFrom = j;
           break;
         }
@@ -2840,22 +3244,22 @@ void sqlite3CreateForeignKey(
       if( j>=p->nCol ){
         sqlite3ErrorMsg(pParse, 
           "unknown column \"%s\" in foreign key definition", 
-          pFromCol->a[i].zName);
+          pFromCol->a[i].zEName);
         goto fk_end;
       }
       if( IN_RENAME_OBJECT ){
-        sqlite3RenameTokenRemap(pParse, &pFKey->aCol[i], pFromCol->a[i].zName);
+        sqlite3RenameTokenRemap(pParse, &pFKey->aCol[i], pFromCol->a[i].zEName);
       }
     }
   }
   if( pToCol ){
     for(i=0; i<nCol; i++){
-      int n = sqlite3Strlen30(pToCol->a[i].zName);
+      int n = sqlite3Strlen30(pToCol->a[i].zEName);
       pFKey->aCol[i].zCol = z;
       if( IN_RENAME_OBJECT ){
-        sqlite3RenameTokenRemap(pParse, z, pToCol->a[i].zName);
+        sqlite3RenameTokenRemap(pParse, z, pToCol->a[i].zEName);
       }
-      memcpy(z, pToCol->a[i].zName, n);
+      memcpy(z, pToCol->a[i].zEName, n);
       z[n] = 0;
       z += n+1;
     }
@@ -2925,7 +3329,7 @@ static void sqlite3RefillIndex(Parse *pParse, Index *pIndex, int memRootPage){
   int iSorter;                   /* Cursor opened by OpenSorter (if in use) */
   int addr1;                     /* Address of top of loop */
   int addr2;                     /* Address to jump to for next iteration */
-  int tnum;                      /* Root page of index */
+  Pgno tnum;                     /* Root page of index */
   int iPartIdxLabel;             /* Jump to this label to skip a row */
   Vdbe *v;                       /* Generate code into this virtual machine */
   KeyInfo *pKey;                 /* KeyInfo for index */
@@ -2946,7 +3350,7 @@ static void sqlite3RefillIndex(Parse *pParse, Index *pIndex, int memRootPage){
   v = sqlite3GetVdbe(pParse);
   if( v==0 ) return;
   if( memRootPage>=0 ){
-    tnum = memRootPage;
+    tnum = (Pgno)memRootPage;
   }else{
     tnum = pIndex->tnum;
   }
@@ -2971,7 +3375,7 @@ static void sqlite3RefillIndex(Parse *pParse, Index *pIndex, int memRootPage){
   sqlite3VdbeAddOp2(v, OP_Next, iTab, addr1+1); VdbeCoverage(v);
   sqlite3VdbeJumpHere(v, addr1);
   if( memRootPage<0 ) sqlite3VdbeAddOp2(v, OP_Clear, tnum, iDb);
-  sqlite3VdbeAddOp4(v, OP_OpenWrite, iIdx, tnum, iDb, 
+  sqlite3VdbeAddOp4(v, OP_OpenWrite, iIdx, (int)tnum, iDb, 
                     (char *)pKey, P4_KEYINFO);
   sqlite3VdbeChangeP5(v, OPFLAG_BULKCSR|((memRootPage>=0)?OPFLAG_P2ISREG:0));
 
@@ -2985,10 +3389,27 @@ static void sqlite3RefillIndex(Parse *pParse, Index *pIndex, int memRootPage){
     sqlite3UniqueConstraint(pParse, OE_Abort, pIndex);
     sqlite3VdbeJumpHere(v, j2);
   }else{
+    /* Most CREATE INDEX and REINDEX statements that are not UNIQUE can not
+    ** abort. The exception is if one of the indexed expressions contains a
+    ** user function that throws an exception when it is evaluated. But the
+    ** overhead of adding a statement journal to a CREATE INDEX statement is
+    ** very small (since most of the pages written do not contain content that
+    ** needs to be restored if the statement aborts), so we call 
+    ** sqlite3MayAbort() for all CREATE INDEX statements.  */
+    sqlite3MayAbort(pParse);
     addr2 = sqlite3VdbeCurrentAddr(v);
   }
   sqlite3VdbeAddOp3(v, OP_SorterData, iSorter, regRecord, iIdx);
-  sqlite3VdbeAddOp1(v, OP_SeekEnd, iIdx);
+  if( !pIndex->bAscKeyBug ){
+    /* This OP_SeekEnd opcode makes index insert for a REINDEX go much
+    ** faster by avoiding unnecessary seeks.  But the optimization does
+    ** not work for UNIQUE constraint indexes on WITHOUT ROWID tables
+    ** with DESC primary keys, since those indexes have there keys in
+    ** a different order from the main table.
+    ** See ticket: https://www.sqlite.org/src/info/bba7b69f9849b5bf
+    */
+    sqlite3VdbeAddOp1(v, OP_SeekEnd, iIdx);
+  }
   sqlite3VdbeAddOp2(v, OP_IdxInsert, iIdx, regRecord);
   sqlite3VdbeChangeP5(v, OPFLAG_USESEEKRESULT);
   sqlite3ReleaseTempReg(pParse, regRecord);
@@ -3033,6 +3454,27 @@ Index *sqlite3AllocateIndexObject(
     *ppExtra = ((char*)p) + nByte;
   }
   return p;
+}
+
+/*
+** If expression list pList contains an expression that was parsed with
+** an explicit "NULLS FIRST" or "NULLS LAST" clause, leave an error in
+** pParse and return non-zero. Otherwise, return zero.
+*/
+int sqlite3HasExplicitNulls(Parse *pParse, ExprList *pList){
+  if( pList ){
+    int i;
+    for(i=0; i<pList->nExpr; i++){
+      if( pList->a[i].bNulls ){
+        u8 sf = pList->a[i].sortFlags;
+        sqlite3ErrorMsg(pParse, "unsupported use of NULLS %s", 
+            (sf==0 || sf==3) ? "FIRST" : "LAST"
+        );
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 /*
@@ -3084,6 +3526,9 @@ void sqlite3CreateIndex(
     goto exit_create_index;
   }
   if( SQLITE_OK!=sqlite3ReadSchema(pParse) ){
+    goto exit_create_index;
+  }
+  if( sqlite3HasExplicitNulls(pParse, pList) ){
     goto exit_create_index;
   }
 
@@ -3143,14 +3588,11 @@ void sqlite3CreateIndex(
   assert( pParse->nErr==0 );
   if( sqlite3StrNICmp(pTab->zName, "sqlite_", 7)==0 
        && db->init.busy==0
+       && pTblName!=0
 #if SQLITE_USER_AUTHENTICATION
        && sqlite3UserAuthTable(pTab->zName)==0
 #endif
-#ifdef SQLITE_ALLOW_SQLITE_MASTER_INDEX
-       && sqlite3StrICmp(&pTab->zName[7],"master")!=0
-#endif
-       && sqlite3StrNICmp(&pTab->zName[7],"altertab_",9)!=0
- ){
+  ){
     sqlite3ErrorMsg(pParse, "table %s may not be indexed", pTab->zName);
     goto exit_create_index;
   }
@@ -3172,7 +3614,7 @@ void sqlite3CreateIndex(
   ** index or table with the same name.  
   **
   ** Exception:  If we are reading the names of permanent indices from the
-  ** sqlite_master table (because some other process changed the schema) and
+  ** sqlite_schema table (because some other process changed the schema) and
   ** one of the index names collides with the name of a temporary table or
   ** index, then we will continue to process this index.
   **
@@ -3184,7 +3626,7 @@ void sqlite3CreateIndex(
     zName = sqlite3NameFromToken(db, pName);
     if( zName==0 ) goto exit_create_index;
     assert( pName->z!=0 );
-    if( SQLITE_OK!=sqlite3CheckObjectName(pParse, zName) ){
+    if( SQLITE_OK!=sqlite3CheckObjectName(pParse, zName,"index",pTab->zName) ){
       goto exit_create_index;
     }
     if( !IN_RENAME_OBJECT ){
@@ -3250,9 +3692,10 @@ void sqlite3CreateIndex(
               sqlite3ExprAlloc(db, TK_ID, &prevCol, 0));
     if( pList==0 ) goto exit_create_index;
     assert( pList->nExpr==1 );
-    sqlite3ExprListSetSortOrder(pList, sortOrder);
+    sqlite3ExprListSetSortOrder(pList, sortOrder, SQLITE_SO_UNDEFINED);
   }else{
     sqlite3ExprListCheckLength(pParse, pList, "index");
+    if( pParse->nErr ) goto exit_create_index;
   }
 
   /* Figure out how many bytes of space are required to store explicitly
@@ -3271,6 +3714,7 @@ void sqlite3CreateIndex(
   */
   nName = sqlite3Strlen30(zName);
   nExtraCol = pPk ? pPk->nKeyCol : 1;
+  assert( pList->nExpr + nExtraCol <= 32767 /* Fits in i16 */ );
   pIndex = sqlite3AllocateIndexObject(db, pList->nExpr + nExtraCol,
                                       nName + nExtra + 1, &zExtra);
   if( db->mallocFailed ){
@@ -3343,8 +3787,13 @@ void sqlite3CreateIndex(
       assert( j<=0x7fff );
       if( j<0 ){
         j = pTab->iPKey;
-      }else if( pTab->aCol[j].notNull==0 ){
-        pIndex->uniqNotNull = 0;
+      }else{
+        if( pTab->aCol[j].notNull==0 ){
+          pIndex->uniqNotNull = 0;
+        }
+        if( pTab->aCol[j].colFlags & COLFLAG_VIRTUAL ){
+          pIndex->bHasVCol = 1;
+        }
       }
       pIndex->aiColumn[i] = (i16)j;
     }
@@ -3366,7 +3815,7 @@ void sqlite3CreateIndex(
       goto exit_create_index;
     }
     pIndex->azColl[i] = zColl;
-    requestedSortOrder = pListItem->sortOrder & sortOrderMask;
+    requestedSortOrder = pListItem->sortFlags & sortOrderMask;
     pIndex->aSortOrder[i] = (u8)requestedSortOrder;
   }
 
@@ -3378,9 +3827,10 @@ void sqlite3CreateIndex(
     for(j=0; j<pPk->nKeyCol; j++){
       int x = pPk->aiColumn[j];
       assert( x>=0 );
-      if( hasColumn(pIndex->aiColumn, pIndex->nKeyCol, x) ){
+      if( isDupColumn(pIndex, pIndex->nKeyCol, pPk, j) ){
         pIndex->nColumn--; 
       }else{
+        testcase( hasColumn(pIndex->aiColumn,pIndex->nKeyCol,x) );
         pIndex->aiColumn[i] = x;
         pIndex->azColl[i] = pPk->azColl[j];
         pIndex->aSortOrder[i] = pPk->aSortOrder[j];
@@ -3398,13 +3848,13 @@ void sqlite3CreateIndex(
   /* If this index contains every column of its table, then mark
   ** it as a covering index */
   assert( HasRowid(pTab) 
-      || pTab->iPKey<0 || sqlite3ColumnOfIndex(pIndex, pTab->iPKey)>=0 );
+      || pTab->iPKey<0 || sqlite3TableColumnToIndex(pIndex, pTab->iPKey)>=0 );
   recomputeColumnsNotIndexed(pIndex);
   if( pTblName!=0 && pIndex->nColumn>=pTab->nCol ){
     pIndex->isCovering = 1;
     for(j=0; j<pTab->nCol; j++){
       if( j==pTab->iPKey ) continue;
-      if( sqlite3ColumnOfIndex(pIndex,j)>=0 ) continue;
+      if( sqlite3TableColumnToIndex(pIndex,j)>=0 ) continue;
       pIndex->isCovering = 0;
       break;
     }
@@ -3508,8 +3958,8 @@ void sqlite3CreateIndex(
     /* If this is the initial CREATE INDEX statement (or CREATE TABLE if the
     ** index is an implied index for a UNIQUE or PRIMARY KEY constraint) then
     ** emit code to allocate the index rootpage on disk and make an entry for
-    ** the index in the sqlite_master table and populate the index with
-    ** content.  But, do not do this if we are simply reading the sqlite_master
+    ** the index in the sqlite_schema table and populate the index with
+    ** content.  But, do not do this if we are simply reading the sqlite_schema
     ** table to parse the schema, or if this index is the PRIMARY KEY index
     ** of a WITHOUT ROWID table.
     **
@@ -3534,12 +3984,13 @@ void sqlite3CreateIndex(
       ** PRIMARY KEY and the table is actually a WITHOUT ROWID table. In 
       ** that case the convertToWithoutRowidTable() routine will replace
       ** the Noop with a Goto to jump over the VDBE code generated below. */
-      pIndex->tnum = sqlite3VdbeAddOp0(v, OP_Noop);
+      pIndex->tnum = (Pgno)sqlite3VdbeAddOp0(v, OP_Noop);
       sqlite3VdbeAddOp3(v, OP_CreateBtree, iDb, iMem, BTREE_BLOBKEY);
 
       /* Gather the complete text of the CREATE INDEX statement into
       ** the zStmt variable
       */
+      assert( pName!=0 || pStart==0 );
       if( pStart ){
         int n = (int)(pParse->sLastToken.z - pName->z) + pParse->sLastToken.n;
         if( pName->z[n-1]==';' ) n--;
@@ -3552,11 +4003,11 @@ void sqlite3CreateIndex(
         zStmt = 0;
       }
 
-      /* Add an entry in sqlite_master for this index
+      /* Add an entry in sqlite_schema for this index
       */
       sqlite3NestedParse(pParse, 
-          "INSERT INTO %Q.%s VALUES('index',%Q,%Q,#%d,%Q);",
-          db->aDb[iDb].zDbSName, MASTER_NAME,
+          "INSERT INTO %Q." DFLT_SCHEMA_TABLE " VALUES('index',%Q,%Q,#%d,%Q);",
+          db->aDb[iDb].zDbSName,
           pIndex->zName,
           pTab->zName,
           iMem,
@@ -3575,29 +4026,12 @@ void sqlite3CreateIndex(
         sqlite3VdbeAddOp2(v, OP_Expire, 0, 1);
       }
 
-      sqlite3VdbeJumpHere(v, pIndex->tnum);
+      sqlite3VdbeJumpHere(v, (int)pIndex->tnum);
     }
   }
-
-  /* When adding an index to the list of indices for a table, make
-  ** sure all indices labeled OE_Replace come after all those labeled
-  ** OE_Ignore.  This is necessary for the correct constraint check
-  ** processing (in sqlite3GenerateConstraintChecks()) as part of
-  ** UPDATE and INSERT statements.  
-  */
   if( db->init.busy || pTblName==0 ){
-    if( onError!=OE_Replace || pTab->pIndex==0
-         || pTab->pIndex->onError==OE_Replace){
-      pIndex->pNext = pTab->pIndex;
-      pTab->pIndex = pIndex;
-    }else{
-      Index *pOther = pTab->pIndex;
-      while( pOther->pNext && pOther->pNext->onError!=OE_Replace ){
-        pOther = pOther->pNext;
-      }
-      pIndex->pNext = pOther->pNext;
-      pOther->pNext = pIndex;
-    }
+    pIndex->pNext = pTab->pIndex;
+    pTab->pIndex = pIndex;
     pIndex = 0;
   }
   else if( IN_RENAME_OBJECT ){
@@ -3609,6 +4043,21 @@ void sqlite3CreateIndex(
   /* Clean up before exiting */
 exit_create_index:
   if( pIndex ) sqlite3FreeIndex(db, pIndex);
+  if( pTab ){  /* Ensure all REPLACE indexes are at the end of the list */
+    Index **ppFrom = &pTab->pIndex;
+    Index *pThis;
+    for(ppFrom=&pTab->pIndex; (pThis = *ppFrom)!=0; ppFrom=&pThis->pNext){
+      Index *pNext;
+      if( pThis->onError!=OE_Replace ) continue;
+      while( (pNext = pThis->pNext)!=0 && pNext->onError!=OE_Replace ){
+        *ppFrom = pNext;
+        pThis->pNext = pNext->pNext;
+        pNext->pNext = pThis;
+        ppFrom = &pNext->pNext;
+      }
+      break;
+    }
+  }
   sqlite3ExprDelete(db, pPIWhere);
   sqlite3ExprListDelete(db, pList);
   sqlite3SrcListDelete(db, pTblName);
@@ -3634,9 +4083,10 @@ exit_create_index:
 ** are based on typical values found in actual indices.
 */
 void sqlite3DefaultRowEst(Index *pIdx){
-  /*                10,  9,  8,  7,  6 */
-  LogEst aVal[] = { 33, 32, 30, 28, 26 };
+               /*                10,  9,  8,  7,  6 */
+  static const LogEst aVal[] = { 33, 32, 30, 28, 26 };
   LogEst *a = pIdx->aiRowLogEst;
+  LogEst x;
   int nCopy = MIN(ArraySize(aVal), pIdx->nKeyCol);
   int i;
 
@@ -3645,10 +4095,21 @@ void sqlite3DefaultRowEst(Index *pIdx){
 
   /* Set the first entry (number of rows in the index) to the estimated 
   ** number of rows in the table, or half the number of rows in the table
-  ** for a partial index.   But do not let the estimate drop below 10. */
-  a[0] = pIdx->pTable->nRowLogEst;
-  if( pIdx->pPartIdxWhere!=0 ) a[0] -= 10;  assert( 10==sqlite3LogEst(2) );
-  if( a[0]<33 ) a[0] = 33;                  assert( 33==sqlite3LogEst(10) );
+  ** for a partial index.
+  **
+  ** 2020-05-27:  If some of the stat data is coming from the sqlite_stat1
+  ** table but other parts we are having to guess at, then do not let the
+  ** estimated number of rows in the table be less than 1000 (LogEst 99).
+  ** Failure to do this can cause the indexes for which we do not have
+  ** stat1 data to be ignored by the query planner.
+  */
+  x = pIdx->pTable->nRowLogEst;
+  assert( 99==sqlite3LogEst(1000) );
+  if( x<99 ){
+    pIdx->pTable->nRowLogEst = x = 99;
+  }
+  if( pIdx->pPartIdxWhere!=0 ) x -= 10;  assert( 10==sqlite3LogEst(2) );
+  a[0] = x;
 
   /* Estimate that a[1] is 10, a[2] is 9, a[3] is 8, a[4] is 7, a[5] is
   ** 6 and each subsequent value (if any) is 5.  */
@@ -3711,13 +4172,13 @@ void sqlite3DropIndex(Parse *pParse, SrcList *pName, int ifExists){
   }
 #endif
 
-  /* Generate code to remove the index and from the master table */
+  /* Generate code to remove the index and from the schema table */
   v = sqlite3GetVdbe(pParse);
   if( v ){
     sqlite3BeginWriteOperation(pParse, 1, iDb);
     sqlite3NestedParse(pParse,
-       "DELETE FROM %Q.%s WHERE name=%Q AND type='index'",
-       db->aDb[iDb].zDbSName, MASTER_NAME, pIndex->zName
+       "DELETE FROM %Q." DFLT_SCHEMA_TABLE " WHERE name=%Q AND type='index'",
+       db->aDb[iDb].zDbSName, pIndex->zName
     );
     sqlite3ClearStatTables(pParse, iDb, "idx", pIndex->zName);
     sqlite3ChangeCookie(pParse, iDb);
@@ -3754,9 +4215,9 @@ void *sqlite3ArrayAllocate(
   int *pIdx         /* Write the index of a new slot here */
 ){
   char *z;
-  int n = *pnEntry;
+  sqlite3_int64 n = *pIdx = *pnEntry;
   if( (n & (n-1))==0 ){
-    int sz = (n==0) ? 1 : 2*n;
+    sqlite3_int64 sz = (n==0) ? 1 : 2*n;
     void *pNew = sqlite3DbRealloc(db, pArray, sz*szEntry);
     if( pNew==0 ){
       *pIdx = -1;
@@ -3766,7 +4227,6 @@ void *sqlite3ArrayAllocate(
   }
   z = (char*)pArray;
   memset(&z[n * szEntry], 0, szEntry);
-  *pIdx = n;
   ++*pnEntry;
   return pArray;
 }
@@ -3877,7 +4337,7 @@ SrcList *sqlite3SrcListEnlarge(
   /* Allocate additional space if needed */
   if( (u32)pSrc->nSrc+nExtra>pSrc->nAlloc ){
     SrcList *pNew;
-    int nAlloc = pSrc->nSrc*2+nExtra;
+    sqlite3_int64 nAlloc = 2*(sqlite3_int64)pSrc->nSrc+nExtra;
     sqlite3 *db = pParse->db;
 
     if( pSrc->nSrc+nExtra>=SQLITE_MAX_SRCLIST ){
@@ -4000,7 +4460,7 @@ void sqlite3SrcListAssignCursors(Parse *pParse, SrcList *pList){
   assert(pList || pParse->db->mallocFailed );
   if( pList ){
     for(i=0, pItem=pList->a; i<pList->nSrc; i++, pItem++){
-      if( pItem->iCursor>=0 ) break;
+      if( pItem->iCursor>=0 ) continue;
       pItem->iCursor = pParse->nTab++;
       if( pItem->pSelect ){
         sqlite3SrcListAssignCursors(pParse, pItem->pSelect->pSrc);
@@ -4017,15 +4477,15 @@ void sqlite3SrcListDelete(sqlite3 *db, SrcList *pList){
   struct SrcList_item *pItem;
   if( pList==0 ) return;
   for(pItem=pList->a, i=0; i<pList->nSrc; i++, pItem++){
-    sqlite3DbFree(db, pItem->zDatabase);
+    if( pItem->zDatabase ) sqlite3DbFreeNN(db, pItem->zDatabase);
     sqlite3DbFree(db, pItem->zName);
-    sqlite3DbFree(db, pItem->zAlias);
+    if( pItem->zAlias ) sqlite3DbFreeNN(db, pItem->zAlias);
     if( pItem->fg.isIndexedBy ) sqlite3DbFree(db, pItem->u1.zIndexedBy);
     if( pItem->fg.isTabFunc ) sqlite3ExprListDelete(db, pItem->u1.pFuncArg);
     sqlite3DeleteTable(db, pItem->pTab);
-    sqlite3SelectDelete(db, pItem->pSelect);
-    sqlite3ExprDelete(db, pItem->pOn);
-    sqlite3IdListDelete(db, pItem->pUsing);
+    if( pItem->pSelect ) sqlite3SelectDelete(db, pItem->pSelect);
+    if( pItem->pOn ) sqlite3ExprDelete(db, pItem->pOn);
+    if( pItem->pUsing ) sqlite3IdListDelete(db, pItem->pUsing);
   }
   sqlite3DbFreeNN(db, pList);
 }
@@ -4118,6 +4578,26 @@ void sqlite3SrcListIndexedBy(Parse *pParse, SrcList *p, Token *pIndexedBy){
 }
 
 /*
+** Append the contents of SrcList p2 to SrcList p1 and return the resulting
+** SrcList. Or, if an error occurs, return NULL. In all cases, p1 and p2
+** are deleted by this function.
+*/ 
+SrcList *sqlite3SrcListAppendList(Parse *pParse, SrcList *p1, SrcList *p2){
+  assert( p1 && p1->nSrc==1 );
+  if( p2 ){
+    SrcList *pNew = sqlite3SrcListEnlarge(pParse, p1, p2->nSrc, 1);
+    if( pNew==0 ){
+      sqlite3SrcListDelete(pParse->db, p2);
+    }else{
+      p1 = pNew;
+      memcpy(&p1->a[1], p2->a, p2->nSrc*sizeof(struct SrcList_item));
+      sqlite3DbFree(pParse->db, p2);
+    }
+  }
+  return p1;
+}
+
+/*
 ** Add the list of function arguments to the SrcList entry for a
 ** table-valued-function.
 */
@@ -4177,7 +4657,16 @@ void sqlite3BeginTransaction(Parse *pParse, int type){
   if( !v ) return;
   if( type!=TK_DEFERRED ){
     for(i=0; i<db->nDb; i++){
-      sqlite3VdbeAddOp2(v, OP_Transaction, i, (type==TK_EXCLUSIVE)+1);
+      int eTxnType;
+      Btree *pBt = db->aDb[i].pBt;
+      if( pBt && sqlite3BtreeIsReadonly(pBt) ){
+        eTxnType = 0;  /* Read txn */
+      }else if( type==TK_EXCLUSIVE ){
+        eTxnType = 2;  /* Exclusive txn */
+      }else{
+        eTxnType = 1;  /* Write txn */
+      }
+      sqlite3VdbeAddOp2(v, OP_Transaction, i, eTxnType);
       sqlite3VdbeUsesBtree(v, i);
     }
   }
@@ -4252,7 +4741,7 @@ int sqlite3OpenTempDatabase(Parse *pParse){
     }
     db->aDb[1].pBt = pBt;
     assert( db->aDb[1].pSchema );
-    if( SQLITE_NOMEM==sqlite3BtreeSetPageSize(pBt, db->nextPagesize, -1, 0) ){
+    if( SQLITE_NOMEM==sqlite3BtreeSetPageSize(pBt, db->nextPagesize, 0, 0) ){
       sqlite3OomFault(db);
       return 1;
     }
@@ -4266,13 +4755,11 @@ int sqlite3OpenTempDatabase(Parse *pParse){
 ** will occur at the end of the top-level VDBE and will be generated
 ** later, by sqlite3FinishCoding().
 */
-void sqlite3CodeVerifySchema(Parse *pParse, int iDb){
-  Parse *pToplevel = sqlite3ParseToplevel(pParse);
-
-  assert( iDb>=0 && iDb<pParse->db->nDb );
-  assert( pParse->db->aDb[iDb].pBt!=0 || iDb==1 );
+static void sqlite3CodeVerifySchemaAtToplevel(Parse *pToplevel, int iDb){
+  assert( iDb>=0 && iDb<pToplevel->db->nDb );
+  assert( pToplevel->db->aDb[iDb].pBt!=0 || iDb==1 );
   assert( iDb<SQLITE_MAX_ATTACHED+2 );
-  assert( sqlite3SchemaMutexHeld(pParse->db, iDb, 0) );
+  assert( sqlite3SchemaMutexHeld(pToplevel->db, iDb, 0) );
   if( DbMaskTest(pToplevel->cookieMask, iDb)==0 ){
     DbMaskSet(pToplevel->cookieMask, iDb);
     if( !OMIT_TEMPDB && iDb==1 ){
@@ -4280,6 +4767,10 @@ void sqlite3CodeVerifySchema(Parse *pParse, int iDb){
     }
   }
 }
+void sqlite3CodeVerifySchema(Parse *pParse, int iDb){
+  sqlite3CodeVerifySchemaAtToplevel(sqlite3ParseToplevel(pParse), iDb);
+}
+
 
 /*
 ** If argument zDb is NULL, then call sqlite3CodeVerifySchema() for each 
@@ -4311,7 +4802,7 @@ void sqlite3CodeVerifyNamedSchema(Parse *pParse, const char *zDb){
 */
 void sqlite3BeginWriteOperation(Parse *pParse, int setStatement, int iDb){
   Parse *pToplevel = sqlite3ParseToplevel(pParse);
-  sqlite3CodeVerifySchema(pParse, iDb);
+  sqlite3CodeVerifySchemaAtToplevel(pToplevel, iDb);
   DbMaskSet(pToplevel->writeMask, iDb);
   pToplevel->isMultiWrite |= setStatement;
 }
@@ -4362,8 +4853,10 @@ void sqlite3HaltConstraint(
   i8 p4type,        /* P4_STATIC or P4_TRANSIENT */
   u8 p5Errmsg       /* P5_ErrMsg type */
 ){
-  Vdbe *v = sqlite3GetVdbe(pParse);
-  assert( (errCode&0xff)==SQLITE_CONSTRAINT );
+  Vdbe *v;
+  assert( pParse->pVdbe!=0 );
+  v = sqlite3GetVdbe(pParse);
+  assert( (errCode&0xff)==SQLITE_CONSTRAINT || pParse->nested );
   if( onError==OE_Abort ){
     sqlite3MayAbort(pParse);
   }
@@ -4384,7 +4877,8 @@ void sqlite3UniqueConstraint(
   StrAccum errMsg;
   Table *pTab = pIdx->pTable;
 
-  sqlite3StrAccumInit(&errMsg, pParse->db, 0, 0, 200);
+  sqlite3StrAccumInit(&errMsg, pParse->db, 0, 0, 
+                      pParse->db->aLimit[SQLITE_LIMIT_LENGTH]);
   if( pIdx->aColExpr ){
     sqlite3_str_appendf(&errMsg, "index '%q'", pIdx->zName);
   }else{
@@ -4582,7 +5076,8 @@ KeyInfo *sqlite3KeyInfoOfIndex(Parse *pParse, Index *pIdx){
       const char *zColl = pIdx->azColl[i];
       pKey->aColl[i] = zColl==sqlite3StrBINARY ? 0 :
                         sqlite3LocateCollSeq(pParse, zColl);
-      pKey->aSortOrder[i] = pIdx->aSortOrder[i];
+      pKey->aSortFlags[i] = pIdx->aSortOrder[i];
+      assert( 0==(pKey->aSortFlags[i] & KEYINFO_ORDER_BIGNULL) );
     }
     if( pParse->nErr ){
       assert( pParse->rc==SQLITE_ERROR_MISSING_COLLSEQ );
@@ -4633,7 +5128,7 @@ With *sqlite3WithAdd(
   }
 
   if( pWith ){
-    int nByte = sizeof(*pWith) + (sizeof(pWith->a[1]) * pWith->nCte);
+    sqlite3_int64 nByte = sizeof(*pWith) + (sizeof(pWith->a[1]) * pWith->nCte);
     pNew = sqlite3DbRealloc(db, pWith, nByte);
   }else{
     pNew = sqlite3DbMallocZero(db, sizeof(*pWith));
