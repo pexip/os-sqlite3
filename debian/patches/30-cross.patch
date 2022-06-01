@@ -2,7 +2,7 @@ Index: sqlite3-3.13.0/Makefile.in
 ===================================================================
 --- sqlite3-3.13.0.orig/Makefile.in
 +++ sqlite3-3.13.0/Makefile.in
-@@ -750,10 +750,20 @@ sqlite3.lo:	sqlite3.c
+@@ -773,10 +773,20 @@ sqlite3.lo:	sqlite3.c
  
  # Rules to build the LEMON compiler generator
  #
@@ -24,33 +24,32 @@ Index: sqlite3-3.13.0/Makefile.in
  # Rules to build the program that generates the source-id
  #
  mksourceid$(BEXE):	$(TOP)/tool/mksourceid.c
-@@ -1029,10 +1029,10 @@ opcodes.h:	parse.h $(TOP)/src/vdbe.c $(T
+@@ -1052,9 +1052,9 @@ opcodes.h:	parse.h $(TOP)/src/vdbe.c $(T
  #
  parse.h:	parse.c
  
--parse.c:	$(TOP)/src/parse.y lemon$(BEXE) $(TOP)/tool/addopcodes.tcl
-+parse.c:	$(TOP)/src/parse.y $(LEMON_FOR_BUILD) $(TOP)/tool/addopcodes.tcl
+-parse.c:	$(TOP)/src/parse.y lemon$(BEXE)
++parse.c:	$(TOP)/src/parse.y $(LEMON_FOR_BUILD)
  	cp $(TOP)/src/parse.y .
- 	rm -f parse.h
--	./lemon$(BEXE) $(OPT_FEATURE_FLAGS) $(OPTS) parse.y
-+	./$(LEMON_FOR_BUILD) $(OPT_FEATURE_FLAGS) $(OPTS) parse.y
- 	mv parse.h parse.h.temp
- 	$(TCLSH_CMD) $(TOP)/tool/addopcodes.tcl parse.h.temp >parse.h
+-	./lemon$(BEXE) $(OPT_FEATURE_FLAGS) $(OPTS) -S parse.y
++	./$(LEMON_FOR_BUILD) $(OPT_FEATURE_FLAGS) $(OPTS) -S parse.y
  
-@@ -1158,10 +1158,10 @@ FTS5_SRC = \
+ sqlite3.h:	$(TOP)/src/sqlite.h.in $(TOP)/manifest mksourceid$(BEXE) $(TOP)/VERSION
+ 	$(TCLSH_CMD) $(TOP)/tool/mksqlite3h.tcl $(TOP) >sqlite3.h
+@@ -1179,10 +1179,10 @@ FTS5_SRC = \
     $(TOP)/ext/fts5/fts5_varint.c \
     $(TOP)/ext/fts5/fts5_vocab.c  \
  
--fts5parse.c:	$(TOP)/ext/fts5/fts5parse.y lemon
+-fts5parse.c:	$(TOP)/ext/fts5/fts5parse.y lemon$(BEXE)
 +fts5parse.c:	$(TOP)/ext/fts5/fts5parse.y $(LEMON_FOR_BUILD)
  	cp $(TOP)/ext/fts5/fts5parse.y .
  	rm -f fts5parse.h
--	./lemon$(BEXE) $(OPTS) fts5parse.y
-+	./$(LEMON_FOR_BUILD)$(BEXE) $(OPTS) fts5parse.y
+-	./lemon$(BEXE) $(OPTS) -S fts5parse.y
++	./$(LEMON_FOR_BUILD)$(BEXE) $(OPTS) -S fts5parse.y
  
  fts5parse.h: fts5parse.c
  
-@@ -1406,7 +1416,10 @@
+@@ -1431,7 +1441,10 @@
  	rm -f *.lo *.la *.o sqlite3$(TEXE) libsqlite3.la
  	rm -f sqlite3.h opcodes.*
  	rm -rf .libs .deps

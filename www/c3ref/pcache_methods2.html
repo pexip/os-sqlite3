@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -108,7 +108,7 @@ struct sqlite3_pcache_methods2 {
   int (*xPagecount)(sqlite3_pcache*);
   sqlite3_pcache_page *(*xFetch)(sqlite3_pcache*, unsigned key, int createFlag);
   void (*xUnpin)(sqlite3_pcache*, sqlite3_pcache_page*, int discard);
-  void (*xRekey)(sqlite3_pcache*, sqlite3_pcache_page*, 
+  void (*xRekey)(sqlite3_pcache*, sqlite3_pcache_page*,
       unsigned oldKey, unsigned newKey);
   void (*xTruncate)(sqlite3_pcache*, unsigned iLimit);
   void (*xDestroy)(sqlite3_pcache*);
@@ -234,7 +234,7 @@ NULL if allocating a new page is effectively impossible.
 
 <p>SQLite will normally invoke xFetch() with a createFlag of 0 or 1.  SQLite
 will only use a createFlag of 2 after a prior call with a createFlag of 1
-failed.  In between the to xFetch() calls, SQLite may
+failed.  In between the xFetch() calls, SQLite may
 attempt to unpin one or more cache pages by spilling the content of
 pinned pages to disk and synching the operating system disk cache.</p>
 

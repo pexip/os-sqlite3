@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -227,8 +227,10 @@ then later resumed.
 <li><p>All RBU updates use the "OR ROLLBACK" constraint handling mechanism.
     </p></li>
 <li><p>The target database may not be in <a href="wal.html">WAL mode</a>.</p></li>
-<li><p>The target database may not contain <a href="expridx.html">indexes on expressions</a>.
-</p></li><li><p>No other writes may occur on the target database while the
+<li><p></p><s>The target database may not contain <a href="expridx.html">indexes on expressions</a>.</s>
+    Indexes on expressions are supported beginning with SQLite 3.30.0
+    (2019-10-04).
+</li><li><p>No other writes may occur on the target database while the
        RBU update is being applied.  A read-lock is held on the target
        database to prevent this.</p></li>
 </ul>

@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -142,6 +142,8 @@ Set Operations Using The Enhanced Query Syntax</a></div>
 <div class="fancy-toc3"><a href="#segment_b_tree_leaf_nodes">9.3.1. Segment B-Tree Leaf Nodes</a></div>
 <div class="fancy-toc3"><a href="#segment_b_tree_interior_nodes">9.3.2. Segment B-Tree Interior Nodes</a></div>
 <div class="fancy-toc2"><a href="#doclist_format">9.4. Doclist Format</a></div>
+<div class="fancy-toc1"><a href="#limitations">10. Limitations</a></div>
+<div class="fancy-toc2"><a href="#_utf_16_byte_order_mark_problem_">10.1.  UTF-16 byte-order-mark problem </a></div>
 <div class="fancy-toc1"><a href="#appendix_a">
 Appendix A: Search Application Tips
 </a></div>
@@ -2472,9 +2474,12 @@ SELECT fts3_tokenizer(&lt;tokenizer-name&gt;, &lt;sqlite3_tokenizer_module ptr&g
 </pre></div>
 
 <p>
-  Where &lt;tokenizer-name&gt; is a string identifying the tokenizer and
-  &lt;sqlite3_tokenizer_module ptr&gt; is a pointer to an sqlite3_tokenizer_module
-  structure encoded as an SQL blob. If the second argument is present,
+  Where &lt;tokenizer-name&gt; is <a href="lang_expr.html#varparam">parameter</a> to which a string is bound using
+  <a href="c3ref/bind_blob.html">sqlite3_bind_text()</a> where the string identifies the tokenizer and
+  &lt;sqlite3_tokenizer_module ptr&gt; is a <a href="lang_expr.html#varparam">parameter</a> to which a BLOB is
+  bound using <a href="c3ref/bind_blob.html">sqlite3_bind_blob()</a> where the value of the BLOB is a
+  pointer to an sqlite3_tokenizer_module structure.
+  If the second argument is present,
   it is registered as tokenizer &lt;tokenizer-name&gt; and a copy of it
   returned. If only one argument is passed, a pointer to the tokenizer
   implementation currently registered as &lt;tokenizer-name&gt; is returned,
@@ -2482,26 +2487,14 @@ SELECT fts3_tokenizer(&lt;tokenizer-name&gt;, &lt;sqlite3_tokenizer_module ptr&g
   (error) is raised.
 
 </p><p>
-  Because of security concerns, SQLite <a href="releaselog/3_11_0.html">version 3.11.0</a> (2016-02-15)
-  and later only enabled the
-  second form of the fts3_tokenizer() function when the library is compiled
-  with the <a href="compile.html#enable_fts3_tokenizer">-DSQLITE_ENABLE_FTS3_TOKENIZER</a>
-  option. In earlier versions it was
-  always available.  Beginning with SQLite <a href="releaselog/3_12_0.html">version 3.12.0</a>
-  (2016-03-29), the second form of
-  fts3_tokenizer() can also be activated at run-time by calling
+  Prior to SQLite <a href="releaselog/3_11_0.html">version 3.11.0</a> (2016-02-15), the arguments to
+  fts3_tokenzer() could be literal strings or BLOBs. They did not have to
+  be <a href="lang_expr.html#varparam">bound parameters</a>.  But that could lead to security problems in the
+  event of an SQL injection.  Hence, the legacy behavior is now disabled
+  by default.  But the old legacy behavior can be enabled, for backwards
+  compatibility in applications that really need it, 
+  by calling
   <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigenablefts3tokenizer">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,1,0).
-
-</p><p>
-  <b>SECURITY WARNING</b>: 
-  If a version of the fts3/4 extension that supports the two-argument form of
-  fts3_tokenizer() is deployed in an environment where malicious users can
-  run arbitrary SQL, then those users should be prevented from invoking the 
-  two-argument fts3_tokenizer() function.
-  This can be done using the <a href="c3ref/set_authorizer.html">authorization callback</a>, 
-  or by disabling the two-argument fts3_tokenizer() interface using a
-  call to
-  <a href="c3ref/db_config.html">sqlite3_db_config</a>(db,<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigenablefts3tokenizer">SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER</a>,0,0).
 
 </p><p>
   The following block contains an example of calling the fts3_tokenizer()
@@ -2517,7 +2510,7 @@ int registerTokenizer(
 ){
   int rc;
   sqlite3_stmt *pStmt;
-  const char *zSql = "SELECT fts3_tokenizer(?, ?)";
+  const char *zSql = "SELECT fts3_tokenizer(?1, ?2)";
 
   rc = sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
   if( rc!=SQLITE_OK ){
@@ -2952,7 +2945,55 @@ CREATE TABLE %_segdir(
   column 0 (if any) is always first, allowing the first two fields of the
   term-offset list to be omitted in this case.
 
-</p><a name="appendix_a"></a>
+</p><a name="limitations"></a>
+<h1 tags="bugs" id="limitations"><span>10. </span>Limitations</h1>
+
+<h2 id="_utf_16_byte_order_mark_problem_"><span>10.1. </span> UTF-16 byte-order-mark problem </h2>
+
+For UTF-16 databases, when using the "simple" tokenizer, it is possible to use
+malformed unicode strings to cause the 
+<a href="#integcheck">integrity-check special command</a> to falsely report
+corruption, or for <a href="#snippet">auxiliary functions</a> to return
+incorrect results. More specifically, the bug can be triggered by any of the following:
+
+<ul>
+  <li><p>A UTF-16 byte-order-mark (BOM) is embedded at the beginning of an SQL string
+       literal value inserted into an FTS3 table. For example:
+
+</p><div class="codeblock"><pre>INSERT INTO fts_table(col) VALUES(char(0xfeff)||'text...');
+</pre></div>
+
+  </li><li><p>Malformed UTF-8 that SQLite converts to a UTF-16 byte-order-mark is
+       embedded at the beginning of an SQL string literal value inserted 
+       into an FTS3 table.
+
+  </p></li><li><p>A text value created by casting a blob that begins with the two
+       bytes 0xFF and 0xFE, in either possible order, is inserted into an
+       FTS3 table. For example:
+       
+</p><div class="codeblock"><pre>INSERT INTO fts_table(col) VALUES(CAST(X'FEFF' AS TEXT));
+</pre></div>
+</li></ul>
+
+Everything works correctly if any of the following are true:
+<ul>
+<li> The <a href="pragma.html#pragma_encoding">database encoding</a> is UTF-8.
+</li><li> All text strings are insert using one of the
+     <a href="c3ref/bind_blob.html">sqlite3_bind_text()</a> family of functions.
+</li><li> Literal strings contain no byte-order-marks.
+</li><li> A tokenizer is used that recognizes byte-order-marks
+     as whitespace.  (The default "simple" tokenizer for
+     FTS3/4 does not think that BOMs are whitespace, but
+     the unicode tokenizer does.)
+</li></ul>
+All of the above conditions must be false in order for problems
+to occur.  And even if all of the conditiona above are false,
+most things will still operator correctly.  Only the
+<a href="#integcheck">integrity-check</a> command and the
+<a href="#snippet">auxiliary functions</a> might given
+unexpected results.
+
+<a name="appendix_a"></a>
 <h1 id="appendix_a" nonumber="1" tags="search application tips">
   Appendix A: Search Application Tips
 </h1>
@@ -3130,7 +3171,7 @@ ORDER BY ranktable.rank DESC
 <i>** column value in the FTS table. The relevancy of a column value is the</i>
 <i>** sum of the following for each reportable phrase in the FTS query:</i>
 <i>**</i>
-<i>**   (&lt;hit count&gt; / &lt;global hit count&gt) * &lt;column weight&gt;</i>
+<i>**   (&lt;hit count&gt; / &lt;global hit count&gt;) * &lt;column weight&gt;</i>
 <i>**</i>
 <i>** where &lt;hit count&gt; is the number of instances of the phrase in the</i>
 <i>** column value of the current row and &lt;global hit count&gt; is the number</i>
@@ -3192,7 +3233,7 @@ static void rankfunc(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal){
 <i>    /* Now iterate through each column in the users query. For each column,</i>
 <i>    ** increment the relevancy score by:</i>
 <i>    **</i>
-<i>    **   (&lt;hit count&gt; / &lt;global hit count&gt) * &lt;column weight&gt;</i>
+<i>    **   (&lt;hit count&gt; / &lt;global hit count&gt;) * &lt;column weight&gt;</i>
 <i>    **</i>
 <i>    ** aPhraseinfo&#x5B;&#x5D; points to the start of the data for phrase iPhrase. So</i>
 <i>    ** the hit count and global hit counts for each column are found in </i>

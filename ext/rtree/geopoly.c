@@ -269,7 +269,7 @@ static GeoPoly *geopolyParseJson(const unsigned char *z, int *pRc){
       GeoPoly *pOut;
       int x = 1;
       s.nVertex--;  /* Remove the redundant vertex at the end */
-      pOut = sqlite3_malloc64( GEOPOLY_SZ(s.nVertex) );
+      pOut = sqlite3_malloc64( GEOPOLY_SZ((sqlite3_int64)s.nVertex) );
       x = 1;
       if( pOut==0 ) goto parse_json_err;
       pOut->nVertex = s.nVertex;
@@ -655,7 +655,7 @@ static GeoPoly *geopolyBBox(
     if( pRc ) *pRc = SQLITE_OK;
     if( aCoord==0 ){
       geopolyBboxFill:
-      pOut = sqlite3_realloc(p, GEOPOLY_SZ(4));
+      pOut = sqlite3_realloc64(p, GEOPOLY_SZ(4));
       if( pOut==0 ){
         sqlite3_free(p);
         if( context ) sqlite3_result_error_nomem(context);
@@ -683,6 +683,8 @@ static GeoPoly *geopolyBBox(
       aCoord[2].f = mnY;
       aCoord[3].f = mxY;
     }
+  }else{
+    memset(aCoord, 0, sizeof(RtreeCoord)*4);
   }
   return pOut;
 }
@@ -1051,9 +1053,9 @@ static GeoSegment *geopolySortSegmentsByYAndC(GeoSegment *pList){
 ** Determine the overlap between two polygons
 */
 static int geopolyOverlap(GeoPoly *p1, GeoPoly *p2){
-  int nVertex = p1->nVertex + p2->nVertex + 2;
+  sqlite3_int64 nVertex = p1->nVertex + p2->nVertex + 2;
   GeoOverlap *p;
-  int nByte;
+  sqlite3_int64 nByte;
   GeoEvent *pThisEvent;
   double rX;
   int rc = 0;
@@ -1065,7 +1067,7 @@ static int geopolyOverlap(GeoPoly *p1, GeoPoly *p2){
   nByte = sizeof(GeoEvent)*nVertex*2 
            + sizeof(GeoSegment)*nVertex 
            + sizeof(GeoOverlap);
-  p = sqlite3_malloc( nByte );
+  p = sqlite3_malloc64( nByte );
   if( p==0 ) return -1;
   p->aEvent = (GeoEvent*)&p[1];
   p->aSegment = (GeoSegment*)&p->aEvent[nVertex*2];
@@ -1073,7 +1075,7 @@ static int geopolyOverlap(GeoPoly *p1, GeoPoly *p2){
   geopolyAddSegments(p, p1, 1);
   geopolyAddSegments(p, p2, 2);
   pThisEvent = geopolySortEventsByX(p->aEvent, p->nEvent);
-  rX = pThisEvent->x==0.0 ? -1.0 : 0.0;
+  rX = pThisEvent && pThisEvent->x==0.0 ? -1.0 : 0.0;
   memset(aOverlap, 0, sizeof(aOverlap));
   while( pThisEvent ){
     if( pThisEvent->x!=rX ){
@@ -1224,8 +1226,8 @@ static int geopolyInit(
 ){
   int rc = SQLITE_OK;
   Rtree *pRtree;
-  int nDb;              /* Length of string argv[1] */
-  int nName;            /* Length of string argv[2] */
+  sqlite3_int64 nDb;              /* Length of string argv[1] */
+  sqlite3_int64 nName;            /* Length of string argv[2] */
   sqlite3_str *pSql;
   char *zSql;
   int ii;
@@ -1233,9 +1235,9 @@ static int geopolyInit(
   sqlite3_vtab_config(db, SQLITE_VTAB_CONSTRAINT_SUPPORT, 1);
 
   /* Allocate the sqlite3_vtab structure */
-  nDb = (int)strlen(argv[1]);
-  nName = (int)strlen(argv[2]);
-  pRtree = (Rtree *)sqlite3_malloc(sizeof(Rtree)+nDb+nName+2);
+  nDb = strlen(argv[1]);
+  nName = strlen(argv[2]);
+  pRtree = (Rtree *)sqlite3_malloc64(sizeof(Rtree)+nDb+nName+2);
   if( !pRtree ){
     return SQLITE_NOMEM;
   }
@@ -1345,17 +1347,11 @@ static int geopolyFilter(
   RtreeNode *pRoot = 0;
   int rc = SQLITE_OK;
   int iCell = 0;
-  sqlite3_stmt *pStmt;
 
   rtreeReference(pRtree);
 
   /* Reset the cursor to the same state as rtreeOpen() leaves it in. */
-  freeCursorConstraints(pCsr);
-  sqlite3_free(pCsr->aPoint);
-  pStmt = pCsr->pReadAux;
-  memset(pCsr, 0, sizeof(RtreeCursor));
-  pCsr->base.pVtab = (sqlite3_vtab*)pRtree;
-  pCsr->pReadAux = pStmt;
+  resetCursor(pCsr);
 
   pCsr->iStrategy = idxNum;
   if( idxNum==1 ){
@@ -1792,14 +1788,20 @@ static int sqlite3_geopoly_init(sqlite3 *db){
   };
   int i;
   for(i=0; i<sizeof(aFunc)/sizeof(aFunc[0]) && rc==SQLITE_OK; i++){
-    int enc = aFunc[i].bPure ? SQLITE_UTF8|SQLITE_DETERMINISTIC : SQLITE_UTF8;
+    int enc;
+    if( aFunc[i].bPure ){
+      enc = SQLITE_UTF8|SQLITE_DETERMINISTIC|SQLITE_INNOCUOUS;
+    }else{
+      enc = SQLITE_UTF8|SQLITE_DIRECTONLY;
+    }
     rc = sqlite3_create_function(db, aFunc[i].zName, aFunc[i].nArg,
                                  enc, 0,
                                  aFunc[i].xFunc, 0, 0);
   }
   for(i=0; i<sizeof(aAgg)/sizeof(aAgg[0]) && rc==SQLITE_OK; i++){
-    rc = sqlite3_create_function(db, aAgg[i].zName, 1, SQLITE_UTF8, 0,
-                                 0, aAgg[i].xStep, aAgg[i].xFinal);
+    rc = sqlite3_create_function(db, aAgg[i].zName, 1, 
+              SQLITE_UTF8|SQLITE_DETERMINISTIC|SQLITE_INNOCUOUS, 0,
+              0, aAgg[i].xStep, aAgg[i].xFinal);
   }
   if( rc==SQLITE_OK ){
     rc = sqlite3_create_module_v2(db, "geopoly", &geopolyModule, 0, 0);

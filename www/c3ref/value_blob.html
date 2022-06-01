@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -91,7 +91,7 @@ return false;
 }
 </script>
 </div>
-<!-- keywords: sqlite3_value_blob sqlite3_value_bytes sqlite3_value_bytes16 sqlite3_value_double sqlite3_value_int sqlite3_value_int64 sqlite3_value_nochange sqlite3_value_numeric_type sqlite3_value_pointer sqlite3_value_text sqlite3_value_text16 sqlite3_value_text16be sqlite3_value_text16le sqlite3_value_type -->
+<!-- keywords: sqlite3_value_blob sqlite3_value_bytes sqlite3_value_bytes16 sqlite3_value_double sqlite3_value_frombind sqlite3_value_int sqlite3_value_int64 sqlite3_value_nochange sqlite3_value_numeric_type sqlite3_value_pointer sqlite3_value_text sqlite3_value_text16 sqlite3_value_text16be sqlite3_value_text16le sqlite3_value_type -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Obtaining SQL Values</h2>
@@ -111,6 +111,7 @@ int sqlite3_value_bytes16(sqlite3_value*);
 int sqlite3_value_type(sqlite3_value*);
 int sqlite3_value_numeric_type(sqlite3_value*);
 int sqlite3_value_nochange(sqlite3_value*);
+int sqlite3_value_frombind(sqlite3_value*);
 </pre></blockquote>
 <p>
 <b>Summary:</b>
@@ -138,14 +139,16 @@ datatype of the value
 <tr><td><b>sqlite3_value_nochange&nbsp;&nbsp;</b>
 <td>&rarr;&nbsp;&nbsp;<td>True if the column is unchanged in an UPDATE
 against a virtual table.
+<tr><td><b>sqlite3_value_frombind&nbsp;&nbsp;</b>
+<td>&rarr;&nbsp;&nbsp;<td>True if value originated from a <a href="../lang_expr.html#varparam">bound parameter</a>
 </table></blockquote></p>
 
 <p><b>Details:</b></p>
 
 <p>These routines extract type, size, and content information from
 <a href="../c3ref/value.html">protected sqlite3_value</a> objects.  Protected sqlite3_value objects
-are used to pass parameter information into implementation of
-<a href="../c3ref/create_function.html">application-defined SQL functions</a> and <a href="../vtab.html">virtual tables</a>.</p>
+are used to pass parameter information into the functions that
+implement <a href="../appfunc.html">application-defined SQL functions</a> and <a href="../vtab.html">virtual tables</a>.</p>
 
 <p>These routines work only with <a href="../c3ref/value.html">protected sqlite3_value</a> objects.
 Any attempt to use these routines on an <a href="../c3ref/value.html">unprotected sqlite3_value</a>
@@ -198,6 +201,11 @@ sqlite3_value_nochange(X) is true will in all other respects appear
 to be a NULL value.  If sqlite3_value_nochange(X) is invoked anywhere other
 than within an <a href="../vtab.html#xupdate">xUpdate</a> method call for an UPDATE statement, then
 the return value is arbitrary and meaningless.</p>
+
+<p>The sqlite3_value_frombind(X) interface returns non-zero if the
+value X originated from one of the <a href="../c3ref/bind_blob.html">sqlite3_bind()</a>
+interfaces.  If X comes from an SQL literal value, or a table column,
+or an expression, then sqlite3_value_frombind(X) returns zero.</p>
 
 <p>Please pay particular attention to the fact that the pointer returned
 from <a href="../c3ref/value_blob.html">sqlite3_value_blob()</a>, <a href="../c3ref/value_blob.html">sqlite3_value_text()</a>, or

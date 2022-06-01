@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -206,7 +206,7 @@ developers use it in their projects without ever telling us.
 <p>
   We believe that <a href="http://www.ge.com/">General Electric</a>
   uses SQLite in some product or 
-  another because they written to the SQLite developers at 
+  another because they have written to the SQLite developers at 
   least four separate times requesting 
   the US Export Control Number for SQLite. So presumably GE is using
   SQLite in something that they are exporting. But nobody
@@ -430,7 +430,7 @@ developers use it in their projects without ever telling us.
 
   We believe that <a href="http://www.ge.com/">General Electric</a>
   uses SQLite in some product or 
-  another because they written to the SQLite developers at 
+  another because they have written to the SQLite developers at 
   least four separate times requesting 
   the US Export Control Number for SQLite. So presumably GE is using
   SQLite in something that they are exporting. But nobody

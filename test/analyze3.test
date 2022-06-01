@@ -18,7 +18,17 @@ set testdir [file dirname $argv0]
 source $testdir/tester.tcl
 set testprefix analyze3
 
-ifcapable !stat4&&!stat3 {
+ifcapable !stat4 {
+  finish_test
+  return
+}
+
+# This test cannot be run with the sqlite3_prepare() permutation, as it
+# tests that stat4 data can be used to influence the plans of queries
+# based on bound variable values. And this is not possible when using
+# sqlite3_prepare() - as queries cannot be internally re-prepared after
+# binding values are available.
+if {[permutation]=="prepare"} {
   finish_test
   return
 }
@@ -100,11 +110,7 @@ do_test analyze3-1.1.1 {
     ANALYZE;
   }
 
-  ifcapable stat4 {
-    execsql { SELECT count(*)>0 FROM sqlite_stat4; }
-  } else {
-    execsql { SELECT count(*)>0 FROM sqlite_stat3; }
-  }
+  execsql { SELECT count(*)>0 FROM sqlite_stat4; }
 } {1}
 
 do_execsql_test analyze3-1.1.x {

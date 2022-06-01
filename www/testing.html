@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -113,6 +113,10 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#sql_fuzz">4.1. SQL Fuzz</a></div>
 <div class="fancy-toc3"><a href="#sql_fuzz_using_the_american_fuzzy_lop_fuzzer">4.1.1. SQL Fuzz Using The American Fuzzy Lop Fuzzer</a></div>
 <div class="fancy-toc3"><a href="#google_oss_fuzz">4.1.2. Google OSS Fuzz</a></div>
+<div class="fancy-toc3"><a href="#the_dbsqlfuzz_fuzzer">4.1.3. The dbsqlfuzz fuzzer</a></div>
+<div class="fancy-toc3"><a href="#other_third_party_fuzzers">4.1.4. Other third-party fuzzers</a></div>
+<div class="fancy-toc3"><a href="#the_fuzzcheck_test_harness">4.1.5. The fuzzcheck test harness</a></div>
+<div class="fancy-toc3"><a href="#tension_between_fuzz_testing_and_100_mc_dc_testing">4.1.6. Tension Between Fuzz Testing And 100% MC/DC Testing</a></div>
 <div class="fancy-toc2"><a href="#malformed_database_files">4.2. Malformed Database Files</a></div>
 <div class="fancy-toc2"><a href="#boundary_value_tests">4.3. Boundary Value Tests</a></div>
 <div class="fancy-toc1"><a href="#regression_testing">5. Regression Testing</a></div>
@@ -164,20 +168,20 @@ mk.innerHTML = "&#x25ba;";
 <p>The reliability and robustness of SQLite is achieved in part
 by thorough and careful testing.</p>
 
-<p>As of <a href="releaselog/3_23_0.html">version 3.23.0</a> (2018-04-02),
+<p>As of <a href="releaselog/3_33_0.html">version 3.33.0</a> (2020-08-14),
 the SQLite library consists of approximately
-128.9 KSLOC of C code.
+143.4 KSLOC of C code.
 (KSLOC means thousands of "Source Lines Of Code" or, in other words,
 lines of code excluding blank lines and comments.)
 By comparison, the project has
-711 times as much
+640 times as much
 test code and test scripts - 
-91772.0 KSLOC.</p>
+91911.0 KSLOC.</p>
 
 <h2 id="executive_summary"><span>1.1. </span>Executive Summary</h2>
 
 <ul>
-<li> Three independently developed test harnesses
+<li> Four independently developed test harnesses
 </li><li> 100% branch test coverage in an as-deployed configuration
 </li><li> Millions and millions of test cases
 </li><li> Out-of-memory tests
@@ -198,7 +202,7 @@ test code and test scripts -
 
 <h1 id="test_harnesses"><span>2. </span>Test Harnesses</h1>
 
-<p>There are three independent test harnesses used for testing the 
+<p>There are four independent test harnesses used for testing the 
 core SQLite library.
 Each test harness is designed, maintained, and managed separately
 from the others.
@@ -214,11 +218,11 @@ SQLite core and like the SQLite core are in the public domain.  The
 TCL tests are the primary tests used during development.
 The TCL tests are written using the 
 <a href="http://www.tcl-lang.org/">TCL scripting language</a>.
-The TCL test harness itself consists of 26.1 KSLOC 
+The TCL test harness itself consists of 27.0 KSLOC 
 of C code used to create the TCL interface.  The test scripts are contained
-in 1307 files totaling 
-15.5MB in size.  There are
-40870 distinct test cases, but many of the test
+in 1272 files totaling 
+21.1MB in size.  There are
+46363 distinct test cases, but many of the test
 cases are parameterized and run multiple times (with different parameters)
 so that on a full test run millions of
 separate tests are performed.
@@ -233,10 +237,10 @@ the core SQLite library.  The TH3 tests are designed to run
 on embedded and specialized platforms that would not easily support
 TCL or other workstation services.  TH3 tests use only the published 
 SQLite interfaces. TH3 consists of about
-57.9 MB or 792.3 KSLOC
-of C code implementing 43049 distinct test cases.
+71.5 MB or 978.3 KSLOC
+of C code implementing 46622 distinct test cases.
 TH3 tests are heavily parameterized, though, so a full-coverage test runs
-about 1.6 million different test
+about 1.9 million different test
 instances.  The cases that provide 100% branch test coverage constitute
 a subset of the total TH3 test suite.  A soak test
 prior to release does hundreds of millions of tests.
@@ -253,12 +257,27 @@ SQLite against PostgreSQL, MySQL, Microsoft SQL Server, and Oracle 10g.
 SLT runs 7.2 million queries comprising
 1.12GB of test data.
 </p></li>
-</ol>
 
-<p>In addition to the three major test harnesses, there several other
+<li><p>
+The <a href="#dbsqlfuzz"><b>dbsqlfuzz</b></a> engine is a
+proprietary fuzz tester.  Other <a href="testing.html#fuzztesting">fuzzers for SQLite</a> 
+mutate either the SQL inputs or the database file.  Dbsqlfuzz mutates
+both the SQL and the database file at the same time, and is thus able
+to reach new error states.  Dbsqlfuzz is built using the
+<a href="http://llvm.org/docs/LibFuzzer.html">libFuzzer</a> framework of LLVM
+with a custom mutator.  Starting from 
+236 seed files, the dbsqlfuzz fuzzer
+has examined many tens of millions of mutations, resulting in 
+63493 distinct test cases that form
+the basis of each new fuzzing session.  Dbsqlfuzz helps ensure
+that SQLite is robust against attack via malicious SQL or database
+inputs.
+</p></li></ol>
+
+<p>In addition to the four main test harnesses, there several other
 small programs that implement specialized tests.
 </p><ol>
-<li value="4">The "speedtest1.c" program 
+<li value="5">The "speedtest1.c" program 
 estimates the performance of SQLite under a typical workload.  
 </li><li>The "mptester.c" program is a stress test for multiple processes 
 concurrently reading and writing a single database.
@@ -276,13 +295,13 @@ before each release of SQLite.</p>
 <p>Prior to each check-in to the SQLite source tree, developers
 typically run a subset (called "veryquick") of the Tcl tests
 consisting of about 
-142.6 thousand test cases.
+248.5 thousand test cases.
 The veryquick tests include most tests other than the anomaly, fuzz, and 
 soak tests.  The idea behind the veryquick tests are that they are
 sufficient to catch most errors, but also run in only a few minutes
 instead of a few hours.</p>
 
-<a name="anomoly"></a>
+<a name="anomaly"></a>
 
 <h1 id="anomaly_testing"><span>3. </span>Anomaly Testing</h1>
 
@@ -432,19 +451,16 @@ statement also happens to be semantically correct.  In that case, the
 resulting prepared statement is run to make sure it gives a reasonable
 result.</p>
 
-<p>The SQL fuzz generator tests are part of the TCL test suite.
-During a full test run, about 111.3 
-thousand fuzz SQL statements are
-generated and tested.</p>
-
 <a name="aflfuzz"></a>
 
 <h3 id="sql_fuzz_using_the_american_fuzzy_lop_fuzzer"><span>4.1.1. </span>SQL Fuzz Using The American Fuzzy Lop Fuzzer</h3>
 
-<p>The <a href="http://lcamtuf.coredump.cx/afl/">American Fuzzy Lop</a>
-or "AFL" fuzzer is a recent (circa 2014) innovation from Michal Zalewski.
-Unlike most other fuzzers that blindly generate random inputs, the AFL
-fuzzer instruments the program being tested (by modifying the assembly-language
+<p>The concept of fuzz testing has been around for decades, but fuzz
+testing was not an effective way to find bugs until 2014 when
+Michal Zalewski invented the first practical profile-guided fuzzer,
+<a href="http://lcamtuf.coredump.cx/afl/">American Fuzzy Lop</a> or "AFL".
+Unlike prior fuzzers that blindly generate random inputs, AFL
+instruments the program being tested (by modifying the assembly-language
 output from the C compiler) and uses that instrumentation to detect when
 an input causes the program to do something different - to follow
 a new control path or loop a different number of times.  Inputs that provoke
@@ -452,20 +468,15 @@ new behavior are retained and further mutated.  In this way, AFL is able
 to "discover" new behaviors of the program under test, including behaviors
 that were never envisioned by the designers.
 
-</p><p>AFL has proven remarkably adept at finding arcane bugs in SQLite.
+</p><p>AFL proved adept at finding arcane bugs in SQLite.
 Most of the findings have been assert() statements where the conditional
 was false under obscure circumstances.  But AFL has also found
 a fair number of crash bugs in SQLite, and even a few cases where SQLite 
 computed incorrect results.
 
 </p><p>Because of its past success, AFL became a standard part of the testing
-strategy for SQLite beginning with <a href="releaselog/3_8_10.html">version 3.8.10</a> (2015-05-07).  
-Both SQL statements and database files are fuzzed.
-Billions and billions of mutations have been tried, but AFL's 
-instrumentation has narrowed them down to less than 50,000 test cases that
-cover all distinct behaviors.  Newly discovered test cases are periodically
-captured and added to the <a href="testing.html#tcl">TCL test suite</a> where they can be rerun using
-the "make fuzztest" or "make valgrindfuzz" commands.
+strategy for SQLite beginning with <a href="releaselog/3_8_10.html">version 3.8.10</a> (2015-05-07) until
+it was superseded by better fuzzers in <a href="releaselog/3_29_0.html">version 3.29.0</a> (2019-07-10).
 
 <a name="ossfuzz"></a>
 
@@ -482,6 +493,118 @@ and emails a confirmation to the developers.
 </p><p>SQLite is one of many open-source projects that OSS Fuzz tests. The
 <a href="https://www.sqlite.org/src/file/test/ossfuzz.c">test/ossfuzz.c</a> source file
 in the SQLite repository is SQLite's interface to OSS fuzz.
+
+</p><p>OSS Fuzz no longer finds historical bugs in SQLite.  But it is still
+running and does occasionally find issues in new development check-ins.
+Examples:
+<a href="https://www.sqlite.org/src/timeline?y=ci&c=c422afb507dc8757">&#91;1&#93;</a>
+<a href="https://www.sqlite.org/src/timeline?y=ci&c=0a2eb949f8a759e5">&#91;2&#93;</a>
+<a href="https://www.sqlite.org/src/timeline?y=ci&c=62f2235adf796c72">&#91;3&#93;</a>.
+
+<a name="dbsqlfuzz"></a>
+
+</p><h3 id="the_dbsqlfuzz_fuzzer"><span>4.1.3. </span>The dbsqlfuzz fuzzer</h3>
+
+<p>Beginning in late 2018, SQLite has been fuzzed using a new proprietary
+fuzzer called "dbsqlfuzz".  Dbsqlfuzz is built using the 
+<a href="http://llvm.org/docs/LibFuzzer.html">libFuzzer</a> framework of LLVM.
+
+</p><p>The dbsqlfuzz fuzzer mutates both the SQL input and the database file
+at the same time.  Dbsqlfuzz uses a custom
+<a href="https://github.com/google/fuzzer-test-suite/blob/master/tutorial/structure-aware-fuzzing.md">Structure-Aware Mutator</a>
+on a specialized input file that defines both an input database and SQL
+text to be run against that database. Because it mutates both the input
+database and the input SQL at the same time, dbsqlfuzz has been able to
+find some obscure faults in SQLite that were missed by prior fuzzers that
+mutated only SQL inputs or only the database file.
+The SQLite developers usually leave an instance or two of dbsqlfuzz
+running on the latest trunk code of SQLite whenever they are away from
+the office for an extended period, such as overnight.</p>
+
+<p>The dbsqlfuzz fuzzer has been so successful at hardening the
+SQLite code base against malicious attack that it is now considered
+one of the four primary test harnesses for SQLite.
+
+<a name="3pfuzz"></a>
+
+</p><h3 id="other_third_party_fuzzers"><span>4.1.4. </span>Other third-party fuzzers</h3>
+
+<p>SQLite seems to be a popular target for third-parties to fuzz.
+The developers hear about many attempts to fuzz SQLite
+and they do occasionally get bug reports found by independent
+fuzzers.  All such reports are promptly fixed, so the product is
+improved and that the entire SQLite user community benefits.
+This mechanism of having many independent testers is similar to
+<a href="https://en.wikipedia.org/wiki/Linus%27s_law">Linus's law</a>:
+"given enough eyeballs, all bugs are shallow".
+
+</p><p>One fuzzing researcher of particular note is 
+<a href="https://www.manuelrigger.at/">Manuel Rigger</a>, currently
+(as this paragraph is written on 2019-12-21)
+at <a href="https://ethz.ch/en.html">ETH Zurich</a>.
+Most fuzzers only look for assertion faults, crashes, undefined behavior (UB),
+or other easily detected anomalies.  Dr. Rigger's fuzzers, on the other hand,
+are able to find cases where SQLite computes an incorrect answer.
+Rigger has found
+<a href="https://www.sqlite.org/src/timeline?y=t&u=mrigger&n=all">many such cases</a>.
+Most of these finds are fairly obscure corner cases involving type
+conversions and affinity transformations, and a good number of the finds
+are against unreleased features.  Nevertheless, his finds are still important
+as they are real bugs,
+and the SQLite developers are grateful to be able to identify and fix
+the underlying problems.  Rigger's work is currently unpublished.  When it
+is released, it could be as influential as Zalewski's invention of AFL
+and profile-guided fuzzing.
+
+<a name="fuzzcheck"></a>
+
+</p><h3 id="the_fuzzcheck_test_harness"><span>4.1.5. </span>The fuzzcheck test harness</h3>
+
+<p>Historical test cases from <a href="testing.html#aflfuzz">AFL</a>, <a href="testing.html#ossfuzz">OSS Fuzz</a>, and <a href="testing.html#dbsqlfuzz">dbsqlfuzz</a> are
+collected in a set of database files in the main SQLite source tree
+and then rerun by the "fuzzcheck" utility program whenever one runs
+"make test".  Fuzzcheck only runs a few thousand "interesting" cases
+out of the hundreds of millions of cases that the various fuzzers have
+examined over the years.  "Interesting" cases are cases that exhibit
+previously unseen behavior.  Actual bugs found by fuzzers are always
+included among the interesting test cases, but most of the cases run
+by fuzzcheck were never actual bugs. 
+
+<a name="tension"></a>
+
+</p><h3 id="tension_between_fuzz_testing_and_100_mc_dc_testing"><span>4.1.6. </span>Tension Between Fuzz Testing And 100% MC/DC Testing</h3>
+
+<p>Fuzz testing and <a href="testing.html#mcdc">100% MC/DC testing</a> are in tension with
+one another.
+That is to say, code tested to 100% MC/DC will tend to be
+more vulnerable to problems found by fuzzing and code that performs
+well during fuzz testing will tend to have (much) less than 
+100% MC/DC.
+This is because MC/DC testing discourages <a href="testing.html#defcode">defensive code</a> with
+unreachable branches, but without defensive code, a fuzzer is
+more likely to find a path that causes problems.  MC/DC testing
+seems to work well for building code that is robust during typical
+normal use, whereas fuzz testing is good for building code that is
+robust against malicious attack.
+
+</p><p>Of course, users would prefer code that is both robust in normal
+use and resistant to malicious attack.  The SQLite developers are
+dedicated to providing that.  The purpose of this section is merely
+to point out that doing both at the same time is hard.
+
+</p><p>For much of its history SQLite has been focused on 100% MC/DC testing.
+Resistance to fuzzing attacks only became a concern with the introduction
+of AFL in 2014.  For a while there, fuzzers were finding many problems
+in SQLite.  In more recent years, the testing strategy of SQLite has
+evolved to place more emphasis on fuzz testing.  We still maintain
+100% MC/DC of the core SQLite code, but most testing CPU cycles are 
+now devoted to fuzzing.
+
+</p><p>While fuzz testing and 100% MC/DC testing are in tension, they
+are not completely at cross-purposes.  The fact that the SQlite test
+suite does test to 100% MC/DC means that when fuzzers do find problems,
+those problems can be fixed quickly and with little risk of introducing
+new errors.
 
 </p><h2 id="malformed_database_files"><span>4.2. </span>Malformed Database Files</h2>
 
@@ -501,6 +624,9 @@ verify that SQLite finds the file format errors and reports them
 using the <a href="rescode.html#corrupt">SQLITE_CORRUPT</a> return code without overflowing
 buffers, dereferencing NULL pointers, or performing other
 unwholesome actions.</p>
+
+<p>The <a href="testing.html#dbsqlfuzz">dbsqlfuzz</a> fuzzer also does an excellent job of verifying
+that SQLite responds sanely to malformed database files.</p>
 
 <h2 id="boundary_value_tests"><span>4.3. </span>Boundary Value Tests</h2>
 
@@ -592,8 +718,9 @@ to achieve 100% branch coverage in the example above, there must be at
 least three test cases:</p>
 
 <p></p><ul>
-<li> a<=b <li="1"> a>b && c==25
-</=b></li><li> a>b && c!=25
+<li> a&lt;=b
+</li><li> a&gt;b && c==25
+</li><li> a&gt;b && c!=25
 </li></ul>
 
 <p>Any one of the above test cases would provide 100% statement coverage
@@ -603,7 +730,7 @@ not true.  To reemphasize, the
 <a href="th3.html">TH3</a> test harness for SQLite provides the stronger form of
 test coverage - 100% branch test coverage.</p>
 
-<a name="defensivecode"></a>
+<a name="defcode"></a>
 
 <h2 id="coverage_testing_of_defensive_code"><span>7.2. </span>Coverage testing of defensive code</h2>
 
@@ -703,7 +830,7 @@ testcase( mask & SQLITE_OPEN_TEMP_DB );
 if( (mask & (SQLITE_OPEN_MAIN_DB|SQLITE_OPEN_TEMP_DB))!=0 ){ ... }
 </pre></div>
 
-<p>The SQLite source code contains 878
+<p>The SQLite source code contains 1084
 uses of the <tt>testcase()</tt> macro.</p>
 
 <a name="mcdc"></a>
@@ -871,7 +998,7 @@ quality of SQLite.</p>
 
 <h2 id="assert"><span>8.1. </span>Assert</h2>
 
-<p>The SQLite core contains 5415 <tt>assert()</tt>
+<p>The SQLite core contains 5855 <tt>assert()</tt>
 statements that verify function preconditions and postconditions and
 loop invariants.  Assert() is a macro which is a standard part of
 ANSI-C.  The argument is a boolean value that is assumed to always be
@@ -885,6 +1012,9 @@ the database engine runs about three times slower when asserts are enabled.
 Hence, the default (production) build of SQLite disables asserts.  
 Assert statements are only enabled when SQLite is compiled with the
 SQLITE_DEBUG preprocessor macro defined.</p>
+
+<p>See the <a href="assert.html">Use Of assert in SQLite</a> document
+for additional information about how SQLite uses assert().</p>
 
 <a name="valgrind"></a>
 

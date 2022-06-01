@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -300,7 +300,7 @@ scenarios.
 <h2 tags="openclose callback" id="the_openclose_callback"><span>3.3. </span>The "openclose" Callback</h2>
 
 <p>The "openclose" parameter allows the user to specify the name of a
-<a href="c3ref/create_function.html">application-defined SQL function</a> that will be invoked just before
+<a href="appfunc.html">application-defined SQL function</a> that will be invoked just before
 swarmvtab opens a database, and again just after it closes one. The first
 argument passed to the open close function is the filename or URI
 identifying the database to be opened or just recently closed (the same
@@ -341,7 +341,7 @@ swarmvtab table resides.
 <h2 tags="missing callback" id="the_missing_callback"><span>3.4. </span>The "missing" Callback</h2>
 
 <p>The "missing" parameter allows the user to specify the name of a
-<a href="c3ref/create_function.html">application-defined SQL function</a> that will be invoked just before
+<a href="appfunc.html">application-defined SQL function</a> that will be invoked just before
 swarmvtab opens a database if it finds that the required database file
 is not present on disk. This provides the application with an opportunity
 to retrieve the required database from a remote source before swarmvtab
