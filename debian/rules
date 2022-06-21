@@ -61,10 +61,12 @@ export LIBS += $(shell pkg-config --libs icu-i18n icu-uc icu-io)
 
 configure: configure-stamp
 configure-stamp:
+	echo "CFLAGS: $(CFLAGS)"
+	echo "LIBS: $(LIBS)"
 	dh_testdir
 	dh_autoreconf --as-needed
 	dh_update_autotools_config
-	./configure --prefix=/usr --mandir="/usr/share/man" \
+	CFLAGS="$(CFLAGS)" LIBS="$(LIBS)" ./configure --prefix=/usr --mandir="/usr/share/man" \
 	  $(confflags) --enable-threadsafe \
 	  --enable-load-extension \
 	  --enable-json1 \
