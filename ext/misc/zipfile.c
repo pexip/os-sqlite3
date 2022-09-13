@@ -369,7 +369,6 @@ static int zipfileConnect(
       zipfileDequote(pNew->zFile);
     }
   }
-  sqlite3_vtab_config(db, SQLITE_VTAB_DIRECTONLY);
   *ppVtab = (sqlite3_vtab*)pNew;
   return rc;
 }
@@ -523,16 +522,14 @@ static int zipfileAppendData(
   const u8 *aWrite,
   int nWrite
 ){
-  if( nWrite>0 ){
-    size_t n = nWrite;
-    fseek(pTab->pWriteFd, (long)pTab->szCurrent, SEEK_SET);
-    n = fwrite(aWrite, 1, nWrite, pTab->pWriteFd);
-    if( (int)n!=nWrite ){
-      pTab->base.zErrMsg = sqlite3_mprintf("error in fwrite()");
-      return SQLITE_ERROR;
-    }
-    pTab->szCurrent += nWrite;
+  size_t n;
+  fseek(pTab->pWriteFd, (long)pTab->szCurrent, SEEK_SET);
+  n = fwrite(aWrite, 1, nWrite, pTab->pWriteFd);
+  if( (int)n!=nWrite ){
+    pTab->base.zErrMsg = sqlite3_mprintf("error in fwrite()");
+    return SQLITE_ERROR;
   }
+  pTab->szCurrent += nWrite;
   return SQLITE_OK;
 }
 
@@ -984,25 +981,25 @@ static int zipfileDeflate(
   u8 **ppOut, int *pnOut,         /* Output */
   char **pzErr                    /* OUT: Error message */
 ){
-  int rc = SQLITE_OK;
-  sqlite3_int64 nAlloc;
-  z_stream str;
+  sqlite3_int64 nAlloc = compressBound(nIn);
   u8 *aOut;
+  int rc = SQLITE_OK;
 
-  memset(&str, 0, sizeof(str));
-  str.next_in = (Bytef*)aIn;
-  str.avail_in = nIn;
-  deflateInit2(&str, 9, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
-
-  nAlloc = deflateBound(&str, nIn);
   aOut = (u8*)sqlite3_malloc64(nAlloc);
   if( aOut==0 ){
     rc = SQLITE_NOMEM;
   }else{
     int res;
+    z_stream str;
+    memset(&str, 0, sizeof(str));
+    str.next_in = (Bytef*)aIn;
+    str.avail_in = nIn;
     str.next_out = aOut;
     str.avail_out = nAlloc;
+
+    deflateInit2(&str, 9, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
     res = deflate(&str, Z_FINISH);
+
     if( res==Z_STREAM_END ){
       *ppOut = aOut;
       *pnOut = (int)str.total_out;
@@ -1311,10 +1308,10 @@ static int zipfileBestIndex(
       idx = i;
     }
   }
-  pIdxInfo->estimatedCost = 1000.0;
   if( idx>=0 ){
     pIdxInfo->aConstraintUsage[idx].argvIndex = 1;
     pIdxInfo->aConstraintUsage[idx].omit = 1;
+    pIdxInfo->estimatedCost = 1000.0;
     pIdxInfo->idxNum = 1;
   }else if( unusable ){
     return SQLITE_CONSTRAINT;
@@ -1436,8 +1433,8 @@ static int zipfileGetMode(
 ** identical, ignoring any trailing '/' character in either path.  */
 static int zipfileComparePath(const char *zA, const char *zB, int nB){
   int nA = (int)strlen(zA);
-  if( nA>0 && zA[nA-1]=='/' ) nA--;
-  if( nB>0 && zB[nB-1]=='/' ) nB--;
+  if( zA[nA-1]=='/' ) nA--;
+  if( zB[nB-1]=='/' ) nB--;
   if( nA==nB && memcmp(zA, zB, nA)==0 ) return 0;
   return 1;
 }
@@ -1447,10 +1444,6 @@ static int zipfileBegin(sqlite3_vtab *pVtab){
   int rc = SQLITE_OK;
 
   assert( pTab->pWriteFd==0 );
-  if( pTab->zFile==0 || pTab->zFile[0]==0 ){
-    pTab->base.zErrMsg = sqlite3_mprintf("zipfile: missing filename");
-    return SQLITE_ERROR;
-  }
 
   /* Open a write fd on the file. Also load the entire central directory
   ** structure into memory. During the transaction any new file data is 
@@ -1625,7 +1618,6 @@ static int zipfileUpdate(
 
     if( rc==SQLITE_OK ){
       zPath = (const char*)sqlite3_value_text(apVal[2]);
-      if( zPath==0 ) zPath = "";
       nPath = (int)strlen(zPath);
       mTime = zipfileGetTime(apVal[4]);
     }
@@ -1635,15 +1627,11 @@ static int zipfileUpdate(
       ** '/'. This appears to be required for compatibility with info-zip
       ** (the unzip command on unix). It does not create directories
       ** otherwise.  */
-      if( nPath<=0 || zPath[nPath-1]!='/' ){
+      if( zPath[nPath-1]!='/' ){
         zFree = sqlite3_mprintf("%s/", zPath);
+        if( zFree==0 ){ rc = SQLITE_NOMEM; }
         zPath = (const char*)zFree;
-        if( zFree==0 ){
-          rc = SQLITE_NOMEM;
-          nPath = 0;
-        }else{
-          nPath = (int)strlen(zPath);
-        }
+        nPath++;
       }
     }
 
@@ -2036,19 +2024,19 @@ void zipfileStep(sqlite3_context *pCtx, int nVal, sqlite3_value **apVal){
   ** at the end of the path. Or, if this is not a directory and the path
   ** ends in '/' it is an error. */
   if( bIsDir==0 ){
-    if( nName>0 && zName[nName-1]=='/' ){
+    if( zName[nName-1]=='/' ){
       zErr = sqlite3_mprintf("non-directory name must not end with /");
       rc = SQLITE_ERROR;
       goto zipfile_step_out;
     }
   }else{
-    if( nName==0 || zName[nName-1]!='/' ){
+    if( zName[nName-1]!='/' ){
       zName = zFree = sqlite3_mprintf("%s/", zName);
+      nName++;
       if( zName==0 ){
         rc = SQLITE_NOMEM;
         goto zipfile_step_out;
       }
-      nName = (int)strlen(zName);
     }else{
       while( nName>1 && zName[nName-2]=='/' ) nName--;
     }

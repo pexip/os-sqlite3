@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -166,13 +166,6 @@ function showhide(n){
   This document enumerates and describes some of the features of
   SQLite that make it different from other SQL database engines.
 </span>
-<li><a class='sh_link' href='quirks.html'>Quirks of SQLite</a>
-<span class='desktoponly'>&rarr; 
-  This document is a short list of some unusual features of SQLite
-  that tend to cause misunderstandings and confusion.  The list includes
-  both deliberate innovations and "misfeatures" that are retained only 
-  for backwards compatibility.
-</span>
 <li><a class='sh_link' href='testing.html'>How SQLite Is Tested</a>
 <span class='desktoponly'>&rarr; 
   The reliability and robustness of SQLite is achieved in large part
@@ -239,14 +232,6 @@ function showhide(n){
 <li><a class='sh_link' href='lang_datefunc.html'>Date and Time SQL Functions</a>
 <span class='desktoponly'>&rarr; 
   SQL functions for manipulating dates and times.
-</span>
-<li><a class='sh_link' href='windowfunctions.html'>Window Functions</a>
-<span class='desktoponly'>&rarr; 
-  SQL Window functions.
-</span>
-<li><a class='sh_link' href='gencol.html'>Generated Columns</a>
-<span class='desktoponly'>&rarr; 
-  Stored and virtual columns in table definitions.
 </span>
 <li><a class='sh_link' href='http://system.data.sqlite.org/'>System.Data.SQLite</a>
 <span class='desktoponly'>&rarr; 

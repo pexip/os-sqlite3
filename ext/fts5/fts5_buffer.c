@@ -27,7 +27,7 @@ int sqlite3Fts5BufferSize(int *pRc, Fts5Buffer *pBuf, u32 nByte){
       *pRc = SQLITE_NOMEM;
       return 1;
     }else{
-      pBuf->nSpace = (int)nNew;
+      pBuf->nSpace = nNew;
       pBuf->p = pNew;
     }
   }
@@ -178,19 +178,10 @@ int sqlite3Fts5PoslistNext64(
     i64 iOff = *piOff;
     int iVal;
     fts5FastGetVarint32(a, i, iVal);
-    if( iVal<=1 ){
-      if( iVal==0 ){
-        *pi = i;
-        return 0;
-      }
+    if( iVal==1 ){
       fts5FastGetVarint32(a, i, iVal);
       iOff = ((i64)iVal) << 32;
       fts5FastGetVarint32(a, i, iVal);
-      if( iVal<2 ){
-        /* This is a corrupt record. So stop parsing it here. */
-        *piOff = -1;
-        return 1;
-      }
     }
     *piOff = iOff + ((iVal-2) & 0x7FFFFFFF);
     *pi = i;
@@ -260,7 +251,7 @@ void *sqlite3Fts5MallocZero(int *pRc, sqlite3_int64 nByte){
     if( pRet==0 ){
       if( nByte>0 ) *pRc = SQLITE_NOMEM;
     }else{
-      memset(pRet, 0, (size_t)nByte);
+      memset(pRet, 0, nByte);
     }
   }
   return pRet;

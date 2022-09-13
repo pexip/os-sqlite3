@@ -167,8 +167,7 @@ namespace GetFile
             string fileName = Path.GetFileName(
                 Process.GetCurrentProcess().MainModule.FileName);
 
-            Console.WriteLine(String.Format(
-                "usage: {0} <uri> [fileName]", fileName));
+            Console.WriteLine(String.Format("usage: {0} <uri>", fileName));
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -337,7 +336,7 @@ namespace GetFile
                 return (int)ExitCode.MissingArgs;
             }
 
-            if ((args.Length < 1) || (args.Length > 2))
+            if (args.Length != 1)
             {
                 Error(null, true);
                 return (int)ExitCode.WrongNumArgs;
@@ -356,26 +355,15 @@ namespace GetFile
             }
 
             //
-            // NOTE: If a file name was specified on the command line, try to
-            //       use it (without its directory name); otherwise, fallback
-            //       to using the file name portion of the URI.
+            // NOTE: Attempt to extract the file name portion of the URI we
+            //       just created.
             //
-            string fileName = (args.Length == 2) ?
-                Path.GetFileName(args[1]) : null;
+            string fileName = GetFileName(uri);
 
-            if (String.IsNullOrEmpty(fileName))
+            if (fileName == null)
             {
-                //
-                // NOTE: Attempt to extract the file name portion of the URI
-                //       we just created.
-                //
-                fileName = GetFileName(uri);
-
-                if (fileName == null)
-                {
-                    Error("Could not extract file name from URI.", false);
-                    return (int)ExitCode.BadFileName;
-                }
+                Error("Could not extract the file name from the URI.", false);
+                return (int)ExitCode.BadFileName;
             }
 
             //
@@ -393,15 +381,6 @@ namespace GetFile
 
             try
             {
-                //
-                // HACK: For use of the TLS 1.2 security protocol because some
-                //       web servers fail without it.  In order to support the
-                //       .NET Framework 2.0+ at compilation time, must use its
-                //       integer constant here.
-                //
-                ServicePointManager.SecurityProtocol =
-                    (SecurityProtocolType)0xC00;
-
                 using (WebClient webClient = new WebClient())
                 {
                     //

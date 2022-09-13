@@ -220,3 +220,4 @@ int sqlite3async_control(int op, ...);
 }  /* End of the 'extern "C"' block */
 #endif
 #endif        /* ifndef __SQLITEASYNC_H_ */
+

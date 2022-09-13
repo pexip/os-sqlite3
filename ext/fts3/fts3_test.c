@@ -448,14 +448,14 @@ static int testTokenizerNext(
   }else{
     /* Advance to the end of the token */
     const char *pToken = p;
-    sqlite3_int64 nToken;
+    int nToken;
     while( p<pEnd && testIsTokenChar(*p) ) p++;
-    nToken = (sqlite3_int64)(p-pToken);
+    nToken = (int)(p-pToken);
 
     /* Copy the token into the buffer */
     if( nToken>pCsr->nBuffer ){
       sqlite3_free(pCsr->aBuffer);
-      pCsr->aBuffer = sqlite3_malloc64(nToken);
+      pCsr->aBuffer = sqlite3_malloc(nToken);
     }
     if( pCsr->aBuffer==0 ){
       rc = SQLITE_NOMEM;
@@ -471,7 +471,7 @@ static int testTokenizerNext(
       pCsr->iInput = (int)(p - pCsr->aInput);
 
       *ppToken = pCsr->aBuffer;
-      *pnBytes = (int)nToken;
+      *pnBytes = nToken;
       *piStartOffset = (int)(pToken - pCsr->aInput);
       *piEndOffset = (int)(p - pCsr->aInput);
       *piPosition = pCsr->iToken;

@@ -129,7 +129,6 @@ if {[info command sqlite_orig]==""} {
         set ::dbhandle [lindex $args 0]
         uplevel #0 $::G(perm:dbconfig)
       }
-      [lindex $args 0] cache size 3
       set res
     } else {
       # This command is not opening a new database connection. Pass the
@@ -389,7 +388,6 @@ proc print_help_and_quit {} {
   puts {Options:
   --pause                  Wait for user input before continuing
   --soft-heap-limit=N      Set the soft-heap-limit to N
-  --hard-heap-limit=N      Set the hard-heap-limit to N
   --maxerror=N             Quit after N errors
   --verbose=(0|1)          Control the amount of output.  Default '1'
   --output=FILE            set --verbose=2 and output to FILE.  Implies -q
@@ -410,7 +408,6 @@ if {[info exists cmdlinearg]==0} {
   #
   #   --pause
   #   --soft-heap-limit=NN
-  #   --hard-heap-limit=NN
   #   --maxerror=NN
   #   --malloctrace=N
   #   --backtrace=N
@@ -427,7 +424,6 @@ if {[info exists cmdlinearg]==0} {
   #   --help
   #
   set cmdlinearg(soft-heap-limit)    0
-  set cmdlinearg(hard-heap-limit)    0
   set cmdlinearg(maxerror)        1000
   set cmdlinearg(malloctrace)        0
   set cmdlinearg(backtrace)         10
@@ -453,9 +449,6 @@ if {[info exists cmdlinearg]==0} {
       }
       {^-+soft-heap-limit=.+$} {
         foreach {dummy cmdlinearg(soft-heap-limit)} [split $a =] break
-      }
-      {^-+hard-heap-limit=.+$} {
-        foreach {dummy cmdlinearg(hard-heap-limit)} [split $a =] break
       }
       {^-+maxerror=.+$} {
         foreach {dummy cmdlinearg(maxerror)} [split $a =] break
@@ -583,18 +576,13 @@ if {[info exists cmdlinearg]==0} {
   if {$cmdlinearg(verbose)==""} {
     set cmdlinearg(verbose) 1
   }
-
-  if {[info commands vdbe_coverage]!=""} {
-    vdbe_coverage start
-  }
 }
 
 # Update the soft-heap-limit each time this script is run. In that
 # way if an individual test file changes the soft-heap-limit, it
 # will be reset at the start of the next test file.
 #
-sqlite3_soft_heap_limit64 $cmdlinearg(soft-heap-limit)
-sqlite3_hard_heap_limit64 $cmdlinearg(hard-heap-limit)
+sqlite3_soft_heap_limit $cmdlinearg(soft-heap-limit)
 
 # Create a test database
 #
@@ -783,9 +771,6 @@ proc do_test {name cmd expected} {
       output2 "\nError: $result"
       fail_test $name
     } else {
-      if {[permutation]=="maindbname"} {
-        set result [string map [list [string tolower ICECUBE] main] $result]
-      }
       if {[regexp {^[~#]?/.*/$} $expected]} {
         # "expected" is of the form "/PATTERN/" then the result if correct if
         # regular expression PATTERN matches the result.  "~/PATTERN/" means
@@ -1218,8 +1203,7 @@ proc finalize_testing {} {
   db close
   sqlite3_reset_auto_extension
 
-  sqlite3_soft_heap_limit64 0
-  sqlite3_hard_heap_limit64 0
+  sqlite3_soft_heap_limit 0
   set nTest [incr_ntest]
   set nErr [set_test_counter errors]
 
@@ -1312,9 +1296,6 @@ proc finalize_testing {} {
       memdebug_log_sql leaks.tcl
     }
   }
-  if {[info commands vdbe_coverage]!=""} {
-    vdbe_coverage_report
-  }
   foreach f [glob -nocomplain test.db-*-journal] {
     forcedelete $f
   }
@@ -1322,39 +1303,6 @@ proc finalize_testing {} {
     forcedelete $f
   }
   exit [expr {$nErr>0}]
-}
-
-proc vdbe_coverage_report {} {
-  puts "Writing vdbe coverage report to vdbe_coverage.txt"
-  set lSrc [list]
-  set iLine 0
-  if {[file exists ../sqlite3.c]} {
-    set fd [open ../sqlite3.c]
-    set iLine
-    while { ![eof $fd] } {
-      set line [gets $fd]
-      incr iLine
-      if {[regexp {^/\** Begin file (.*\.c) \**/} $line -> file]} {
-        lappend lSrc [list $iLine $file]
-      }
-    }
-    close $fd
-  }
-  set fd [open vdbe_coverage.txt w]
-  foreach miss [vdbe_coverage report] {
-    foreach {line branch never} $miss {}
-    set nextfile ""
-    while {[llength $lSrc]>0 && [lindex $lSrc 0 0] < $line} {
-      set nextfile [lindex $lSrc 0 1]
-      set lSrc [lrange $lSrc 1 end]
-    }
-    if {$nextfile != ""} {
-      puts $fd ""
-      puts $fd "### $nextfile ###"
-    }
-    puts $fd "Vdbe branch $line: never $never (path $branch)"
-  }
-  close $fd
 }
 
 # Display memory statistics for analysis and debugging purposes.
@@ -1730,9 +1678,6 @@ proc crashsql {args} {
     if {$msg=="child killed: unknown signal"} {
       set msg "child process exited abnormally"
     }
-  }
-  if {$r && [string match {*ERROR: LeakSanitizer*} $msg]} {
-    set msg "child process exited abnormally"
   }
 
   lappend r $msg
@@ -2482,7 +2427,6 @@ set sqlite_fts3_enable_parentheses 0
 # this setting by invoking "database_can_be_corrupt"
 #
 database_never_corrupt
-extra_schema_checks 1
 
 source $testdir/thread_common.tcl
 source $testdir/malloc_common.tcl

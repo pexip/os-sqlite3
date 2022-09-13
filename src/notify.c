@@ -29,12 +29,12 @@
 */
 
 #define assertMutexHeld() \
-  assert( sqlite3_mutex_held(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MAIN)) )
+  assert( sqlite3_mutex_held(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MASTER)) )
 
 /*
 ** Head of a linked list of all sqlite3 objects created by this process
 ** for which either sqlite3.pBlockingConnection or sqlite3.pUnlockConnection
-** is not NULL. This variable may only accessed while the STATIC_MAIN
+** is not NULL. This variable may only accessed while the STATIC_MASTER
 ** mutex is held.
 */
 static sqlite3 *SQLITE_WSD sqlite3BlockedList = 0;
@@ -108,20 +108,20 @@ static void addToBlockedList(sqlite3 *db){
 }
 
 /*
-** Obtain the STATIC_MAIN mutex.
+** Obtain the STATIC_MASTER mutex.
 */
 static void enterMutex(void){
-  sqlite3_mutex_enter(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MAIN));
+  sqlite3_mutex_enter(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MASTER));
   checkListProperties(0);
 }
 
 /*
-** Release the STATIC_MAIN mutex.
+** Release the STATIC_MASTER mutex.
 */
 static void leaveMutex(void){
   assertMutexHeld();
   checkListProperties(0);
-  sqlite3_mutex_leave(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MAIN));
+  sqlite3_mutex_leave(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MASTER));
 }
 
 /*
@@ -232,7 +232,7 @@ void sqlite3ConnectionUnlocked(sqlite3 *db){
   void *aStatic[16];         /* Starter space for aArg[].  No malloc required */
 
   aArg = aStatic;
-  enterMutex();         /* Enter STATIC_MAIN mutex */
+  enterMutex();         /* Enter STATIC_MASTER mutex */
 
   /* This loop runs once for each entry in the blocked-connections list. */
   for(pp=&sqlite3BlockedList; *pp; /* no-op */ ){
@@ -315,7 +315,7 @@ void sqlite3ConnectionUnlocked(sqlite3 *db){
     xUnlockNotify(aArg, nArg);
   }
   sqlite3_free(aDyn);
-  leaveMutex();         /* Leave STATIC_MAIN mutex */
+  leaveMutex();         /* Leave STATIC_MASTER mutex */
 }
 
 /*

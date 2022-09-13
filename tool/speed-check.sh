@@ -65,24 +65,11 @@ while test "$1" != ""; do
     --nomemstat)
         SPEEDTEST_OPTS="$SPEEDTEST_OPTS $1"
         ;;
-    --multithread)
-        SPEEDTEST_OPTS="$SPEEDTEST_OPTS $1"
-        ;;
-    --singlethread)
-        SPEEDTEST_OPTS="$SPEEDTEST_OPTS $1"
-        ;;
-    --serialized)
-        SPEEDTEST_OPTS="$SPEEDTEST_OPTS $1"
-        ;;
     --temp)
         SPEEDTEST_OPTS="$SPEEDTEST_OPTS --temp 6"
         ;;
     --legacy)
 	doWal=0
-        CC_OPTS="$CC_OPTS -DSPEEDTEST_OMIT_HASH"
-        ;;
-    --verify)
-        SPEEDTEST_OPTS="$SPEEDTEST_OPTS --verify"
         ;;
     --wal)
         doWal=1
@@ -92,9 +79,6 @@ while test "$1" != ""; do
         ;;
     --cachesize)
         shift; SPEEDTEST_OPTS="$SPEEDTEST_OPTS --cachesize $1"
-        ;;
-    --checkpoint)
-        SPEEDTEST_OPTS="$SPEEDTEST_OPTS --checkpoint"
         ;;
     --explain)
         doExplain=1

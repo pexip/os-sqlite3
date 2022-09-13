@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -106,7 +106,6 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#flexible_typing">3. Flexible Typing</a></div>
 <div class="fancy-toc2"><a href="#no_separate_boolean_datatype">3.1. No Separate BOOLEAN Datatype</a></div>
 <div class="fancy-toc2"><a href="#no_separate_datetime_datatype">3.2. No Separate DATETIME Datatype</a></div>
-<div class="fancy-toc2"><a href="#the_datatype_is_optional">3.3. The datatype is optional</a></div>
 <div class="fancy-toc1"><a href="#foreign_key_enforcement_is_off_by_default">4. Foreign Key Enforcement Is Off By Default</a></div>
 <div class="fancy-toc1"><a href="#primary_keys_can_sometimes_contain_nulls">5. PRIMARY KEYs Can Sometimes Contain NULLs</a></div>
 <div class="fancy-toc1"><a href="#aggregate_queries_can_contain_non_aggregate_result_columns_that_are_not_in_the_group_by_clause">6. Aggregate Queries Can Contain Non-Aggregate Result Columns
@@ -116,7 +115,6 @@ That Are Not In The GROUP BY Clause</a></div>
 <div class="fancy-toc1"><a href="#keywords_can_often_be_used_as_identifiers">9. Keywords Can Often Be Used As Identifiers</a></div>
 <div class="fancy-toc1"><a href="#dubious_sql_is_allowed_without_any_error_or_warning">10. Dubious SQL Is Allowed Without Any Error Or Warning</a></div>
 <div class="fancy-toc1"><a href="#autoincrement_does_not_work_the_same_as_mysql">11. AUTOINCREMENT Does Not Work The Same As MySQL</a></div>
-<div class="fancy-toc1"><a href="#nul_characters_are_allowed_in_text_strings">12. NUL Characters Are Allowed In Text Strings</a></div>
 </div>
 </div>
 <script>
@@ -160,12 +158,12 @@ we can document the problem.
 </p><h1 id="sqlite_is_embedded_not_client_server"><span>2. </span>SQLite Is Embedded, Not Client-Server</h1>
 
 <p>
-Whenever comparing SQLite to other SQL database engines like
+When ever comparing SQLite to other SQL database engines like
 SQL Server, PostgreSQL, MySQL, or Oracle, it is important first of all
-to realize that SQLite is not intended as a replacement or competitor to
+to realize the SQLite is not intended as a replacement or competitor to
 any of those systems.  SQLite is <a href="serverless.html">serverless</a>.  There is no separate
-server process that manages the database.  An application interacts
-with the database engine using function calls, not by sending messages
+server process that manages the database.  An application interact
+with the database engine using function calls, not be sending messages
 to a separate process or thread.
 
 </p><p>
@@ -192,7 +190,7 @@ SQLite is very flexible with regard to datatypes.
 </p><p>
 Some commentators say that SQLite is "weakly typed" and that other
 SQL databases are "strongly typed".  We consider these terms to be
-inaccurate and pejorative.  We prefer to say that SQLite is "flexibly typed"
+inaccurate and purgative.  We prefer to say that SQLite is "flexibly typed"
 and that other SQL databases are "rigidly typed".
 
 </p><p>
@@ -212,7 +210,7 @@ SQLite stores the actual string value in the column.
 
 </p><p>
 Similarly, SQLite allows you to store a 2000-character string into a
-column of type VARCHAR(50).  Other SQL implementations would either throw
+column of type VARCHAR(50).  Other SQL implementions would either throw
 an error or truncate the string.  SQLite stores the entire 2000-character
 string with no loss of information and without complaint.
 
@@ -228,7 +226,7 @@ and unforgiving type enforcement policy.
 Flexible typing is considered a feature of SQLite, not a bug.
 Nevertheless, we recognize that this feature does sometimes cause
 confusion and pain for developers who are acustomed to working with
-other databases that are more judgmental with regard to data types.
+other databases that are more judgemental with regard to data types.
 In retrospect, perhaps it would have been better if SQLite had merely
 implemented an ANY datatype so that developers could explicitly state
 when they wanted to use flexible typing, rather than making flexible
@@ -259,11 +257,11 @@ columns, rather than BOOLEAN literals.
 </p><h2 id="no_separate_datetime_datatype"><span>3.2. </span>No Separate DATETIME Datatype</h2>
 
 <p>
-SQLite has no DATETIME datatype.
+SQLite as no DATETIME datatype.
 Instead, dates and times can be stored in any of these ways:
 
 </p><ul>
-<li> As a TEXT string in the ISO-8601 format.  Example: '2018-04-02 12:13:46'.
+<li> As a TEXT string in the ISO-8610 format.  Example: '2018-04-02 12:13:46'.
 </li><li> As an INTEGER number of seconds since 1970 (also known as "unix time").
 </li><li> As a REAL value that is the fractional 
      <a href="https://en.wikipedia.org/wiki/Julian_day">Julian day number</a>.
@@ -274,24 +272,12 @@ The built-in <a href="lang_datefunc.html">date and time functions</a> of SQLite 
 all of the formats above, and can freely change between them.
 Which format you use, is entirely up to your application.
 
-</p><h2 id="the_datatype_is_optional"><span>3.3. </span>The datatype is optional</h2>
-
-<p>
-Because SQLite is flexible and forgiving with regard to datatypes,
-table columns can be created that have no specified datatype at all.
-For example:
-</p><div class="codeblock"><pre>CREATE TABLE t1(a,b,c,d);
-</pre></div>
-<p>The table "t1" has four columns "a", "b", "c", and "d" that have
-no particular datatype assigned.  You can store anything you want in
-any of those columns.</p>
-
-<h1 id="foreign_key_enforcement_is_off_by_default"><span>4. </span>Foreign Key Enforcement Is Off By Default</h1>
+</p><h1 id="foreign_key_enforcement_is_off_by_default"><span>4. </span>Foreign Key Enforcement Is Off By Default</h1>
 
 <p>SQLite has parsed foreign key constraints for time out of mind,
 but added the ability to actually enforce those constraints much later,
 with <a href="releaselog/3_6_19.html">version 3.6.19</a> (2009-10-14).  By the time foreign key constraint
-enforcement was added, there were already countless millions of databases
+enforcement was added, there where already countless millions of databases
 in circulation that contained foreign key constraints, some of which
 were not correct.  To avoid breaking those legacy databases, foreign key
 constraint enforcement is turned off by default in SQLite.
@@ -324,10 +310,10 @@ In most SQL implementations, output columns of an aggregate query
 may only reference aggregate functions or columns named in the
 GROUP BY clause.  It does not make good sense to reference an ordinary
 column in an aggregate query because each output row might be composed
-from two or more rows in the input table(s).
+from two more more rows in the input table(s).
 
 </p><p>
-SQLite does not enforce this restriction.
+SQLite does not impose this restriction.
 The output columns from an aggregate query can be arbitrary expressions
 that include columns not found in GROUP BY clause.
 This feature has two uses:
@@ -350,12 +336,11 @@ will correspond to the row that satisfied the max(salary) condition.
 
 </p></li><li><p>
 If a query contains no aggregate functions at all, then a GROUP BY
-clause can be added as a substitute for the DISTINCT ON clause.  In other words,
-output rows are filtered so that only one row is shown for each distinct
+clause can be added as a substitute of DISTINCT ON clause.  In other words,
+output rows are filtered so that only one row is shows for each distinct
 set of values in the GROUP BY clause.  If two or more output rows would
 have otherwise had the same set of values for the GROUP BY columns, then
-one of the rows is chosen arbitrarily.  (SQLite supports DISTINCT but not
-DISTINCT ON, whose functionality is provided instead by GROUP BY.)
+the one of the rows is chosen arbitrarily.
 </p></li></ol>
 
 <h1 id="does_not_do_full_unicode_case_folding_by_default"><span>7. </span>Does Not Do Full Unicode Case Folding By Default</h1>
@@ -367,7 +352,7 @@ upper() and lower() only work on ASCII characters.  There are two
 reasons for this:
 </p><ol>
 <li> Though stable now, when SQLite was first designed, the rules for
-     unicode case folding were still in flux.  That means that the
+     unicode case folding where still in flux.  That means that the
      behavior might have changed with each new unicode release, disrupting
      applications and corrupting indexes in the process.
 </li><li> The tables necessary to do full and proper unicode case folding are
@@ -384,53 +369,32 @@ library.
 </p><h1 id="double_quoted_string_literals_are_accepted"><span>8. </span>Double-quoted String Literals Are Accepted</h1>
 
 <p>
-The SQL standard requires double-quotes around identifiers
-and single-quotes around string literals.  For example:
+The SQL standard says that one should use double-quotes around identifiers
+and single-quotes around string literals.
 </p><ul>
 <li> <tt>"this is a legal SQL column name"</tt>
 </li><li> <tt>'this is an SQL string literal'</tt>
 </li></ul>
 <p>
 SQLite accepts both of the above.  But, in an effort to be compatible
-with MySQL 3.x (which was one of the most widely used RDBMSes
-when SQLite was first being designed) SQLite will also interpret
-a double-quotes string as
-string literal if it does not match any valid identifier.
+with MySQL 3.x (which was very popular when SQLite was first being
+designed) SQLite will also use content contained in double-quotes as a s
+tring literal if the content does not match any valid identifier.
 </p><p>
-This misfeature means that a misspelled double-quoted
+An unfortunate side-effect of this is that a misspelled double-quoted
 identifier will be interpreted as a string literal, rather than generating
 an error.
-It also lures developers who are new to the SQL language into the
-bad habit of using double-quoted string literals when they
+Another problem is that this behavior allows developers who are new to
+the SQL language to continue using double-quoted string literals when they
 really need to learn to use the correct single-quoted string literal form.
 </p><p>
 In hindsight, we should not have tried to make SQLite accept MySQL 3.x
 syntax, and should have never allowed double-quoted string literals.
-However, there are countless applications that make use of
-double-quoted string literals and so we continue to support
-that capability to avoid breaking legacy.
+However, we continue to support that capability to avoid breaking legacy
+applications.
 </p><p>
-As of SQLite 3.27.0 (2019-02-07) the use of a double-quoted
+Update: As of SQLite 3.27.0 (2019-02-07) the use of a double-quoted
 string literal causes a warning message to be sent to the <a href="errlog.html">error log</a>.
-</p><p>
-As of SQLite 3.29.0 (2019-07-10) the use of double-quoted
-string literals can be disabled at run-time using the
-<a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigdqsddl">SQLITE_DBCONFIG_DQS_DDL</a> and <a href="c3ref/c_dbconfig_defensive.html#sqlitedbconfigdqsdml">SQLITE_DBCONFIG_DQS_DML</a> actions
-to <a href="c3ref/db_config.html">sqlite3_db_config()</a>.  The default settings can be altered
-at compile-time using the <a href="compile.html#dqs">-DSQLITE_DQS=<i>N</i></a> compile-time
-option.  Application developers are encouraged to compile using
--DSQLITE_DQS=0 in order to disable the double-quoted string literal
-misfeature by default.  If that is not possible, then disable
-double-quoted string literals for individual database connections
-using C-code like this:
-</p><blockquote><pre>
-sqlite3_db_config(db, SQLITE_DBCONFIG_DQS_DDL, 0, (void*)0);
-sqlite3_db_config(db, SQLITE_DBCONFIG_DQS_DML, 0, (void*)0);
-</pre></blockquote>
-<p>Or, if double-quoted string literals are disabled by default, but need
-to be selectively enabled for some historical database connections,
-that can be done using the same C-code as shown above except with the
-third parameter changed from 0 to 1.
 
 </p><h1 id="keywords_can_often_be_used_as_identifiers"><span>9. </span>Keywords Can Often Be Used As Identifiers</h1>
 
@@ -449,29 +413,8 @@ For example, the following statement is valid in SQLite:
 The same SQL statement will fail on every other SQL implementation that
 we know of due to the use of keywords "union", "true", and "with" as
 identifiers.
-</p><p>
-The ability to use keywords as identifiers promotes backwards compatibility.
-As new keywords are added, legacy schemas that just happen to use those
-keywords as table or column names continue to work.  However, the ability
-to use a keyword as an identifier sometimes leads to surprising outcomes.
-For example:
-</p><div class="codeblock"><pre>CREATE TRIGGER AFTER INSERT ON tableX BEGIN
-  INSERT INTO tableY(b) VALUES(new.a);
-END;
-</pre></div>
-<p>The trigger created by the previous statement is named "AFTER"
-and it is a "BEFORE" trigger.  The "AFTER" token is used as an identifier
-instead of as a keyword, as that is the only way to parse the statement.
-Another example:
-</p><div class="codeblock"><pre>CREATE TABLE tableZ(INTEGER PRIMARY KEY);
-</pre></div>
-<p>The tableZ table has a single column named "INTEGER".  That column
-has no datatype specified, but it is the PRIMARY KEY.
-The column is <em>not</em> the <a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> for the table because
-it has no datatype.  The "INTEGER" token is used as an identifier for the
-column name, not as a datatype keyword.</p>
 
-<h1 id="dubious_sql_is_allowed_without_any_error_or_warning"><span>10. </span>Dubious SQL Is Allowed Without Any Error Or Warning</h1>
+</p><h1 id="dubious_sql_is_allowed_without_any_error_or_warning"><span>10. </span>Dubious SQL Is Allowed Without Any Error Or Warning</h1>
 
 <p>
 The original implementation of SQLite sought to follow
@@ -494,10 +437,4 @@ expect the two systems to work identically.
 </p><p>See the <a href="autoinc.html">SQLite AUTOINCREMENT documentation</a> for
 detailed instructions on what AUTOINCREMENT does and does not do
 in SQLite.
-
-</p><h1 id="nul_characters_are_allowed_in_text_strings"><span>12. </span>NUL Characters Are Allowed In Text Strings</h1>
-
-<p>NUL characters (ASCII code 0x00 and Unicode \u0000) may appear in
-the middle of strings in SQLite.  This can lead to unexpected behavior.
-See the "<a href="nulinstr.html">NUL characters in strings</a>" document for further information.
 </p>

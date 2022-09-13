@@ -281,7 +281,7 @@ array set ::Platforms [strip_comments {
     "User-Auth"               tcltest
     "Update-Delete-Limit"     test
     "Extra-Robustness"        test
-    "Device-Two"              "threadtest test"
+    "Device-Two"              test
     "No-lookaside"            test
     "Devkit"                  test
     "Apple"                   test
@@ -412,8 +412,6 @@ proc count_tests_and_errors {logfile rcVar errmsgVar} {
       # skip over "value is outside range" errors
       if {[regexp {value .* is outside the range of representable} $line]} {
          # noop
-      } elseif {[regexp {overflow: .* cannot be represented} $line]} {
-         # noop
       } else {
         incr ::NERRCASE
         if {$rc==0} {
@@ -503,26 +501,7 @@ proc run_slave_test {} {
       unset -nocomplain savedEnv(TCLSH_CMD)
     }
     set ::env(TCLSH_CMD) [file nativename [info nameofexecutable]]
-
-    # Create a file called "makecommand.sh" containing the text of
-    # the make command line.
-    catch {
-      set cmd [makeCommand $testtarget $makeOpts $cflags $opts]
-      set fd [open makecommand.sh w]
-      foreach e $cmd { 
-        if {[string first " " $e]>=0} {
-          puts -nonewline $fd "\"$e\""
-        } else {
-          puts -nonewline $fd $e
-        }
-        puts -nonewline $fd " "
-      }
-      puts $fd ""
-      close $fd
-    } msg
-
-    # Run the make command.
-    set rc [catch {trace_cmd exec {*}$cmd >>& test.log} msg]
+    set rc [catch [makeCommand $testtarget $makeOpts $cflags $opts]]
     if {[info exists savedEnv(TCLSH_CMD)]} {
       set ::env(TCLSH_CMD) $savedEnv(TCLSH_CMD)
     } else {
@@ -758,7 +737,7 @@ proc configureCommand {opts} {
 # specified targets, compiler flags, and options.
 #
 proc makeCommand { targets makeOpts cflags opts } {
-  set result [list]
+  set result [list trace_cmd exec]
   if {$::MSVC} {
     set nmakeDir [file nativename $::SRCDIR]
     set nmakeFile [file nativename [file join $nmakeDir Makefile.msc]]
@@ -779,7 +758,7 @@ proc makeCommand { targets makeOpts cflags opts } {
   foreach target $targets {
     lappend result $target
   }
-  lappend result CFLAGS=$cflags OPTS=$opts
+  lappend result CFLAGS=$cflags OPTS=$opts >>& test.log
 }
 
 # The following procedure prints its arguments if ::TRACE is true.

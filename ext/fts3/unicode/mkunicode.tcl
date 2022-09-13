@@ -738,11 +738,10 @@ proc print_categories {lMap} {
         int bToken = aArray[ aFts5UnicodeData[iTbl] & 0x1F ];
         int n = (aFts5UnicodeData[iTbl] >> 5) + i;
         for(; i<128 && i<n; i++){
-          aAscii[i] = (u8)bToken;
+          aAscii[i] = bToken;
         }
         iTbl++;
       }
-      aAscii[0] = 0;                  /* 0x00 is never a token character */
     }
   }]
 }

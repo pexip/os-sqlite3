@@ -155,6 +155,11 @@ AC_SUBST(VERSION)
 RELEASE=`cat $srcdir/VERSION`
 AC_MSG_NOTICE(Release set to $RELEASE)
 AC_SUBST(RELEASE)
+VERSION_NUMBER=[`cat $srcdir/VERSION \
+                           | sed 's/[^0-9]/ /g' \
+                | awk '{printf "%d%03d%03d",$1,$2,$3}'`]
+AC_MSG_NOTICE(Version number set to $VERSION_NUMBER)
+AC_SUBST(VERSION_NUMBER)
 
 #########
 # Locate a compiler for the build machine.  This compiler should
@@ -564,7 +569,7 @@ AC_SUBST(TARGET_DEBUG)
 # See whether we should use the amalgamation to build
 AC_ARG_ENABLE(amalgamation, AC_HELP_STRING([--disable-amalgamation],
       [Disable the amalgamation and instead build all files separately]))
-if test "${enable_amalgamation}" = "no" ; then
+if test "${enable_amalgamation}" == "no" ; then
   USE_AMALGAMATION=0
 fi
 AC_SUBST(USE_AMALGAMATION)
@@ -608,12 +613,6 @@ else
   AC_MSG_RESULT([no])
 fi
 
-########
-# The --enable-extensions argument is short-hand to enable
-# multiple extensions.
-AC_ARG_ENABLE(all, AC_HELP_STRING([--enable-all],
-      [Enable FTS4, FTS5, Geopoly, JSON, RTree, Sessions]))
-
 #########
 # See whether we should enable Full Text Search extensions
 AC_ARG_ENABLE(fts3, AC_HELP_STRING([--enable-fts3],
@@ -623,13 +622,13 @@ if test "${enable_fts3}" = "yes" ; then
 fi
 AC_ARG_ENABLE(fts4, AC_HELP_STRING([--enable-fts4],
       [Enable the FTS4 extension]))
-if test "${enable_fts4}" = "yes" -o "${enable_all}" = "yes" ; then
+if test "${enable_fts4}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_FTS4"
   AC_SEARCH_LIBS([log],[m])
 fi
 AC_ARG_ENABLE(fts5, AC_HELP_STRING([--enable-fts5],
       [Enable the FTS5 extension]))
-if test "${enable_fts5}" = "yes" -o "${enable_all}" = "yes" ; then
+if test "${enable_fts5}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_FTS5"
   AC_SEARCH_LIBS([log],[m])
 fi
@@ -637,7 +636,7 @@ fi
 #########
 # See whether we should enable JSON1
 AC_ARG_ENABLE(json1, AC_HELP_STRING([--enable-json1],[Enable the JSON1 extension]))
-if test "${enable_json1}" = "yes" -o "${enable_all}" = "yes" ; then
+if test "${enable_json1}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_JSON1"
 fi
 
@@ -646,7 +645,7 @@ fi
 # statements.
 AC_ARG_ENABLE(update-limit, AC_HELP_STRING([--enable-update-limit],
       [Enable the UPDATE/DELETE LIMIT clause]))
-if test "${enable_update_limit}" = "yes" ; then
+if test "${enable_udlimit}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_UPDATE_DELETE_LIMIT"
 fi
 
@@ -655,7 +654,7 @@ fi
 AC_ARG_ENABLE(geopoly, AC_HELP_STRING([--enable-geopoly],
       [Enable the GEOPOLY extension]),
       [enable_geopoly=yes],[enable_geopoly=no])
-if test "${enable_geopoly}" = "yes" -o "${enable_all}" = "yes" ; then
+if test "${enable_geopoly}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_GEOPOLY"
   enable_rtree=yes
 fi
@@ -672,7 +671,7 @@ fi
 # See whether we should enable the SESSION extension
 AC_ARG_ENABLE(session, AC_HELP_STRING([--enable-session],
       [Enable the SESSION extension]))
-if test "${enable_session}" = "yes" -o "${enable_all}" = "yes" ; then
+if test "${enable_session}" = "yes" ; then
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_SESSION"
   OPT_FEATURE_FLAGS="${OPT_FEATURE_FLAGS} -DSQLITE_ENABLE_PREUPDATE_HOOK"
 fi

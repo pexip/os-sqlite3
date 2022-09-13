@@ -16,7 +16,6 @@ source $testdir/tester.tcl
 ifcapable !fts3 { finish_test ; return }
 
 set ::testprefix fts3corrupt2
-sqlite3_fts3_may_be_corrupt 1
 
 set data [list]
 lappend data {*}{
@@ -103,6 +102,7 @@ foreach c {50 100 150 200 250} {
     execsql { UPDATE t2_segdir SET root = $blob WHERE rowid = $rowid }
   }
 }
+
 
 
 

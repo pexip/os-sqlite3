@@ -698,9 +698,7 @@ static const char zHelp[] =
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#ifndef OMIT_ZLIB
 #include "zlib.h"
-#endif
 
 /*
 ** Implementation of the "sqlar_uncompress(X,SZ)" SQL function
@@ -717,9 +715,6 @@ static void sqlarUncompressFunc(
   int argc,
   sqlite3_value **argv
 ){
-#ifdef OMIT_ZLIB
-  sqlite3_result_value(context, argv[0]);
-#else
   uLong nData;
   uLongf sz;
 
@@ -738,7 +733,6 @@ static void sqlarUncompressFunc(
     }
     sqlite3_free(pOut);
   }
-#endif
 }
 
 
@@ -836,6 +830,7 @@ static int conflictCall(
 ){
   (void)NotUsed;
   (void)p;
+  printf("Conflict %d\n", eConflict);
   return SQLITE_CHANGESET_OMIT;
 }
 

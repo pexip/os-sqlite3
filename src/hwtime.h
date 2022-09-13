@@ -11,7 +11,7 @@
 ******************************************************************************
 **
 ** This file contains inline asm code for retrieving "high-performance"
-** counters for x86 and x86_64 class CPUs.
+** counters for x86 class CPUs.
 */
 #ifndef SQLITE_HWTIME_H
 #define SQLITE_HWTIME_H
@@ -22,9 +22,8 @@
 ** processor and returns that value.  This can be used for high-res
 ** profiling.
 */
-#if !defined(__STRICT_ANSI__) && \
-    (defined(__GNUC__) || defined(_MSC_VER)) && \
-    (defined(i386) || defined(__i386__) || defined(_M_IX86))
+#if (defined(__GNUC__) || defined(_MSC_VER)) && \
+      (defined(i386) || defined(__i386__) || defined(_M_IX86))
 
   #if defined(__GNUC__)
 
@@ -45,7 +44,7 @@
 
   #endif
 
-#elif !defined(__STRICT_ANSI__) && (defined(__GNUC__) && defined(__x86_64__))
+#elif (defined(__GNUC__) && defined(__x86_64__))
 
   __inline__ sqlite_uint64 sqlite3Hwtime(void){
       unsigned long val;
@@ -53,7 +52,7 @@
       return val;
   }
  
-#elif !defined(__STRICT_ANSI__) && (defined(__GNUC__) && defined(__ppc__))
+#elif (defined(__GNUC__) && defined(__ppc__))
 
   __inline__ sqlite_uint64 sqlite3Hwtime(void){
       unsigned long long retval;
@@ -70,13 +69,14 @@
 
 #else
 
+  #error Need implementation of sqlite3Hwtime() for your platform.
+
   /*
-  ** asm() is needed for hardware timing support.  Without asm(),
-  ** disable the sqlite3Hwtime() routine.
-  **
-  ** sqlite3Hwtime() is only used for some obscure debugging
-  ** and analysis configurations, not in any deliverable, so this
-  ** should not be a great loss.
+  ** To compile without implementing sqlite3Hwtime() for your platform,
+  ** you can remove the above #error and use the following
+  ** stub function.  You will lose timing support for many
+  ** of the debugging and testing utilities, but it should at
+  ** least compile and run.
   */
   sqlite_uint64 sqlite3Hwtime(void){ return ((sqlite_uint64)0); }
 

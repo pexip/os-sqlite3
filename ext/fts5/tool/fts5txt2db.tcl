@@ -12,7 +12,6 @@ proc process_cmdline {} {
   cmdline::process ::A $::argv {
     {fts5                 "use fts5 (this is the default)"}
     {fts4                 "use fts4"}
-    {trigram              "Use tokenize=trigram"}
     {colsize   "10 10 10" "list of column sizes"}
     {tblname   "t1"       "table name to create"}
     {detail    "full"     "Fts5 detail mode to use"}
@@ -176,7 +175,6 @@ proc create_table {} {
   set sql    "CREATE VIRTUAL TABLE IF NOT EXISTS $A(tblname) USING $A(fts) ("
   append sql [join $cols ,]
   if {$A(fts)=="fts5"} { append sql ",detail=$A(detail)" }
-  if {$A(trigram)} { append sql ",tokenize=trigram" }
   append sql ", prefix='$A(prefix)');"
 
   db eval $sql

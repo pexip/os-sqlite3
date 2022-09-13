@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -146,7 +146,6 @@ non-deterministic functions:
 <li>In the expression of a <a href="lang_createtable.html#ckconst">CHECK constraint</a>.
 </li><li>In the WHERE clause of a <a href="partialindex.html">partial index</a>.
 </li><li>In an expression used as part of an <a href="expridx.html">expression index</a>.
-</li><li>In the expression of a <a href="gencol.html">generated column</a>.
 </li></ul>
 
 <p>
@@ -173,7 +172,7 @@ the <a href="lang_datefunc.html#localtime">localtime modifier</a> or the <a href
 considered non-deterministic.  Because the function inputs are
 not necessarily known until run-time, the date/time functions will
 throw an exception if they encounter any of the non-deterministic
-features in a context where only deterministic functions are allowed.
+features in a context where only deterministic functions are allows.
 
 </p><p>
 Prior to SQLite 3.20.0 (2017-08-01) all date/time functions were
@@ -184,15 +183,15 @@ depending on their arguments, was added for the 3.20.0 release.
 </p><h1 id="application_defined_deterministic_functions"><span>4. </span>Application-defined deterministic functions</h1>
 
 <p>
-By default, <a href="appfunc.html">application-defined SQL functions</a> are considered to
+By default, <a href="c3ref/create_function.html">application-defined SQL functions</a> are considered to
 be non-deterministic.  However, if the 4th parameter to
 <a href="c3ref/create_function.html">sqlite3_create_function_v2()</a> is OR-ed with 
-<a href="c3ref/c_deterministic.html#sqlitedeterministic">SQLITE_DETERMINISTIC</a>, then SQLite will treat that function as if it
+<a href="c3ref/c_deterministic.html">SQLITE_DETERMINISTIC</a>, then SQLite will treat that function as if it
 were deterministic.
 
 </p><p>
 Note that if a non-deterministic function is tagged with
-<a href="c3ref/c_deterministic.html#sqlitedeterministic">SQLITE_DETERMINISTIC</a> and if that function ends up being used in
+<a href="c3ref/c_deterministic.html">SQLITE_DETERMINISTIC</a> and if that function ends up being used in
 the WHERE clause of a <a href="partialindex.html">partial index</a> or in an
 <a href="expridx.html">expression index</a>, then when the function begins to return different
 answers, the associated index may become corrupt.  If an SQL function
@@ -204,6 +203,6 @@ corrupt, the corruption can be fixed by running <a href="lang_reindex.html">REIN
 The interfaces necessary to construct a function that is sometimes
 deterministic and sometimes non-deterministic depending on their
 inputs, such as the built-in date/time functions, are not published.
-Generic <a href="appfunc.html">application-defined SQL functions</a> must
+Generic <a href="c3ref/create_function.html">application-defined SQL functions</a> must
 be always deterministic or always non-deterministic.
 </p>

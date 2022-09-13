@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -252,9 +252,9 @@ An SQLite Archive can work around firewall-imposed censorship.
 For example, certain file types that are considered "dangerous" 
 (examples: DLLs) will be
 <a href="https://support.google.com/mail/answer/6590">blocked by Gmail</a>
-and probably many other email services and firewalls, even if the
+and probably many other email services and firewall, even if those
 files are wrapped inside a ZIP Archive or Tarball.
-But these firewalls usually do not (yet) know about SQLite Archives and
+But these firewall usually do not care about SQLite Archives and
 so content can be put inside an SQLite Archive to evade censorship.
 </p></li></ol>
 

@@ -43,10 +43,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <stdint.h>
-#ifndef _WIN32
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif
 #include "sqlite3.h"
 
 /*
@@ -54,7 +52,7 @@
 */
 static const char *azSql[] = {
   "PRAGMA integrity_check;",
-  "SELECT * FROM sqlite_schema;",
+  "SELECT * FROM sqlite_master;",
   "SELECT sum(length(name)) FROM dbstat;",
   "UPDATE t1 SET b=a, a=b WHERE a<b;",
   "ALTER TABLE t1 RENAME TO alkjalkjdfiiiwuer987lkjwer82mx97sf98788s9789s;",
@@ -73,10 +71,6 @@ static int bVdbeDebug = 0;
 
 /* Maximum size of the in-memory database file */
 static sqlite3_int64 szMax = 104857600;
-
-/* Progress handler callback data */
-static int nCb = 0;                  /* Number of callbacks seen so far */
-static int mxCb = 250000;            /* Maximum allowed callbacks */
 
 /***** Copy/paste from ext/misc/memtrace.c ***************************/
 /* The original memory allocation routines */
@@ -161,21 +155,6 @@ int sqlite3MemTraceDeactivate(void){
 }
 /***** End copy/paste from ext/misc/memtrace.c ***************************/
 
-/*
-** Progress handler callback
-**
-** Count the number of callbacks and cause an abort once the limit is
-** reached.
-*/
-static int progress_handler(void *pNotUsed){
-  nCb++;
-  if( nCb<mxCb ) return 0;
-  if( eVerbosity>=1 ){
-    printf("-- Progress limit of %d reached\n", mxCb);
-  }
-  return 1;
-}
-
 /* libFuzzer invokes this routine with fuzzed database files (in aData).
 ** This routine run SQLite against the malformed database to see if it
 ** can provoke a failure or malfunction.
@@ -202,25 +181,16 @@ int LLVMFuzzerTestOneInput(const uint8_t *aData, size_t nByte){
         SQLITE_DESERIALIZE_RESIZEABLE |
         SQLITE_DESERIALIZE_FREEONCLOSE);
   x = szMax;
-#ifdef SQLITE_FCNTL_SIZE_LIMIT
   sqlite3_file_control(db, "main", SQLITE_FCNTL_SIZE_LIMIT, &x);
-#endif
   if( bVdbeDebug ){
     sqlite3_exec(db, "PRAGMA vdbe_debug=ON", 0, 0, 0);
   }
-  if( mxCb>0 ){
-    sqlite3_progress_handler(db, 10, progress_handler, 0);
-  }
-#ifdef SQLITE_TESTCTRL_PRNG_SEED
-  sqlite3_test_control(SQLITE_TESTCTRL_PRNG_SEED, 1, db);
-#endif
   for(i=0; i<sizeof(azSql)/sizeof(azSql[0]); i++){
     if( eVerbosity>=1 ){
       printf("%s\n", azSql[i]);
       fflush(stdout);
     }
     zErr = 0;
-    nCb = 0;
     rc = sqlite3_exec(db, azSql[i], 0, 0, &zErr);
     if( rc && eVerbosity>=1 ){
       printf("-- rc=%d zErr=%s\n", rc, zErr);
@@ -275,14 +245,6 @@ int LLVMFuzzerInitialize(int *pArgc, char ***pArgv){
         bVdbeDebug = 1;
         continue;
       }
-      if( strcmp(z,"limit")==0 ){
-        if( i+1==argc ){
-          fprintf(stderr, "missing argument to %s\n", argv[i]);
-          exit(1);
-        }
-        mxCb = strtol(argv[++i], 0, 0);
-        continue;
-      }
       if( strcmp(z,"memtrace")==0 ){
         sqlite3MemTraceActivate(stdout);
         continue;
@@ -299,7 +261,6 @@ int LLVMFuzzerInitialize(int *pArgc, char ***pArgv){
         szMax = strtol(argv[++i], 0, 0);
         continue;
       }
-#ifndef _WIN32
       if( strcmp(z,"max-stack")==0
        || strcmp(z,"max-data")==0
        || strcmp(z,"max-as")==0
@@ -330,7 +291,6 @@ int LLVMFuzzerInitialize(int *pArgc, char ***pArgv){
                zType, (int)x.rlim_cur, (int)y.rlim_cur);
         continue;
       }
-#endif /* _WIN32 */
     }
     argv[j++] = argv[i];
   }
@@ -380,7 +340,6 @@ int main(int argc, char **argv){
       free(pIn);
     }
   }
-#ifdef RUSAGE_SELF
   if( eVerbosity>0 ){
     struct rusage x;
     printf("SQLite %s\n", sqlite3_sourceid());
@@ -389,7 +348,6 @@ int main(int argc, char **argv){
       printf("Maximum RSS = %ld KB\n", x.ru_maxrss);
     }
   }
-#endif
   return 0;
 }
 #endif /*STANDALONE*/

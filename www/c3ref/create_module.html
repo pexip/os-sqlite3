@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -132,13 +132,7 @@ no longer needs the pClientData pointer.  The destructor will also
 be invoked if the call to sqlite3_create_module_v2() fails.
 The sqlite3_create_module()
 interface is equivalent to sqlite3_create_module_v2() with a NULL
-destructor.</p>
-
-<p>If the third parameter (the pointer to the sqlite3_module object) is
-NULL then no new module is create and any existing modules with the
-same name are dropped.</p>
-
-<p>See also: <a href="../c3ref/drop_modules.html">sqlite3_drop_modules()</a>
+destructor.
 </p><p>See also lists of
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and

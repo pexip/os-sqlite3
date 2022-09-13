@@ -126,14 +126,11 @@ static const sqlite3_io_methods memdb_io_methods = {
 ** Close an memdb-file.
 **
 ** The pData pointer is owned by the application, so there is nothing
-** to free.  Unless the SQLITE_DESERIALIZE_FREEONCLOSE flag is set,
-** in which case we own the pData pointer and need to free it.
+** to free.
 */
 static int memdbClose(sqlite3_file *pFile){
   MemFile *p = (MemFile *)pFile;
-  if( p->mFlags & SQLITE_DESERIALIZE_FREEONCLOSE ){
-    sqlite3_free(p->aData);
-  }
+  if( p->mFlags & SQLITE_DESERIALIZE_FREEONCLOSE ) sqlite3_free(p->aData);
   return SQLITE_OK;
 }
 
@@ -169,7 +166,7 @@ static int memdbEnlarge(MemFile *p, sqlite3_int64 newSz){
   }
   newSz *= 2;
   if( newSz>p->szMax ) newSz = p->szMax;
-  pNew = sqlite3Realloc(p->aData, newSz);
+  pNew = sqlite3_realloc64(p->aData, newSz);
   if( pNew==0 ) return SQLITE_NOMEM;
   p->aData = pNew;
   p->szAlloc = newSz;
@@ -342,12 +339,12 @@ static int memdbOpen(
   p->mFlags = SQLITE_DESERIALIZE_RESIZEABLE | SQLITE_DESERIALIZE_FREEONCLOSE;
   assert( pOutFlags!=0 );  /* True because flags==SQLITE_OPEN_MAIN_DB */
   *pOutFlags = flags | SQLITE_OPEN_MEMORY;
-  pFile->pMethods = &memdb_io_methods;
+  p->base.pMethods = &memdb_io_methods;
   p->szMax = sqlite3GlobalConfig.mxMemdbSize;
   return SQLITE_OK;
 }
 
-#if 0 /* Only used to delete rollback journals, super-journals, and WAL
+#if 0 /* Only used to delete rollback journals, master journals, and WAL
       ** files, none of which exist in memdb.  So this routine is never used */
 /*
 ** Delete the file located at zPath. If the dirSync argument is true,
@@ -576,12 +573,8 @@ int sqlite3_deserialize(
     goto end_deserialize;
   }    
   zSql = sqlite3_mprintf("ATTACH x AS %Q", zSchema);
-  if( zSql==0 ){
-    rc = SQLITE_NOMEM;
-  }else{
-    rc = sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
-    sqlite3_free(zSql);
-  }
+  rc = sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
+  sqlite3_free(zSql);
   if( rc ) goto end_deserialize;
   db->init.iDb = (u8)iDb;
   db->init.reopenMemdb = 1;
@@ -596,7 +589,6 @@ int sqlite3_deserialize(
     rc = SQLITE_ERROR;
   }else{
     p->aData = pData;
-    pData = 0;
     p->sz = szDb;
     p->szAlloc = szBuf;
     p->szMax = szBuf;
@@ -609,9 +601,6 @@ int sqlite3_deserialize(
 
 end_deserialize:
   sqlite3_finalize(pStmt);
-  if( pData && (mFlags & SQLITE_DESERIALIZE_FREEONCLOSE)!=0 ){
-    sqlite3_free(pData);
-  }
   sqlite3_mutex_leave(db->mutex);
   return rc;
 }
@@ -624,11 +613,10 @@ int sqlite3MemdbInit(void){
   sqlite3_vfs *pLower = sqlite3_vfs_find(0);
   int sz = pLower->szOsFile;
   memdb_vfs.pAppData = pLower;
-  /* The following conditional can only be true when compiled for
-  ** Windows x86 and SQLITE_MAX_MMAP_SIZE=0.  We always leave
-  ** it in, to be safe, but it is marked as NO_TEST since there
-  ** is no way to reach it under most builds. */
-  if( sz<sizeof(MemFile) ) sz = sizeof(MemFile); /*NO_TEST*/
+  /* In all known configurations of SQLite, the size of a default
+  ** sqlite3_file is greater than the size of a memdb sqlite3_file.
+  ** Should that ever change, remove the following NEVER() */
+  if( NEVER(sz<sizeof(MemFile)) ) sz = sizeof(MemFile);
   memdb_vfs.szOsFile = sz;
   return sqlite3_vfs_register(&memdb_vfs, 0);
 }

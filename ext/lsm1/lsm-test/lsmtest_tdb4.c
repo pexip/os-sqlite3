@@ -978,3 +978,5 @@ static int bgc_detach(BtDb *pDb){
 /*
 ** End of background checkpointer.
 *************************************************************************/
+
+

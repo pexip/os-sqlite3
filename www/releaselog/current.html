@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="../sqlite.css" rel="stylesheet">
-<title>SQLite Release 3.34.1 On 2021-01-20</title>
+<title>SQLite Release 3.27.2 On 2019-02-25</title>
 <!-- path=../ -->
 </head>
 <body>
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -91,68 +91,103 @@ return false;
 }
 </script>
 </div>
-<h2>SQLite Release 3.34.1 On 2021-01-20</h2><p><b>Changes in version 3.34.0 (2020-12-01):</b></p>
-<p><ol class='lessindent'>
-<li value='1'> Added the <a href="../c3ref/txn_state.html">sqlite3_txn_state()</a> interface for reporting on the current
-     transaction state of the database connection.
-<li> Enhance <a href="../lang_with.html#recursivecte">recursive common table expressions</a> to support two or more
-     recursive terms as is done by SQL Server, since this helps make
-     <a href="../lang_with.html#rcex3">queries against graphs</a> easier to write and faster to execute.
-<li> Improved error messages on <a href="../lang_createtable.html#ckconst">CHECK constraint</a> failures.
-<li> <a href="../cli.html">CLI</a> enhancements:
-     <ol type="a">
-     <li> The <a href="../cli.html#dotread">.read</a> dot-command now accepts a pipeline in addition to
-          a filename.
-     <li> Added options --data-only and --nosys to the <a href="../cli.html#dump">.dump</a> dot-command.
-     <li> Added the --nosys option to the <a href="../cli.html#dschema">.schema</a> dot-command.
-     <li> Table name quoting works correctly for the <a href="../cli.html#csv">.import</a> dot-command.
-     <li> The <a href="../series.html">generate_series(START,END,STEP)</a> table-valued function
-          extension is now built into the CLI.
-     <li> The <a href="../cli.html#dotdatabases">.databases</a> dot-command now shows the status of each database
-          file as determined by <a href="../c3ref/db_readonly.html">sqlite3_db_readonly()</a> and
-          <a href="../c3ref/txn_state.html">sqlite3_txn_state()</a>.
-     <li> Added the --tabs command-line option that sets
-          <a href="../cli.html#dotmode">.mode tabs</a>.
-     <li> The --init option reports an error if the file named as its argument
-          cannot be opened.  The --init option also now honors the --bail option.
-     </ol>
-<li> Query planner improvements:
-     <ol type="a">
-     <li> Improved estimates for the cost of running a DISTINCT operator.
-     <li> When doing an UPDATE or DELETE using a multi-column index where 
-          only a few of the earlier columns of the index are useful for the 
-          index lookup, postpone doing the main table seek until after all 
-          WHERE clause constraints have been evaluated, in case those 
-          constraints can be covered by unused later terms of the index,
-          thus avoiding unnecessary main table seeks.
-     <li> The new OP_SeekScan opcode is used to improve performance of
-          multi-column index look-ups when later columns are constrained
-          by an IN operator.
-     </ol>
-<li> The <a href="../lang_transaction.html#immediate">BEGIN IMMEDIATE</a> and <a href="../lang_transaction.html#immediate">BEGIN EXCLUSIVE</a> commands now work even
-     if one or more attached database files are read-only.
-<li> Enhanced <a href="../fts5.html">FTS5</a> to support <a href="../fts5.html#trigramidx">trigram indexes</a>.
-<li> Improved performance of <a href="../wal.html">WAL mode</a> locking primitives in cases where
-     there are hundreds of connections all accessing the same database file
-     at once.
-<li> Enhanced the <a href="../carray.html">carray() table-valued function</a> to include a single-argument
-     form that is bound using the auxiliary <a href="../carray.html#onearg">sqlite3_carray_bind()</a> interface.
-<li> The <a href="../lang_corefunc.html#substr">substr() SQL function</a> can now also be called "substring()" for
-     compatibility with  SQL Server.
-<li> The <a href="../syntaxdiagrams.html">syntax diagrams</a> are now implemented as
-     <a href='https://pikchr.org/'>Pikchr</a> scripts and rendered
-     as SVG for improved legibility and ease of maintenance.
-</ol>
-<p><b>Additional changes in version 3.34.1:</b></p>
-<p><ol class='lessindent'>
-<li value='12'> Fix a potential use-after-free bug when processing a a subquery with both
-     a correlated WHERE clause and a "HAVING 0" clause and where the parent
-     query is an aggregate.
-<li> Fix documentation typos
-<li> Fix minor problems in extensions.
+<h2>SQLite Release 3.27.2 On 2019-02-25</h2><p><ol class='lessindent'>
+<li> Fix a bug in the IN operator that was introduced by an 
+     attempted optimization in version 3.27.0. Ticket
+     <a href="https://www.sqlite.org/src/info/df46dfb631f75694">df46dfb631f75694</a>
+<li> Fix a bug causing a crash when a <a href="../windowfunctions.html">window function</a> is misused.  Ticket
+     <a href="https://www.sqlite.org/src/info/4feb3159c6bc3f7e33959">4feb3159c6bc3f7e33959</a>.
+<li> Fix various documentation typos
 <p><b>Hashes:</b>
-<li>SQLITE_SOURCE_ID: 2021-01-20 14:10:07 10e20c0b43500cfb9bbc0eaa061c57514f715d87238f4d835880cd846b9ebd1f
-<li>SHA3-256 for sqlite3.c: 799a7be90651fc7296113b641a70b028c142d767b25af1d0a78f93dcf1a2bf20
+<li>SQLITE_SOURCE_ID: bd49a8271d650fa89e446b42e513b595a717b9212c91dd384aab871fc1d0f6d7
+<li>SHA3-256 for sqlite3.c: 1dbae33bff261f979d0042338f72c9e734b11a80720fb32498bae9150cc576e7
+
+</ol></p>
+<p><b>Changes carried forward from version 3.27.1 (2019-02-08):</b></p>
+<p><ol class='lessindent'>
+<li> Fix a bug in the query optimizer: an adverse interaction between
+the <a href="../optoverview.html#or_opt">OR optimization</a> and the optimization that tries to use values
+read directly from an <a href="../expridx.html">expression index</a> instead of recomputing the
+expression.
+Ticket <a href="https://www.sqlite.org/src/info/4e8e4857d32d401f">4e8e4857d32d401f</a>
+
+</ol></p>
+<p><b>Changes carried forward from version 3.27.0 (2019-02-07):</b></p>
+<p><ol class='lessindent'>
+<li>Added the <a href="../lang_vacuum.html#vacuuminto">VACUUM INTO</a> command
+<li>Issue an SQLITE_WARNING message on the <a href="../errlog.html">error log</a> if a 
+<a href="../quirks.html#dblquote">double-quoted string literal</a> is used.
+<li>The <a href="../c3ref/expanded_sql.html">sqlite3_normalized_sql()</a> interface works on any prepared statement
+created using <a href="../c3ref/prepare.html">sqlite3_prepare_v2()</a> or <a href="../c3ref/prepare.html">sqlite3_prepare_v3()</a>.  It is no
+longer necessary to use <a href="../c3ref/prepare.html">sqlite3_prepare_v3()</a> with <a href="../c3ref/c_prepare_normalize.html#sqlitepreparenormalize">SQLITE_PREPARE_NORMALIZE</a>
+in order to use <a href="../c3ref/expanded_sql.html">sqlite3_normalized_sql()</a>.
+<li>Added the remove_diacritics=2 option to <a href="../fts3.html">FTS3</a> and <a href="../fts5.html">FTS5</a>.
+<li>Added the <a href="../c3ref/c_prepare_normalize.html#sqlitepreparenovtab">SQLITE_PREPARE_NO_VTAB</a> option to <a href="../c3ref/prepare.html">sqlite3_prepare_v3()</a>.
+Use that option to prevent circular references to <a href="../vtab.html#xshadowname">shadow tables</a> from
+causing resource leaks.
+<li>Enhancements to the <a href="../c3ref/deserialize.html">sqlite3_deserialize()</a> interface:
+<ol type="a">
+<li> Add the <a href="../c3ref/c_fcntl_begin_atomic_write.html#sqlitefcntlsizelimit">SQLITE_FCNTL_SIZE_LIMIT</a> <a href="../c3ref/file_control.html">file-control</a> for
+     setting an upper bound on the size of the in-memory database created
+     by sqlite3_deserialize.  The default upper bound is 1GiB, or whatever
+     alternative value is specified by
+     <a href="../c3ref/config.html">sqlite3_config</a>(<a href="../c3ref/c_config_covering_index_scan.html#sqliteconfigmemdbmaxsize">SQLITE_CONFIG_MEMDB_MAXSIZE</a>)
+     and/or <a href="../compile.html#memdb_default_maxsize">SQLITE_MEMDB_DEFAULT_MAXSIZE</a>.
+<li> Honor the <a href="../c3ref/c_deserialize_freeonclose.html">SQLITE_DESERIALIZE_READONLY</a> flag, which was previously described
+     in the documentation, but was previously a no-op.
+<li> Enhance the "deserialize" command of the <a href="../tclsqlite.html">TCL Interface</a> to give it
+     new "--maxsize N" and "--readonly BOOLEAN" options.
+</ol>
+<li>Enhancements to the <a href="../cli.html">CLI</a>, mostly to support testing and debugging
+of the SQLite library itself:
+<ol type="a">
+<li> Add support for ".open --hexdb". The 
+     "<a href="https://sqlite.org/src/doc/trunk/tool/dbtotxt.md">dbtotxt</a>" utility 
+     program used to generate the text for the "hexdb" is added to the 
+     source tree.
+<li> Add support for the "--maxsize N" option on ".open --deserialize".
+<li> Add the "--memtrace" command-line option, to show all memory allocations
+     and deallocations.
+<li> Add the ".eqp trace" option on builds with SQLITE_DEBUG, to enable
+     bytecode program listing with indentation and 
+     <a href="../pragma.html#pragma_vdbe_trace">PRAGMA vdbe_trace</a> all in one step.
+<li> Add the ".progress" command for accessing
+     the <a href="../c3ref/progress_handler.html">sqlite3_progress_handler()</a> interface.
+<li> Add the "--async" option to the ".backup" command.
+<li> Add options "--expanded", "--normalized", "--plain", "--profile", "--row",
+     "--stmt", and "--close" to the ".trace" command.
+</ol>
+<li> Increased robustness against malicious SQL that is run against a 
+     maliciously corrupted database.
+ <p><b>Bug fixes:</b>
+<li>Do not use a partial index to do a table scan on an IN operator.
+Ticket <a href="https://www.sqlite.org/src/info/1d958d90596593a774">1d958d90596593a774</a>.
+<li>Fix the <a href="../optoverview.html#flattening">query flattener</a> so that it works on queries that contain
+subqueries that use <a href="../windowfunctions.html">window functions</a>.
+Ticket <a href="https://www.sqlite.org/src/info/f09fcd17810f65f717">709fcd17810f65f717</a>
+<li>Ensure that ALTER TABLE modifies table and column names embedded in WITH
+clauses that are part of views and triggers.
+<li>Fix a parser bug that prevented the use of parentheses around table-valued
+functions.
+<li>Fix a problem with the <a href="../optoverview.html#or_opt">OR optimization</a> on <a href="../expridx.html">indexes on expressions</a>.
+Ticket <a href="https://www.sqlite.org/src/info/d96eba87698a428c1d">d96eba87698a428c1d</a>.
+<li>Fix a problem with the
+<a href="../optoverview.html#leftjoinreduction">LEFT JOIN strength reduction optimization</a> in which the optimization
+was being applied inappropriately due to an IS NOT NULL operator.
+Ticket <a href="https://www.sqlite.org/src/info/5948e09b8c415bc45d">5948e09b8c415bc45d</a>.
+<li>Fix the <a href="../lang_replace.html">REPLACE</a> command so that it is no longer able to sneak a
+NULL value into a NOT NULL column even if the NOT NULL column has a default
+value of NULL.
+Ticket <a href="https://www.sqlite.org/src/info/e6f1f2e34dceeb1ed6">e6f1f2e34dceeb1ed6</a>
+<li>Fix a problem with the use of <a href="../windowfunctions.html">window functions</a> used within 
+<a href="../lang_expr.html#cosub">correlated subqueries</a>.
+Ticket <a href="https://www.sqlite.org/src/info/d0866b26f83e9c55e3">d0866b26f83e9c55e3</a>
+<li>Fix the <a href="../lang_altertable.html#altertabmvcol">ALTER TABLE RENAME COLUMN</a> command so that it works for tables
+that have redundant UNIQUE constraints.
+Ticket <a href="https://www.sqlite.org/src/info/bc8d94f0fbd633fd9a">bc8d94f0fbd633fd9a</a>
+<li>Fix a bug that caused <a href="../lang_corefunc.html#zeroblob">zeroblob</a> values to be truncated when inserted into
+a table that uses an <a href="../expridx.html">expression index</a>.
+Ticket <a href="https://www.sqlite.org/src/info/bb4bdb9f7f654b0bb9">bb4bdb9f7f654b0bb9</a>
 
 </ol></p>
 

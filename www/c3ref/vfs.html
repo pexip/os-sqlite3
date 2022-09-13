@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -134,7 +134,7 @@ struct sqlite3_vfs {
   /*
   ** The methods above are in versions 1 through 3 of the sqlite_vfs object.
   ** New fields may be appended in future versions.  The iVersion
-  ** value will increment whenever this happens.
+  ** value will increment whenever this happens. 
   */
 };
 </pre></blockquote>
@@ -152,10 +152,10 @@ with SQLite <a href="../releaselog/3_7_0.html">version 3.7.0</a> on 2010-07-21, 
 to 3 with SQLite <a href="../releaselog/3_7_6.html">version 3.7.6</a> on 2011-04-12.  Additional fields
 may be appended to the sqlite3_vfs object and the iVersion value
 may increase again in future versions of SQLite.
-Note that due to an oversight, the structure
-of the sqlite3_vfs object changed in the transition from
+Note that the structure
+of the sqlite3_vfs object changes in the transition from
 SQLite <a href="../releaselog/3_5_9.html">version 3.5.9</a> to <a href="../releaselog/3_6_0.html">version 3.6.0</a> on 2008-07-16
-and yet the iVersion field was not increased.</p>
+and yet the iVersion field was not modified.</p>
 
 <p>The szOsFile field is the size of the subclassed <a href="../c3ref/file.html">sqlite3_file</a>
 structure used by this VFS.  mxPathname is the maximum length of
@@ -212,7 +212,7 @@ call, depending on the object being opened:</p>
 <li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_TEMP_JOURNAL</a>
 <li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_TRANSIENT_DB</a>
 <li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_SUBJOURNAL</a>
-<li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_SUPER_JOURNAL</a>
+<li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_MASTER_JOURNAL</a>
 <li>  <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_WAL</a>
 </ul></p>
 
@@ -247,7 +247,7 @@ It is <i>not</i> used to indicate the file should be opened
 for exclusive access.</p>
 
 <p>At least szOsFile bytes of memory are allocated by SQLite
-to hold the <a href="../c3ref/file.html">sqlite3_file</a> structure passed as the third
+to hold the  <a href="../c3ref/file.html">sqlite3_file</a> structure passed as the third
 argument to xOpen.  The xOpen method does not have to
 allocate the structure; it should just fill it in.  Note that
 the xOpen method must set the sqlite3_file.pMethods to either
@@ -261,14 +261,8 @@ or failure of the xOpen call.</p>
 The flags argument to xAccess() may be <a href="../c3ref/c_access_exists.html">SQLITE_ACCESS_EXISTS</a>
 to test for the existence of a file, or <a href="../c3ref/c_access_exists.html">SQLITE_ACCESS_READWRITE</a> to
 test whether a file is readable and writable, or <a href="../c3ref/c_access_exists.html">SQLITE_ACCESS_READ</a>
-to test whether a file is at least readable.  The SQLITE_ACCESS_READ
-flag is never actually used and is not implemented in the built-in
-VFSes of SQLite.  The file is named by the second argument and can be a
-directory. The xAccess method returns <a href="../rescode.html#ok">SQLITE_OK</a> on success or some
-non-zero error code if there is an I/O error or if the name of
-the file given in the second argument is illegal.  If SQLITE_OK
-is returned, then non-zero or zero is written into *pResOut to indicate
-whether or not the file is accessible.</p>
+to test whether a file is at least readable.   The file can be a
+directory.</p>
 
 <p>SQLite will always allocate at least mxPathname+1 bytes for the
 output buffer xFullPathname.  The exact size of the output buffer

@@ -11,7 +11,8 @@
 *************************************************************************
 **
 ** This is a utility program designed to aid running regressions tests on
-** the SQLite library using data from external fuzzers.
+** the SQLite library using data from an external fuzzer, such as American
+** Fuzzy Lop (AFL) (http://lcamtuf.coredump.cx/afl/).
 **
 ** This program reads content from an SQLite database file with the following
 ** schema:
@@ -62,21 +63,6 @@
 ** If fuzzcheck does crash, it can be run in the debugger and the content
 ** of the global variable g.zTextName[] will identify the specific XSQL and
 ** DB values that were running when the crash occurred.
-**
-** DBSQLFUZZ:
-**
-** The dbsqlfuzz fuzzer includes both a database file and SQL to run against
-** that database in its input.  This utility can now process dbsqlfuzz
-** input files.  Load such files using the "--load-dbsql FILE ..." command-line
-** option.
-**
-** Dbsqlfuzz inputs are ordinary text.  The first part of the file is text
-** that describes the content of the database (using a lot of hexadecimal),
-** then there is a divider line followed by the SQL to run against the
-** database.  Because they are ordinary text, dbsqlfuzz inputs are stored
-** in the XSQL table, as if they were ordinary SQL inputs.  The isDbSql()
-** function can look at a text string and determine whether or not it is
-** a valid dbsqlfuzz input.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,9 +80,11 @@
 # include <unistd.h>
 #endif
 
-#include <stddef.h>
-#if !defined(_MSC_VER)
-# include <stdint.h>
+#ifdef SQLITE_OSS_FUZZ
+# include <stddef.h>
+# if !defined(_MSC_VER)
+#  include <stdint.h>
+# endif
 #endif
 
 #if defined(_MSC_VER)
@@ -146,7 +134,6 @@ struct Blob {
 */
 static struct GlobalVars {
   const char *zArgv0;              /* Name of program */
-  const char *zDbFile;             /* Name of database file */
   VFile aFile[MX_FILE];            /* The virtual filesystem */
   int nDb;                         /* Number of template databases */
   Blob *pFirstDb;                  /* Content of first template database */
@@ -161,10 +148,11 @@ static struct GlobalVars {
 */
 static void fatalError(const char *zFormat, ...){
   va_list ap;
-  fprintf(stderr, "%s", g.zArgv0);
-  if( g.zDbFile ) fprintf(stderr, " %s", g.zDbFile);
-  if( g.zTestName[0] ) fprintf(stderr, " (%s)", g.zTestName);
-  fprintf(stderr, ": ");
+  if( g.zTestName[0] ){
+    fprintf(stderr, "%s (%s): ", g.zArgv0, g.zTestName);
+  }else{
+    fprintf(stderr, "%s: ", g.zArgv0);
+  }
   va_start(ap, zFormat);
   vfprintf(stderr, zFormat, ap);
   va_end(ap);
@@ -173,21 +161,12 @@ static void fatalError(const char *zFormat, ...){
 }
 
 /*
-** signal handler
+** Timeout handler
 */
 #ifdef __unix__
-static void signalHandler(int signum){
-  const char *zSig;
-  if( signum==SIGABRT ){
-    zSig = "abort";
-  }else if( signum==SIGALRM ){
-    zSig = "timeout";
-  }else if( signum==SIGSEGV ){
-    zSig = "segfault";
-  }else{
-    zSig = "signal";
-  }
-  fatalError(zSig);
+static void timeoutHandler(int NotUsed){
+  (void)NotUsed;
+  fatalError("timeout\n");
 }
 #endif
 
@@ -335,39 +314,6 @@ static void readfileFunc(
 }
 
 /*
-** Implementation of the "readtextfile(X)" SQL function.  The text content
-** of the file named X through the end of the file or to the first \000
-** character, whichever comes first, is read and returned as TEXT.  NULL
-** is returned if the file does not exist or is unreadable.
-*/
-static void readtextfileFunc(
-  sqlite3_context *context,
-  int argc,
-  sqlite3_value **argv
-){
-  const char *zName;
-  FILE *in;
-  long nIn;
-  char *pBuf;
-
-  zName = (const char*)sqlite3_value_text(argv[0]);
-  if( zName==0 ) return;
-  in = fopen(zName, "rb");
-  if( in==0 ) return;
-  fseek(in, 0, SEEK_END);
-  nIn = ftell(in);
-  rewind(in);
-  pBuf = sqlite3_malloc64( nIn+1 );
-  if( pBuf && 1==fread(pBuf, nIn, 1, in) ){
-    pBuf[nIn] = 0;
-    sqlite3_result_text(context, pBuf, -1, sqlite3_free);
-  }else{
-    sqlite3_free(pBuf);
-  }
-  fclose(in);
-}
-
-/*
 ** Implementation of the "writefile(X,Y)" SQL function.  The argument Y
 ** is written into file X.  The number of bytes written is returned.  Or
 ** NULL is returned if something goes wrong, such as being unable to open
@@ -507,68 +453,11 @@ static unsigned int mxProgressCb = 2000;
 /* Maximum string length in SQLite */
 static int lengthLimit = 1000000;
 
-/* Maximum expression depth */
-static int depthLimit = 500;
-
-/* Limit on the amount of heap memory that can be used */
-static sqlite3_int64 heapLimit = 100000000;
-
 /* Maximum byte-code program length in SQLite */
 static int vdbeOpLimit = 25000;
 
 /* Maximum size of the in-memory database */
 static sqlite3_int64 maxDbSize = 104857600;
-/* OOM simulation parameters */
-static unsigned int oomCounter = 0;    /* Simulate OOM when equals 1 */
-static unsigned int oomRepeat = 0;     /* Number of OOMs in a row */
-static void*(*defaultMalloc)(int) = 0; /* The low-level malloc routine */
-
-/* This routine is called when a simulated OOM occurs.  It is broken
-** out as a separate routine to make it easy to set a breakpoint on
-** the OOM
-*/
-void oomFault(void){
-  if( eVerbosity ){
-    printf("Simulated OOM fault\n");
-  }
-  if( oomRepeat>0 ){
-    oomRepeat--;
-  }else{
-    oomCounter--;
-  }
-}
-
-/* This routine is a replacement malloc() that is used to simulate
-** Out-Of-Memory (OOM) errors for testing purposes.
-*/
-static void *oomMalloc(int nByte){
-  if( oomCounter ){
-    if( oomCounter==1 ){
-      oomFault();
-      return 0;
-    }else{
-      oomCounter--;
-    }
-  }
-  return defaultMalloc(nByte);
-}
-
-/* Register the OOM simulator.  This must occur before any memory
-** allocations */
-static void registerOomSimulator(void){
-  sqlite3_mem_methods mem;
-  sqlite3_shutdown();
-  sqlite3_config(SQLITE_CONFIG_GETMALLOC, &mem);
-  defaultMalloc = mem.xMalloc;
-  mem.xMalloc = oomMalloc;
-  sqlite3_config(SQLITE_CONFIG_MALLOC, &mem);
-}
-
-/* Turn off any pending OOM simulation */
-static void disableOom(void){
-  oomCounter = 0;
-  oomRepeat = 0;
-}
 
 /*
 ** Translate a single byte of Hex into an integer.
@@ -627,7 +516,7 @@ static int decodeDatabase(
   unsigned char **paDecode,      /* OUT: decoded database file */
   int *pnDecode                  /* OUT: Size of decoded database */
 ){
-  unsigned char *a, *aNew;       /* Database under construction */
+  unsigned char *a;              /* Database under construction */
   int mx = 0;                    /* Current size of the database */
   sqlite3_uint64 nAlloc = 4096;  /* Space allocated in a[] */
   unsigned int i;                /* Next byte of zIn[] to read */
@@ -642,7 +531,7 @@ static int decodeDatabase(
     fprintf(stderr, "Out of memory!\n");
     exit(1);
   }
-  memset(a, 0, (size_t)nAlloc);
+  memset(a, 0, nAlloc);
   for(i=k=0; i<n; i++){
     unsigned char c = (unsigned char)zIn[i];
     if( isxdigit(c) ){
@@ -673,14 +562,13 @@ static int decodeDatabase(
             }
             newSize = MX_FILE_SZ;
           }
-          aNew = sqlite3_realloc64( a, newSize );
-          if( aNew==0 ){
-            sqlite3_free(a);
-            return -1;
+          a = sqlite3_realloc64( a, newSize );
+          if( a==0 ){
+            fprintf(stderr, "Out of memory!\n");
+            exit(1);
           }
-          a = aNew;
           assert( newSize > nAlloc );
-          memset(a+nAlloc, 0, (size_t)(newSize - nAlloc));
+          memset(a+nAlloc, 0, newSize - nAlloc);
           nAlloc = newSize;
         }
         if( j>=(unsigned)mx ){
@@ -749,9 +637,6 @@ static int block_troublesome_sql(
      || sqlite3_stricmp("temp_store_directory", zArg1)==0
     ){
       return SQLITE_DENY;
-    }
-    if( sqlite3_stricmp("oom",zArg1)==0 && zArg2!=0 && zArg2[0]!=0 ){
-      oomCounter = atoi(zArg2);
     }
   }else if( (eCode==SQLITE_ATTACH || eCode==SQLITE_DETACH)
             && zArg1 && zArg1[0] ){
@@ -852,8 +737,7 @@ int runCombinedDbSqlInput(const uint8_t *aData, size_t nByte){
     int nAlloc = 0;
     int nNotUsed = 0;
     sqlite3_status(SQLITE_STATUS_MALLOC_COUNT, &nAlloc, &nNotUsed, 0);
-    fprintf(stderr,"memory leak prior to test start:"
-                   " %lld bytes in %d allocations\n",
+    fprintf(stderr,"Memory leak in mutator: %lld bytes in %d allocations\n",
             sqlite3_memory_used(), nAlloc);
     exit(1);
   }
@@ -868,10 +752,7 @@ int runCombinedDbSqlInput(const uint8_t *aData, size_t nByte){
     fflush(stdout);
   }
   rc = sqlite3_open(0, &cx.db);
-  if( rc ){
-    sqlite3_free(aDb);
-    return 1;
-  }
+  if( rc ) return 1;
   if( bVdbeDebug ){
     sqlite3_exec(cx.db, "PRAGMA vdbe_debug=ON", 0, 0, 0);
   }
@@ -896,11 +777,6 @@ int runCombinedDbSqlInput(const uint8_t *aData, size_t nByte){
   if( lengthLimit>0 ){
     sqlite3_limit(cx.db, SQLITE_LIMIT_LENGTH, lengthLimit);
   }
-  if( depthLimit>0 ){
-    sqlite3_limit(cx.db, SQLITE_LIMIT_EXPR_DEPTH, depthLimit);
-  }
-  sqlite3_limit(cx.db, SQLITE_LIMIT_LIKE_PATTERN_LENGTH, 100);
-  sqlite3_hard_heap_limit64(heapLimit);
 
   if( nDb>=20 && aDb[18]==2 && aDb[19]==2 ){
     aDb[18] = aDb[19] = 1;
@@ -1415,8 +1291,6 @@ static void showHelp(void){
 "  --export-sql DIR     Write SQL to file(s) in DIR. Also works with --sqlid\n"
 "  --help               Show this help text\n"
 "  --info               Show information about SOURCE-DB w/o running tests\n"
-"  --limit-depth N      Limit expression depth to N.  Default: 500\n"
-"  --limit-heap N       Limit heap memory to N.  Default: 100M\n"
 "  --limit-mem N        Limit memory used by test SQLite instance to N bytes\n"
 "  --limit-vdbe         Panic if any test runs for more than 100,000 cycles\n"
 "  --load-sql ARGS...   Load SQL scripts fron files into SOURCE-DB\n"
@@ -1430,12 +1304,9 @@ static void showHelp(void){
 "  -q|--quiet           Reduced output\n"
 "  --rebuild            Rebuild and vacuum the database file\n"
 "  --result-trace       Show the results of each SQL command\n"
-"  --skip N             Skip the first N test cases\n"
-"  --spinner            Use a spinner to show progress\n"
 "  --sqlid N            Use only SQL where sqlid=N\n"
 "  --timeout N          Abort if any single test needs more than N seconds\n"
 "  -v|--verbose         Increased output.  Repeat for more output.\n"
-"  --vdbe-debug         Activate VDBE debugging.\n"
   );
 }
 
@@ -1458,8 +1329,6 @@ int main(int argc, char **argv){
   int rebuildFlag = 0;         /* --rebuild */
   int vdbeLimitFlag = 0;       /* --limit-vdbe */
   int infoFlag = 0;            /* --info */
-  int nSkip = 0;               /* --skip */
-  int bSpinner = 0;            /* True for --spinner */
   int timeoutTest = 0;         /* undocumented --timeout-test flag */
   int runFlags = 0;            /* Flags sent to runSql() */
   char *zMsg = 0;              /* Add this message */
@@ -1472,7 +1341,7 @@ int main(int argc, char **argv){
   int cellSzCkFlag = 0;        /* --cell-size-check */
   int sqlFuzz = 0;             /* True for SQL fuzz. False for DB fuzz */
   int iTimeout = 120;          /* Default 120-second timeout */
-  int nMem = 0;                /* Memory limit override */
+  int nMem = 0;                /* Memory limit */
   int nMemThisDb = 0;          /* Memory limit set by the CONFIG table */
   char *zExpDb = 0;            /* Write Databases to files in this directory */
   char *zExpSql = 0;           /* Write SQL to files in this directory */
@@ -1484,13 +1353,10 @@ int main(int argc, char **argv){
   int openFlags4Data;          /* Flags for sqlite3_open_v2() */
   int nV;                      /* How much to increase verbosity with -vvvv */
 
-  registerOomSimulator();
   sqlite3_initialize();
   iBegin = timeOfDay();
 #ifdef __unix__
-  signal(SIGALRM, signalHandler);
-  signal(SIGSEGV, signalHandler);
-  signal(SIGABRT, signalHandler);
+  signal(SIGALRM, timeoutHandler);
 #endif
   g.zArgv0 = argv[0];
   openFlags4Data = SQLITE_OPEN_READONLY;
@@ -1524,24 +1390,20 @@ int main(int argc, char **argv){
       if( strcmp(z,"info")==0 ){
         infoFlag = 1;
       }else
-      if( strcmp(z,"limit-depth")==0 ){
-        if( i>=argc-1 ) fatalError("missing arguments on %s", argv[i]);
-        depthLimit = integerValue(argv[++i]);
-      }else
-      if( strcmp(z,"limit-heap")==0 ){
-        if( i>=argc-1 ) fatalError("missing arguments on %s", argv[i]);
-        heapLimit = integerValue(argv[++i]);
-      }else
       if( strcmp(z,"limit-mem")==0 ){
+#if !defined(SQLITE_ENABLE_MEMSYS3) && !defined(SQLITE_ENABLE_MEMSYS5)
+        fatalError("the %s option requires -DSQLITE_ENABLE_MEMSYS5 or _MEMSYS3",
+                   argv[i]);
+#else
         if( i>=argc-1 ) fatalError("missing arguments on %s", argv[i]);
         nMem = integerValue(argv[++i]);
+#endif
       }else
       if( strcmp(z,"limit-vdbe")==0 ){
         vdbeLimitFlag = 1;
       }else
       if( strcmp(z,"load-sql")==0 ){
-        zInsSql = "INSERT INTO xsql(sqltext)"
-                  "VALUES(CAST(readtextfile(?1) AS text))";
+        zInsSql = "INSERT INTO xsql(sqltext)VALUES(CAST(readfile(?1) AS text))";
         iFirstInsArg = i+1;
         openFlags4Data = SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE;
         break;
@@ -1553,8 +1415,7 @@ int main(int argc, char **argv){
         break;
       }else
       if( strcmp(z,"load-dbsql")==0 ){
-        zInsSql = "INSERT INTO xsql(sqltext)"
-                  "VALUES(CAST(readtextfile(?1) AS text))";
+        zInsSql = "INSERT INTO xsql(sqltext)VALUES(CAST(readfile(?1) AS text))";
         iFirstInsArg = i+1;
         openFlags4Data = SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE;
         dbSqlOnly = 1;
@@ -1590,13 +1451,6 @@ int main(int argc, char **argv){
       if( strcmp(z,"result-trace")==0 ){
         runFlags |= SQL_OUTPUT;
       }else
-      if( strcmp(z,"skip")==0 ){
-        if( i>=argc-1 ) fatalError("missing arguments on %s", argv[i]);
-        nSkip = atoi(argv[++i]);
-      }else
-      if( strcmp(z,"spinner")==0 ){
-        bSpinner = 1;
-      }else
       if( strcmp(z,"sqlid")==0 ){
         if( i>=argc-1 ) fatalError("missing arguments on %s", argv[i]);
         onlySqlid = integerValue(argv[++i]);
@@ -1610,9 +1464,6 @@ int main(int argc, char **argv){
 #ifndef __unix__
         fatalError("timeout is not available on non-unix systems");
 #endif
-      }else
-      if( strcmp(z,"vdbe-debug")==0 ){
-        bVdbeDebug = 1;
       }else
       if( strcmp(z,"verbose")==0 ){
         quietFlag = 0;
@@ -1656,7 +1507,6 @@ int main(int argc, char **argv){
 
   /* Process each source database separately */
   for(iSrcDb=0; iSrcDb<nSrcDb; iSrcDb++){
-    g.zDbFile = azSrcDb[iSrcDb];
     rc = sqlite3_open_v2(azSrcDb[iSrcDb], &db,
                          openFlags4Data, pDfltVfs->zName);
     if( rc ){
@@ -1736,9 +1586,14 @@ int main(int argc, char **argv){
           ossFuzzThisDb = sqlite3_column_int(pStmt,1);
           if( verboseFlag ) printf("Config: oss-fuzz=%d\n", ossFuzzThisDb);
         }
-        if( strcmp(zName, "limit-mem")==0 ){
+        if( strcmp(zName, "limit-mem")==0 && !nativeMalloc ){
+#if !defined(SQLITE_ENABLE_MEMSYS3) && !defined(SQLITE_ENABLE_MEMSYS5)
+          fatalError("the limit-mem option requires -DSQLITE_ENABLE_MEMSYS5"
+                     " or _MEMSYS3");
+#else
           nMemThisDb = sqlite3_column_int(pStmt,1);
           if( verboseFlag ) printf("Config: limit-mem=%d\n", nMemThisDb);
+#endif
         }
       }
       sqlite3_finalize(pStmt);
@@ -1747,8 +1602,6 @@ int main(int argc, char **argv){
     if( zInsSql ){
       sqlite3_create_function(db, "readfile", 1, SQLITE_UTF8, 0,
                               readfileFunc, 0, 0);
-      sqlite3_create_function(db, "readtextfile", 1, SQLITE_UTF8, 0,
-                              readtextfileFunc, 0, 0);
       sqlite3_create_function(db, "isdbsql", 1, SQLITE_UTF8, 0,
                               isDbSqlFunc, 0, 0);
       rc = sqlite3_prepare_v2(db, zInsSql, -1, &pStmt, 0);
@@ -1867,19 +1720,12 @@ int main(int argc, char **argv){
 
     /* Limit available memory, if requested */
     sqlite3_shutdown();
-
-    if( nMemThisDb>0 && nMem==0 ){
-      if( !nativeMalloc ){
-        pHeap = realloc(pHeap, nMemThisDb);
-        if( pHeap==0 ){
-          fatalError("failed to allocate %d bytes of heap memory", nMem);
-        }
-        sqlite3_config(SQLITE_CONFIG_HEAP, pHeap, nMemThisDb, 128);
-      }else{
-        sqlite3_hard_heap_limit64((sqlite3_int64)nMemThisDb);
+    if( nMemThisDb>0 && !nativeMalloc ){
+      pHeap = realloc(pHeap, nMemThisDb);
+      if( pHeap==0 ){
+        fatalError("failed to allocate %d bytes of heap memory", nMem);
       }
-    }else{
-      sqlite3_hard_heap_limit64(0);
+      sqlite3_config(SQLITE_CONFIG_HEAP, pHeap, nMemThisDb, 128);
     }
 
     /* Disable lookaside with the --native-malloc option */
@@ -1892,16 +1738,11 @@ int main(int argc, char **argv){
     
     /* Run a test using each SQL script against each database.
     */
-    if( !verboseFlag && !quietFlag && !bSpinner ) printf("%s:", zDbName);
+    if( !verboseFlag && !quietFlag ) printf("%s:", zDbName);
     for(pSql=g.pFirstSql; pSql; pSql=pSql->pNext){
       if( isDbSql(pSql->a, pSql->sz) ){
         sqlite3_snprintf(sizeof(g.zTestName), g.zTestName, "sqlid=%d",pSql->id);
-        if( bSpinner ){
-          int nTotal =g.nSql;
-          int idx = pSql->seq;
-          printf("\r%s: %d/%d   ", zDbName, idx, nTotal);
-          fflush(stdout);
-        }else if( verboseFlag ){
+        if( verboseFlag ){
           printf("%s\n", g.zTestName);
           fflush(stdout);
         }else if( !quietFlag ){
@@ -1914,14 +1755,9 @@ int main(int argc, char **argv){
             prevAmt = amt;
           }
         }
-        if( nSkip>0 ){
-          nSkip--;
-        }else{
-          runCombinedDbSqlInput(pSql->a, pSql->sz);
-        }
+        runCombinedDbSqlInput(pSql->a, pSql->sz);
         nTest++;
         g.zTestName[0] = 0;
-        disableOom();
         continue;
       }
       for(pDb=g.pFirstDb; pDb; pDb=pDb->pNext){
@@ -1929,12 +1765,7 @@ int main(int argc, char **argv){
         const char *zVfs = "inmem";
         sqlite3_snprintf(sizeof(g.zTestName), g.zTestName, "sqlid=%d,dbid=%d",
                          pSql->id, pDb->id);
-        if( bSpinner ){
-          int nTotal = g.nDb*g.nSql;
-          int idx = pSql->seq*g.nDb + pDb->id - 1;
-          printf("\r%s: %d/%d   ", zDbName, idx, nTotal);
-          fflush(stdout);
-        }else if( verboseFlag ){
+        if( verboseFlag ){
           printf("%s\n", g.zTestName);
           fflush(stdout);
         }else if( !quietFlag ){
@@ -1946,10 +1777,6 @@ int main(int argc, char **argv){
             fflush(stdout);
             prevAmt = amt;
           }
-        }
-        if( nSkip>0 ){
-          nSkip--;
-          continue;
         }
         createVFile("main.db", pDb->sz, pDb->a);
         sqlite3_randomness(0,0);
@@ -1979,12 +1806,6 @@ int main(int argc, char **argv){
                                      &vdbeLimitFlag);
           }
 #endif
-#ifdef SQLITE_TESTCTRL_PRNG_SEED
-          sqlite3_test_control(SQLITE_TESTCTRL_PRNG_SEED, 1, db);
-#endif
-          if( bVdbeDebug ){
-            sqlite3_exec(db, "PRAGMA vdbe_debug=ON", 0, 0, 0);
-          }
           do{
             runSql(db, (char*)pSql->a, runFlags);
           }while( timeoutTest );
@@ -2017,9 +1838,7 @@ int main(int argc, char **argv){
         }
       }
     }
-    if( bSpinner ){
-      printf("\n");
-    }else if( !quietFlag && !verboseFlag ){
+    if( !quietFlag && !verboseFlag ){
       printf(" 100%% - %d tests\n", g.nDb*g.nSql);
     }
   

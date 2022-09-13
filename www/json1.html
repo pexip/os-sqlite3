@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -148,7 +148,7 @@ mk.innerHTML = "&#x25ba;";
 <h1 id="overview"><span>1. </span>Overview</h1>
 <p>
 The <b>json1</b> extension is a <a href="loadext.html">loadable extension</a> that
-implements fifteen <a href="appfunc.html">application-defined SQL functions</a> and
+implements fifteen <a href="c3ref/create_function.html">application-defined SQL functions</a> and
 two <a href="vtab.html#tabfunc2">table-valued functions</a> that are useful for
 managing <a href="http://json.org/">JSON</a> content stored in an SQLite database.
 There are thirteen scalar functions:
@@ -276,7 +276,7 @@ and BLOBs.  It is not possible to add a sixth "JSON" type.
 The json1 extension does not (currently) support a binary encoding
 of JSON.  Experiments have been unable to find a binary encoding
 that is significantly smaller or faster than a plain text encoding.
-(The present implementation parses JSON text at over 1 GB/s.)
+(The present implementation parses JSON text at over 300 MB/s.)
 All json1 functions currently throw an error if any of their
 arguments are BLOBs because BLOBs are reserved
 for a future enhancement in which BLOBs will store the binary encoding
@@ -309,8 +309,6 @@ with the JSON spec.  These routines accept exactly the
 <a href="http://www.rfc-editor.org/rfc/rfc7159.txt">rfc-7159 JSON syntax</a>
 &mdash; no more and no less.
 
-<a name="jsonpath"></a>
-
 </p><h2 id="path_arguments"><span>3.2. </span>PATH arguments</h2>
 
 <p>
@@ -318,18 +316,7 @@ For functions that accept PATH arguments, that PATH must be well-formed or
 else the function will throw an error.
 A well-formed PATH is a text value that begins with exactly one
 '$' character followed by zero or more instances
-of ".<i>objectlabel</i>" or "&#91;<i>arrayindex</i>&#93;".
-
-</p><p>
-The <i>arrayindex</i> is usually a non-negative integer <i>N</i>.  In
-that case, the array element selected is the <i>N</i>-th element
-of the array, starting with zero on the left.
-The <i>arrayindex</i> can also be of the form "<b>#-</b><i>N</i>"
-in which case the element selected is the <i>N</i>-th from the
-right.  The last element of the array is "<b>#-1</b>".  Think of
-the "#" characters as the "number of elements in the array".  Then
-the expression "#-1" evaluates is the integer that corresponds to 
-the last entry in the array.
+of ".<i>objectlabel</i>" or "&#91<i>arrayindex</i>&#93".
 
 </p><h2 id="value_arguments"><span>3.3. </span>VALUE arguments</h2>
 
@@ -436,7 +423,7 @@ Example:
 returns a well-formed JSON array that is composed from those arguments.
 If any argument to json_array() is a BLOB then an error is thrown.
 
-</p><p>An argument with SQL type TEXT is normally converted into a quoted 
+</p><p>An argument with SQL type TEXT it is normally converted into a quoted 
 JSON string.  However, if the argument is the output from another json1
 function, then it is stored as JSON.  This allows calls to json_array()
 and <a href="json1.html#jobj">json_object()</a> to be nested.  The <a href="json1.html#jmini">json()</a> function can also
@@ -534,9 +521,6 @@ the various values.
 <li><span class='jex'>json_extract('{"a":2,"c":[4,5],"f":7}','$.c','$.a')</span>
 <span class='jans'>&rarr; '[[4,5],2]'</span></li>
 
-<li><span class='jex'>json_extract('{"a":2,"c":[4,5],"f":7}','$.c[#-1]')</span>
-<span class='jans'>&rarr; 5</span></li>
-
 <li><span class='jex'>json_extract('{"a":2,"c":[4,5,{"f":7}]}', '$.x')</span>
 <span class='jans'>&rarr; NULL</span></li>
 
@@ -579,7 +563,7 @@ JSON to be edited.  Subsequent arguments occur in pairs with the first
 element of each pair being a path and the second element being the value
 to insert or replace or set on that path.
 
-</p><p>Edits occur sequentially from left to right.  Changes caused by
+</p><p>Edits occurs sequentially from left to right.  Changes caused by
 prior edits can affect the path search for subsequent edits.
 
 </p><p>If the value of a path/value pair is an SQLite TEXT value, then it
@@ -593,20 +577,7 @@ of its substructure.
 well-formed or if any PATH argument is not well-formed or if any
 argument is a BLOB.
 
-</p><p>To append an element onto the end of an array, using json_insert()
-with an array index of "#".  Examples:
-
-<ul>
-<li><span class='jex'>json_insert('[1,2,3,4]','$[#]',99)</span>
-<span class='jans'>&rarr; '[1,2,3,4,99]'</span></li>
-
-<li><span class='jex'>json_insert('[1,[2,3],4]','$[1][#]',99)</span>
-<span class='jans'>&rarr; '[1,[2,3,99],4]'</span></li>
-
-</ul>
-
-
-</p><p>Other examples:
+</p><p>Examples:
 
 <ul>
 <li><span class='jex'>json_insert('{"a":2,"c":4}', '$.a', 99)</span>
@@ -720,7 +691,7 @@ especially Arrays with lots of substructure.
 <p>The json_remove(X,P,...) function takes a single JSON value as its
 first argument followed by zero or more path arguments.
 The json_remove(X,P,...) function returns
-a copy of the X parameter with all the elements 
+a new JSON value that is the X with all the elements 
 identified by path arguments removed.  Paths that select elements
 not found in X are silently ignored.
 
@@ -747,9 +718,6 @@ path, or if any argument is a BLOB.
 <li><span class='jex'>json_remove('[0,1,2,3,4]','$[0]','$[2]')</span>
 <span class='jans'>&rarr; '[1,2,4]'</span></li>
 
-<li><span class='jex'>json_remove('[0,1,2,3,4]','$[#-1]','$[0]')</span>
-<span class='jans'>&rarr; '[1,2,3]'</span></li>
-
 <li><span class='jex'>json_remove('{"x":25,"y":42}')</span>
 <span class='jans'>&rarr; '{"x":25,"y":42}'</span></li>
 
@@ -772,7 +740,7 @@ path, or if any argument is a BLOB.
 <p>The json_type(X) function returns the "type" of the outermost element
 of X.  The json_type(X,P) function returns the "type" of the element
 in X that is selected by path P.  The "type" returned by json_type() is
-one of the following an SQL text values:
+on of the following an SQL text values:
 'null', 'true', 'false', 'integer', 'real', 'text', 'array', or 'object'.
 If the path P in json_type(X,P) selects an element that does not exist
 in X, then this function returns NULL.

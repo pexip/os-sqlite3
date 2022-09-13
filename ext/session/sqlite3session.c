@@ -902,7 +902,7 @@ static int sessionGrowHash(int bPatchset, SessionTable *pTab){
   if( pTab->nChange==0 || pTab->nEntry>=(pTab->nChange/2) ){
     int i;
     SessionChange **apNew;
-    sqlite3_int64 nNew = 2*(sqlite3_int64)(pTab->nChange ? pTab->nChange : 128);
+    int nNew = (pTab->nChange ? pTab->nChange : 128) * 2;
 
     apNew = (SessionChange **)sqlite3_malloc64(sizeof(SessionChange *) * nNew);
     if( apNew==0 ){
@@ -1624,9 +1624,7 @@ int sqlite3session_diff(
       }
       sqlite3_free((char*)azCol);
       if( bMismatch ){
-        if( pzErrMsg ){
-          *pzErrMsg = sqlite3_mprintf("table schemas do not match");
-        }
+        *pzErrMsg = sqlite3_mprintf("table schemas do not match");
         rc = SQLITE_SCHEMA;
       }
       if( bHasPk==0 ){
@@ -1831,13 +1829,13 @@ int sqlite3session_attach(
 ** If successful, return zero. Otherwise, if an OOM condition is encountered,
 ** set *pRc to SQLITE_NOMEM and return non-zero.
 */
-static int sessionBufferGrow(SessionBuffer *p, size_t nByte, int *pRc){
-  if( *pRc==SQLITE_OK && (size_t)(p->nAlloc-p->nBuf)<nByte ){
+static int sessionBufferGrow(SessionBuffer *p, int nByte, int *pRc){
+  if( *pRc==SQLITE_OK && p->nAlloc-p->nBuf<nByte ){
     u8 *aNew;
     i64 nNew = p->nAlloc ? p->nAlloc : 128;
     do {
       nNew = nNew*2;
-    }while( (size_t)(nNew-p->nBuf)<nByte );
+    }while( (nNew-p->nBuf)<nByte );
 
     aNew = (u8 *)sqlite3_realloc64(p->aBuf, nNew);
     if( 0==aNew ){
@@ -2949,20 +2947,15 @@ static int sessionChangesetReadTblhdr(sqlite3_changeset_iter *p){
   }
 
   if( rc==SQLITE_OK ){
-    size_t iPK = sizeof(sqlite3_value*)*p->nCol*2;
+    int iPK = sizeof(sqlite3_value*)*p->nCol*2;
     memset(p->tblhdr.aBuf, 0, iPK);
     memcpy(&p->tblhdr.aBuf[iPK], &p->in.aData[p->in.iNext], nCopy);
     p->in.iNext += nCopy;
   }
 
   p->apValue = (sqlite3_value**)p->tblhdr.aBuf;
-  if( p->apValue==0 ){
-    p->abPK = 0;
-    p->zTab = 0;
-  }else{
-    p->abPK = (u8*)&p->apValue[p->nCol*2];
-    p->zTab = p->abPK ? (char*)&p->abPK[p->nCol] : 0;
-  }
+  p->abPK = (u8*)&p->apValue[p->nCol*2];
+  p->zTab = (char*)&p->abPK[p->nCol];
   return (p->rc = rc);
 }
 
@@ -3484,7 +3477,6 @@ struct SessionApplyCtx {
   u8 *abPK;                       /* Boolean array - true if column is in PK */
   int bStat1;                     /* True if table is sqlite_stat1 */
   int bDeferConstraints;          /* True to defer constraints */
-  int bInvertConstraints;         /* Invert when iterating constraints buffer */
   SessionBuffer constraints;      /* Deferred constraints are stored here */
   SessionBuffer rebase;           /* Rebase information (if any) here */
   u8 bRebaseStarted;              /* If table header is already in rebase */
@@ -3519,7 +3511,7 @@ static int sessionDeleteRow(
   SessionBuffer buf = {0, 0, 0};
   int nPk = 0;
 
-  sessionAppendStr(&buf, "DELETE FROM main.", &rc);
+  sessionAppendStr(&buf, "DELETE FROM ", &rc);
   sessionAppendIdent(&buf, zTab, &rc);
   sessionAppendStr(&buf, " WHERE ", &rc);
 
@@ -3602,7 +3594,7 @@ static int sessionUpdateRow(
   SessionBuffer buf = {0, 0, 0};
 
   /* Append "UPDATE tbl SET " */
-  sessionAppendStr(&buf, "UPDATE main.", &rc);
+  sessionAppendStr(&buf, "UPDATE ", &rc);
   sessionAppendIdent(&buf, zTab, &rc);
   sessionAppendStr(&buf, " SET ", &rc);
 
@@ -3870,7 +3862,7 @@ static int sessionSeekToRow(
 }
 
 /*
-** This function is called from within sqlite3changeset_apply_v2() when
+** This function is called from within sqlite3changset_apply_v2() when
 ** a conflict is encountered and resolved using conflict resolution
 ** mode eType (either SQLITE_CHANGESET_OMIT or SQLITE_CHANGESET_REPLACE)..
 ** It adds a conflict resolution record to the buffer in 
@@ -4257,11 +4249,9 @@ static int sessionRetryConstraints(
     SessionBuffer cons = pApply->constraints;
     memset(&pApply->constraints, 0, sizeof(SessionBuffer));
 
-    rc = sessionChangesetStart(
-        &pIter2, 0, 0, cons.nBuf, cons.aBuf, pApply->bInvertConstraints
-    );
+    rc = sessionChangesetStart(&pIter2, 0, 0, cons.nBuf, cons.aBuf, 0);
     if( rc==SQLITE_OK ){
-      size_t nByte = 2*pApply->nCol*sizeof(sqlite3_value*);
+      int nByte = 2*pApply->nCol*sizeof(sqlite3_value*);
       int rc2;
       pIter2->bPatchset = bPatchset;
       pIter2->zTab = (char*)zTab;
@@ -4326,7 +4316,6 @@ static int sessionChangesetApply(
   pIter->in.bNoDiscard = 1;
   memset(&sApply, 0, sizeof(sApply));
   sApply.bRebase = (ppRebase && pnRebase);
-  sApply.bInvertConstraints = !!(flags & SQLITE_CHANGESETAPPLY_INVERT);
   sqlite3_mutex_enter(sqlite3_db_mutex(db));
   if( (flags & SQLITE_CHANGESETAPPLY_NOSAVEPOINT)==0 ){
     rc = sqlite3_exec(db, "SAVEPOINT changeset_apply", 0, 0, 0);

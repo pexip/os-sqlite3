@@ -2,11 +2,10 @@ Source: sqlite3
 Section: devel
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
-Build-Depends: debhelper-compat (= 13), autoconf (>= 2.59), libtool (>= 1.5.2), automake, chrpath, lynx, libreadline-dev, tcl8.6-dev
+Build-Depends: debhelper (>= 11), autoconf (>= 2.59), libtool (>= 1.5.2), automake, chrpath, libreadline-dev, tcl8.6-dev
 Build-Conflicts: tcl8.4, tcl8.4-dev, tcl8.5, tcl8.5-dev
-Standards-Version: 4.5.1
-Rules-Requires-Root: no
 Homepage: https://www.sqlite.org/
+Standards-Version: 4.3.0
 
 Package: lemon
 Architecture: any
@@ -30,8 +29,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libsqlite3-0 (= ${binary:Version})
 Suggests: sqlite3-doc
 Multi-Arch: foreign
 Description: Command line interface for SQLite 3
- SQLite is a C library that implements an SQL database engine.
- Programs that link with the SQLite library can have SQL database
+ SQLite is a C library that implements an SQL database engine. 
+ Programs that link with the SQLite library can have SQL database 
  access without running a separate RDBMS process.
 
 Package: sqlite3-doc
@@ -40,8 +39,8 @@ Architecture: all
 Depends: ${misc:Depends}
 Recommends: sqlite3
 Description: SQLite 3 documentation
- SQLite is a C library that implements an SQL database engine.
- Programs that link with the SQLite library can have SQL database
+ SQLite is a C library that implements an SQL database engine. 
+ Programs that link with the SQLite library can have SQL database 
  access without running a separate RDBMS process.
  .
  This package contains the documentation that is also available on
@@ -55,8 +54,8 @@ Breaks: python-migrate (<< 0.11.0-4~), python3-migrate (<< 0.11.0-4~)
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Description: SQLite 3 shared library
- SQLite is a C library that implements an SQL database engine.
- Programs that link with the SQLite library can have SQL database
+ SQLite is a C library that implements an SQL database engine. 
+ Programs that link with the SQLite library can have SQL database 
  access without running a separate RDBMS process.
 
 Package: libsqlite3-dev
@@ -66,8 +65,8 @@ Architecture: any
 Depends: libsqlite3-0 (= ${binary:Version}), ${misc:Depends}, libc6-dev
 Multi-Arch: same
 Description: SQLite 3 development files
- SQLite is a C library that implements an SQL database engine.
- Programs that link with the SQLite library can have SQL database
+ SQLite is a C library that implements an SQL database engine. 
+ Programs that link with the SQLite library can have SQL database 
  access without running a separate RDBMS process.
  .
  This package contains the development files (headers, static libraries)
@@ -78,8 +77,8 @@ Section: interpreters
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: SQLite 3 Tcl bindings
- SQLite is a C library that implements an SQL database engine.
- Programs that link with the SQLite library can have SQL database
+ SQLite is a C library that implements an SQL database engine. 
+ Programs that link with the SQLite library can have SQL database 
  access without running a separate RDBMS process.
  .
  This package contains the Tcl bindings.

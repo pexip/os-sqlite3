@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -117,9 +117,9 @@ by the reader until a new read transaction is started.</p>
 version of the database file so that it is possible to later open a new read
 transaction that sees that historical version of the database rather than
 the most recent version.
-</p><p>1 Constructor: <a href="../c3ref/snapshot_get.html">sqlite3_snapshot_get()</a></p>
-<p>1 Destructor: <a href="../c3ref/snapshot_free.html">sqlite3_snapshot_free()</a></p>
-<p>3 Methods:
+</p><p>Constructor: <a href="../c3ref/snapshot_get.html">sqlite3_snapshot_get()</a></p>
+<p>Destructor: <a href="../c3ref/snapshot_free.html">sqlite3_snapshot_free()</a></p>
+<p>Methods:
  <a href="../c3ref/snapshot_cmp.html">sqlite3_snapshot_cmp()</a>,
 <a href="../c3ref/snapshot_open.html">sqlite3_snapshot_open()</a>,
 <a href="../c3ref/snapshot_recover.html">sqlite3_snapshot_recover()</a></p>

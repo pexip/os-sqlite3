@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -153,7 +153,7 @@ xMutexNotheld) implement the following interfaces (respectively):</p>
 <p>The only difference is that the public sqlite3_XXX functions enumerated
 above silently ignore any invocations that pass a NULL pointer instead
 of a valid mutex handle. The implementations of the methods defined
-by this structure are not required to handle this case. The results
+by this structure are not required to handle this case, the results
 of passing a NULL pointer instead of a valid mutex handle are undefined
 (i.e. it is acceptable to provide an implementation that segfaults if
 it is passed a NULL pointer).</p>
