@@ -1,3 +1,21 @@
+sqlite3 (3.27.2-3+deb10u2pexip1) pexip; urgency=medium
+
+  * New upstream release with security fixes
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Wed, 21 Sep 2022 15:46:17 +0100
+
+sqlite3 (3.27.2-3+deb10u2) buster-security; urgency=high
+
+  * CVE-2020-35525: Prevent a potential null pointer deference issue in
+    INTERSEC query processing.
+  * CVE-2020-35527: Prevent an out-of-bounds access issue that could be
+    exploited via ALTER TABLE in views that have a nested FROM clauses.
+  * CVE-2021-20223: Prevent an issue with the "unicode61" tokenizer related to
+    Unicode control characters ("class Cc") and embedded NUL characters being
+    misinterpreted as tokens.
+
+ -- Chris Lamb <lamby@debian.org>  Tue, 13 Sep 2022 15:15:07 +0100
+
 sqlite3 (3.27.2-3+deb10u1pexip1) pexip; urgency=medium
 
   * New upstream release
