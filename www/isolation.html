@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -130,7 +154,7 @@ same cache until the writer commits its transaction.
 </p>
 
 <p>
-If two database connections shared the same cache and the reader has 
+If two database connections share the same cache and the reader has 
 enabled the <a href="pragma.html#pragma_read_uncommitted">read_uncommitted pragma</a>, then the reader will be able to
 see changes made by the writer before the writer transaction commits.
 The combined use of <a href="sharedcache.html">shared cache mode</a> and the <a href="pragma.html#pragma_read_uncommitted">read_uncommitted pragma</a> 
@@ -146,16 +170,15 @@ by actually serializing the writes.  There can only be a single writer
 at a time to an SQLite database.  There can be multiple database connections
 open at the same time, and all of those database connections can write
 to the database file, but they have to take turns.  SQLite uses locks
-to serialization of the writes automatically; this is not something that
-the applications using SQLite need to worry with.</p>
+to serialize the writes automatically; this is not something that
+the applications using SQLite need to worry about.</p>
 
 
 <h2>Isolation And Concurrency</h2>
 
 <p>
 SQLite implements isolation and concurrency control (and atomicity) using
-transient
-journal files that appear in the same directory in as the database file.
+transient journal files that appear in the same directory as the database file.
 There are two major "journal modes".
 The older "rollback mode" corresponds to using the "DELETE", "PERSIST",
 or "TRUNCATE" options to the <a href="pragma.html#pragma_journal_mode">journal_mode pragma</a>.  In rollback mode,
@@ -181,15 +204,15 @@ enabled by running "<a href="pragma.html#pragma_journal_mode">PRAGMA journal_mod
 In rollback mode, SQLite implements isolation by locking the database
 file and preventing any reads by other database connections
 while each write transaction is underway.
-Readers can be be active at the beginning of a write, before any content
+Readers can be active at the beginning of a write, before any content
 is flushed to disk and while all changes are still held in the writer's
 private memory space.  But before any changes are made to the database file
-on disk, all readers must be (temporally) expelled in order to give the writer
+on disk, all readers must be (temporarily) expelled in order to give the writer
 exclusive access to the database file.  
 Hence, readers are prohibited from seeing incomplete
 transactions by virtue of being locked out of the database while the
 transaction is being written to disk.  Only after the transaction is
-completely written and synced to disk and commits are the readers allowed
+completely written and synced to disk and committed are the readers allowed
 back into the database.  Hence readers never get a chance to see partially
 written changes.
 </p>
@@ -215,7 +238,7 @@ Then Y comes along and runs an <a href="lang_update.html">UPDATE</a> statement t
 X can subsequently do a <a href="lang_select.html">SELECT</a> against the records that Y modified but
 X will see the older unmodified entries because Y's changes are all
 invisible to X while X is holding a read transaction.  If X wants to see
-the changes that Y made, then X must ends its read transaction and
+the changes that Y made, then X must end its read transaction and
 start a new one (by running <a href="lang_transaction.html">COMMIT</a> followed by another <a href="lang_transaction.html">BEGIN</a>.)
 </p>
 
@@ -343,4 +366,5 @@ considered to be the same database connection, not separate database
 connections.
 </p>
 </ol>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/isolation.in?m=aa8b8e3ef6e0a7fed">2022-01-20 21:38:08</a> UTC </small></i></p>
 

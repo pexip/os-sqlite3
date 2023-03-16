@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,9 +89,33 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
-<!-- keywords: sqlite3_errcode sqlite3_errmsg sqlite3_errmsg16 sqlite3_errstr sqlite3_extended_errcode -->
+<!-- keywords: sqlite3_errcode sqlite3_errmsg sqlite3_errmsg16 sqlite3_error_offset sqlite3_errstr sqlite3_extended_errcode -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Error Codes And Messages</h2>
@@ -102,6 +126,7 @@ int sqlite3_extended_errcode(sqlite3 *db);
 const char *sqlite3_errmsg(sqlite3*);
 const void *sqlite3_errmsg16(sqlite3*);
 const char *sqlite3_errstr(int);
+int sqlite3_error_offset(sqlite3 *db);
 </pre></blockquote>
 <p>
 If the most recent sqlite3_* API call associated with
@@ -117,13 +142,14 @@ disabled.</p>
 sqlite3_extended_errcode() might change with each API call.
 Except, there are some interfaces that are guaranteed to never
 change the value of the error code.  The error-code preserving
-interfaces are:</p>
+interfaces include the following:</p>
 
 <p><ul>
 <li> sqlite3_errcode()
 <li> sqlite3_extended_errcode()
 <li> sqlite3_errmsg()
 <li> sqlite3_errmsg16()
+<li> sqlite3_error_offset()
 </ul></p>
 
 <p>The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
@@ -137,6 +163,13 @@ subsequent calls to other SQLite interface functions.</p>
 that describes the <a href="../rescode.html">result code</a>, as UTF-8.
 Memory to hold the error message string is managed internally
 and must not be freed by the application.</p>
+
+<p>If the most recent error references a specific token in the input
+SQL, the sqlite3_error_offset() interface returns the byte offset
+of the start of that token.  The byte offset returned by
+sqlite3_error_offset() assumes that the input SQL is UTF8.
+If the most recent error does not reference a specific token in the input
+SQL, then the sqlite3_error_offset() function returns -1.</p>
 
 <p>When the serialized <a href="../threadsafe.html">threading mode</a> is in use, it might be the
 case that a second error occurs on a separate thread in between
@@ -155,3 +188,4 @@ error code and message may or may not be set.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

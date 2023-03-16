@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -105,74 +129,72 @@ Professional Support &amp; Extension Products
 
 <div class='desktoponly'>
 <table border=0 cellspacing=20 width='100%'>
-<tr><td valign=top><b>1.</b></td><td valign=top><b>Public Mailing List.</b> 
-  Help and advice via email from a world-wide
-  community of experts.
+<tr><td valign=top><b>1.</b></td><td valign=top><b>Public Forum.</b> 
+  Help and advice from a world-wide community of experts.
 </td>
 <td valign=top width=165>Free</td>
-<td valign=top align=left width=145><a class='button' href='http://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/'>Archives</a><br>
-<a class='button' href='http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-users'>Sign-up</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/forum/about'>More Info</a><br>
+<a class='button' href='https://sqlite.org/forum/forummain'>Recent Posts</a></td>
 </tr>
 <tr><td valign=top><b>2.</b></td><td valign=top><b>Annual Maintenance Subscription.</b> 
   Private, expert email advice from the developers of SQLite.
 </td>
 <td valign=top width=165>$1500/year</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/ams.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/cgi-bin/sams-step1'>Buy Now!</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/com/ams.html'>More Info</a><br>
+<a class='button' href='https://sqlite.org/purchase/ams'>Purchase</a></td>
 </tr>
 <tr><td valign=top><b>3.</b></td><td valign=top><b>Technical Support.</b> 
   High-priority email and phone support directly from the SQLite developers.
   Guaranteed response time available as an option.
 </td>
-<td valign=top width=165>$8K-50K/year</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/tech.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a></td>
+<td valign=top width=165>$8K-85K/year</td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/com/tech.html'>More Info</a><br>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a></td>
 </tr>
 <tr><td valign=top><b>4.</b></td><td valign=top><b>SQLite Consortium Membership.</b> 
   Premium enterprise support including on-site visits and
   access to all proprietary extensions and test suites.
 </td>
-<td valign=top width=165>$85K/year</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/member.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a></td>
+<td valign=top width=165>$120K/year</td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/com/member.html'>More Info</a><br>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a></td>
 </tr>
 </table></div>
 <div class='mobileonly'>
 <ol>
 <li value=1><p>
-<b>Public Mailing List.</b> 
-  Help and advice via email from a world-wide
-  community of experts.
+<b>Public Forum.</b> 
+  Help and advice from a world-wide community of experts.
 
 <p>Cost: Free
-<p><a class='button' href='http://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/'>Archives</a>
-<a class='button' href='http://sqlite.org:8080/cgi-bin/mailman/listinfo/sqlite-users'>Sign-up</a>
+<p><a class='button' href='https://sqlite.org/forum/about'>More Info</a>
+<a class='button' href='https://sqlite.org/forum/forummain'>Recent Posts</a>
 </li>
 <li value=2><p>
 <b>Annual Maintenance Subscription.</b> 
   Private, expert email advice from the developers of SQLite.
 
 <p>Cost: $1500/year
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/ams.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/cgi-bin/sams-step1'>Buy Now!</a>
+<p><a class='button' href='https://sqlite.org/com/ams.html'>More Info</a>
+<a class='button' href='https://sqlite.org/purchase/ams'>Purchase</a>
 </li>
 <li value=3><p>
 <b>Technical Support.</b> 
   High-priority email and phone support directly from the SQLite developers.
   Guaranteed response time available as an option.
 
-<p>Cost: $8K-50K/year
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/tech.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a>
+<p>Cost: $8K-85K/year
+<p><a class='button' href='https://sqlite.org/com/tech.html'>More Info</a>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a>
 </li>
 <li value=4><p>
 <b>SQLite Consortium Membership.</b> 
   Premium enterprise support including on-site visits and
   access to all proprietary extensions and test suites.
 
-<p>Cost: $85K/year
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/member.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a>
+<p>Cost: $120K/year
+<p><a class='button' href='https://sqlite.org/com/member.html'>More Info</a>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a>
 </li>
 </ol></div>
 
@@ -186,16 +208,16 @@ Professional Support &amp; Extension Products
   Warranty of title and perpetual right-to-use for the SQLite source code. 
 </td>
 <td valign=top width=165>$6000 one time fee</td>
-<td valign=top align=left width=145><a class='button' href='https://www.sqlite.org/copyright.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/cgi-bin/license-step1'>Buy Now!</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/copyright.html'>More Info</a><br>
+<a class='button' href='https://sqlite.org/purchase/license'>Purchase</a></td>
 </tr>
 <tr><td valign=top><b>6.</b></td><td valign=top><b>SQLite Encryption Extension (SEE).</b> 
    A drop-in replacement for public-domain SQLite source code that has 
    the added ability to read/write AES-encrypted databases. 
 </td>
 <td valign=top width=165>$2000 one time fee</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/see.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/cgi-bin/see-step1'>Buy Now!</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/see/doc/release/www/readme.wiki'>More Info</a><br>
+<a class='button' href='https://sqlite.org/purchase/see'>Purchase</a></td>
 </tr>
 <tr><td valign=top><b>7.</b></td><td valign=top><b>Compressed And Encrypted Read-Only Database (CEROD).</b> 
    A drop-in replacement for public-domain SQLite source code
@@ -203,8 +225,8 @@ Professional Support &amp; Extension Products
    compressed and encrypted. 
 </td>
 <td valign=top width=165>$2000 one time fee</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/cerod.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/cgi-bin/scerod-step1'>Buy Now!</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/cerod/doc/release/www/readme.wiki'>More Info</a><br>
+<a class='button' href='https://sqlite.org/purchase/cerod'>Buy Now!</a></td>
 </tr>
 <tr><td valign=top><b>8.</b></td><td valign=top><b>The ZIPVFS Read/Write Compressed Database Extension.</b> 
    The ZIPVFS extension automatically compresses and encrypts
@@ -212,8 +234,8 @@ Professional Support &amp; Extension Products
    it while reading.
 </td>
 <td valign=top width=165>$4000 one time fee</td>
-<td valign=top align=left width=145><a class='button' href='https://www.hwaci.com/sw/sqlite/zipvfs.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/cgi-bin/zipvfs-step1'>Buy Now!</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/zipvfs/doc/release/www/readme.wiki'>More Info</a><br>
+<a class='button' href='https://sqlite.org/purchase/zipvfs'>Buy Now!</a></td>
 </tr>
 </table></div>
 <div class='mobileonly'>
@@ -223,8 +245,8 @@ Professional Support &amp; Extension Products
   Warranty of title and perpetual right-to-use for the SQLite source code. 
 
 <p>Cost: $6000 one time fee
-<p><a class='button' href='https://www.sqlite.org/copyright.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/cgi-bin/license-step1'>Buy Now!</a>
+<p><a class='button' href='https://sqlite.org/copyright.html'>More Info</a>
+<a class='button' href='https://sqlite.org/purchase/license'>Purchase</a>
 </li>
 <li value=6><p>
 <b>SQLite Encryption Extension (SEE).</b> 
@@ -232,8 +254,8 @@ Professional Support &amp; Extension Products
    the added ability to read/write AES-encrypted databases. 
 
 <p>Cost: $2000 one time fee
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/see.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/cgi-bin/see-step1'>Buy Now!</a>
+<p><a class='button' href='https://sqlite.org/see/doc/release/www/readme.wiki'>More Info</a>
+<a class='button' href='https://sqlite.org/purchase/see'>Purchase</a>
 </li>
 <li value=7><p>
 <b>Compressed And Encrypted Read-Only Database (CEROD).</b> 
@@ -242,8 +264,8 @@ Professional Support &amp; Extension Products
    compressed and encrypted. 
 
 <p>Cost: $2000 one time fee
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/cerod.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/cgi-bin/scerod-step1'>Buy Now!</a>
+<p><a class='button' href='https://sqlite.org/cerod/doc/release/www/readme.wiki'>More Info</a>
+<a class='button' href='https://sqlite.org/purchase/cerod'>Buy Now!</a>
 </li>
 <li value=8><p>
 <b>The ZIPVFS Read/Write Compressed Database Extension.</b> 
@@ -252,8 +274,8 @@ Professional Support &amp; Extension Products
    it while reading.
 
 <p>Cost: $4000 one time fee
-<p><a class='button' href='https://www.hwaci.com/sw/sqlite/zipvfs.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/cgi-bin/zipvfs-step1'>Buy Now!</a>
+<p><a class='button' href='https://sqlite.org/zipvfs/doc/release/www/readme.wiki'>More Info</a>
+<a class='button' href='https://sqlite.org/purchase/zipvfs'>Buy Now!</a>
 </li>
 </ol></div>
 
@@ -272,8 +294,8 @@ Professional Support &amp; Extension Products
   services is on a case-by-case basis depending on requirements.
 </td>
 <td valign=top width=165>call</td>
-<td valign=top align=left width=145><a class='button' href='https://www.sqlite.org/th3.html'>More Info</a><br>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a></td>
+<td valign=top align=left width=145><a class='button' href='https://sqlite.org/th3.html'>More Info</a><br>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a></td>
 </tr>
 </table></div>
 <div class='mobileonly'>
@@ -288,8 +310,8 @@ Professional Support &amp; Extension Products
   services is on a case-by-case basis depending on requirements.
 
 <p>Cost: call
-<p><a class='button' href='https://www.sqlite.org/th3.html'>More Info</a>
-<a class='button' href='https://www.hwaci.com/sw/sqlite/contact.html'>Request A Quote</a>
+<p><a class='button' href='https://sqlite.org/th3.html'>More Info</a>
+<a class='button' href='https://sqlite.org/com/contact.html'>Request A Quote</a>
 </li>
 </ol></div>
 
@@ -302,39 +324,25 @@ Most people use SQLite without
 any kind of license or support.</p>
 
 <p>Free support for SQLite is available on the public
-SQLite mailing list: 
-<a href="mailto:sqlite-users@mailinglists.sqlite.org">sqlite-users@mailinglists.sqlite.org</a>.
-The mailing list is monitored by a large
+<a href="https://sqlite.org/forum/forummain">SQLite Forum</a>.
+The forum is monitored by a large
 community of experts, including the core SQLite development team,
 who are able to resolve just about
 any problems with SQLite that you are likely to have.</p>
 
-<p>You can browse the 
-<a href="http://www.mail-archive.com/sqlite-users%40mailinglists.sqlite.org/">
-mailing list archives</a> or
-<a href="http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-users">
-sign-up</a> as a mailing list member.
-To send a question to the mailing list, it is recommended that you
-<a href="http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/sqlite-users">
-sign-up</a>, but you can simply send an email message to
-<a href="mailto:sqlite-users@mailinglists.sqlite.org">sqlite-users@mailinglists.sqlite.org</a> and
-your question will probably appear on the mailing list in about 24 hours.
-(Questions from non-members are moderated, which is the reason for the
-24-hour delay.)
-
 <p>If you do not want to discuss your issues on a public and open forum, an
-<a href="https://www.hwaci.com/sw/sqlite/ams.html">Annual Maintenance 
+<a href="https://sqlite.org/com/ams.html">Annual Maintenance 
 Subscription</a> or "AMS" might
 serve your needs better.
 An AMS entitles you to private email support directly from the developers of
 SQLite.  The level of support with an AMS is similar to the support one
-gets from the public mail list except that an AMS includes a unilateral 
+gets from the public forum except that an AMS includes a unilateral 
 promise of non-disclosure, so with an AMS you can discuss your issues
 with the SQLite developers in private, without the whole world watching.
 An AMS costs $1500 per year.</p>
 
 <p>Users with more advanced support needs can opt for a
-<a href="https://www.hwaci.com/sw/sqlite/tech.html">Technical Support
+<a href="https://sqlite.org/com/tech.html">Technical Support
 Agreement</a>.
 Technical support agreements are customized to the needs of each
 individual client, but generally include direct telephone support
@@ -344,8 +352,8 @@ technical support varies but is generally
 in the range of $8000 to $35000 per year.</p>
 
 <p>If SQLite is "mission critical" to your company, then you may
-want to becoming an 
-<a href="https://www.hwaci.com/sw/sqlite/member.html">SQLite Consortium 
+want to become an 
+<a href="https://sqlite.org/com/member.html">SQLite Consortium 
 Member</a>.  The SQLite
 Consortium is a collaboration of companies who sponsor ongoing development
 of SQLite in exchange for enterprise-level technical support, on-site
@@ -358,20 +366,20 @@ a competitor.</p>
 <h2>Software Licenses</h2>
 
 <p>The SQLite source code is in the 
-<a href="https://www.sqlite.org/copyright.html">public domain</a>,
+<a href="https://sqlite.org/copyright.html">public domain</a>,
 and is free for use
 by anyone and for any purpose.  No license is required.  However, some
 users desire a license so that they can have warranty of title, or just
 because their company lawyers say they need one.  A
-<a href="https://www.hwaci.com/cgi-bin/license-step1">perpetual license</a> 
-and warranty
-of title for the core SQLite source code is available for this purpose.</p>
+<a href="https://sqlite.org/purchase/license">perpetual license
+and warranty of title</a>
+for the core SQLite source code is available for this purpose.</p>
 
 <p>The 
-<a href="https://www.hwaci.com/cgi-bin/see-step1">SQLite Encryption
+<a href="https://sqlite.org/purchase/see">SQLite Encryption
 Extension (SEE)</a>,
-the <a href="https://www.hwaci.com/cgi-bin/zipvfs-step1">ZIPVFS Extension</a>,
-and the <a href="https://www.hwaci.com/cgi-bin/scerod-step1">Compressed and
+the <a href="https://sqlite.org/purchase/zipvfs">ZIPVFS Extension</a>,
+and the <a href="https://sqlite.org/purchase/cerod">Compressed and
 Encrypted ReadOnly Database (CEROD)</a> extension are enhanced versions 
 of SQLite that handle encrypted
 and/or compressed databases.  SEE can read and write encrypted databases.
@@ -384,7 +392,7 @@ also optionally encrypted.  All of SEE, ZIPVFS, and CEROD are
 supplied in source code form only; the licensee is responsible for 
 compiling the products for their chosen platform.  It is not difficult 
 to compile any of these extension.  All products come in the form of an
-<a href="https://www.sqlite.org/amalgamation.html">amalgamated source file</a>
+<a href="https://sqlite.org/amalgamation.html">amalgamated source file</a>
 named "sqlite3.c".  So compiling SEE, ZIPVFS, or CEROD into an application 
 is simply a matter of substituting the SEE-, ZIPVFS-, or CEROD-enabled sqlite3.c 
 source file in place of the public-domain sqlite3.c source file and recompiling.
@@ -395,7 +403,7 @@ uncompressed and unencrypted database files.</p>
 <a name="th3"></a>
 <h2>Testing Services</h2>
 
-<p>The <a href="https://www.sqlite.org/th3.html">Test Harness #3 (TH3)</a> is 
+<p>The <a href="https://sqlite.org/th3.html">Test Harness #3 (TH3)</a> is 
 a suite of test cases for SQLite that provide 100% branch test coverage
 (and 100% modified condition/decision coverage) for the core SQLite in
 an as-deployed configuration using only published and documented interfaces.
@@ -432,4 +440,5 @@ size until at least the year 2050.
 We expect to be here when you need us,
 even if that need is many years in the future.</p>
 </body></html>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/prosupport.in?m=9490d686297a13d0d">2022-03-14 21:40:46</a> UTC </small></i></p>
 

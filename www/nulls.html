@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h2>NULL Handling in SQLite Versus Other Database Engines</h2>
@@ -162,7 +186,7 @@ The following table shows the results of the NULL handling experiments.
 </p>
 
 <table border=1 cellpadding=3 width="100%">
-<tr><th>&nbsp&nbsp;</th>
+<tr><th>&nbsp;&nbsp;</th>
 <th>SQLite</th>
 <th>PostgreSQL</th>
 <th>Oracle</th>
@@ -247,7 +271,7 @@ The following table shows the results of the NULL handling experiments.
 </table>
 
 <table border=1 cellpadding=3 width="100%">
-<tr><th>&nbsp&nbsp;</th>
+<tr><th>&nbsp;&nbsp;</th>
 <th>MySQL<br>3.23.41</th>
 <th>MySQL<br>4.0.16</th>
 <th>Firebird</th>
@@ -317,7 +341,7 @@ The following table shows the results of the NULL handling experiments.
 <tr>
 <td valign="top" rowspan=5>Notes:&nbsp;&nbsp;</td>
 <td>1.&nbsp;</td>
-<td>Older versions of firebird omits all NULLs from SELECT DISTINCT
+<td>Older versions of firebird omit all NULLs from SELECT DISTINCT
 and from UNION.</td>
 </tr>
 <tr><td>2.&nbsp;</td>
@@ -346,8 +370,8 @@ above.
 -- I have about decided that SQL's treatment of NULLs is capricious and cannot be
 -- deduced by logic.  It must be discovered by experiment.  To that end, I have 
 -- prepared the following script to test how various SQL databases deal with NULL.
--- My aim is to use the information gather from this script to make SQLite as much
--- like other databases as possible.
+-- My aim is to use the information gathered from this script to make SQLite as
+-- much like other databases as possible.
 --
 -- If you could please run this script in your database engine and mail the results
 -- to me at drh@hwaci.com, that will be a big help.  Please be sure to identify the
@@ -377,7 +401,7 @@ select a+50, case when not (b<>0 or c<>0) then 1 else 0 end from t1;
 select a+60, case b when c then 1 else 0 end from t1;
 select a+70, case c when b then 1 else 0 end from t1;
 
--- What happens when you multiple a NULL by zero?
+-- What happens when you multiply a NULL by zero?
 select a+80, b*0 from t1;
 select a+90, b*c from t1;
 
@@ -412,4 +436,5 @@ select * from t2;
 drop table t1;
 drop table t2;
 </pre>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/nulls.in?m=fb46653cda64eb8a1">2022-01-20 21:38:08</a> UTC </small></i></p>
 

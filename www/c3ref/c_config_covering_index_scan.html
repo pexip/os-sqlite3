@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: SQLITE_CONFIG_COVERING_INDEX_SCAN SQLITE_CONFIG_GETMALLOC SQLITE_CONFIG_GETMUTEX SQLITE_CONFIG_GETPCACHE SQLITE_CONFIG_GETPCACHE2 SQLITE_CONFIG_HEAP SQLITE_CONFIG_LOG SQLITE_CONFIG_LOOKASIDE SQLITE_CONFIG_MALLOC SQLITE_CONFIG_MEMDB_MAXSIZE SQLITE_CONFIG_MEMSTATUS SQLITE_CONFIG_MMAP_SIZE SQLITE_CONFIG_MULTITHREAD SQLITE_CONFIG_MUTEX SQLITE_CONFIG_PAGECACHE SQLITE_CONFIG_PCACHE SQLITE_CONFIG_PCACHE2 SQLITE_CONFIG_PCACHE_HDRSZ SQLITE_CONFIG_PMASZ SQLITE_CONFIG_SCRATCH SQLITE_CONFIG_SERIALIZED SQLITE_CONFIG_SINGLETHREAD SQLITE_CONFIG_SMALL_MALLOC SQLITE_CONFIG_SORTERREF_SIZE SQLITE_CONFIG_SQLLOG SQLITE_CONFIG_STMTJRNL_SPILL SQLITE_CONFIG_URI SQLITE_CONFIG_WIN32_HEAPSIZE {configuration option} -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -108,7 +132,7 @@ return false;
 #define SQLITE_CONFIG_MEMSTATUS     9  /* boolean */
 #define SQLITE_CONFIG_MUTEX        10  /* sqlite3_mutex_methods* */
 #define SQLITE_CONFIG_GETMUTEX     11  /* sqlite3_mutex_methods* */
-/* previously SQLITE_CONFIG_CHUNKALLOC 12 which is now unused. */ 
+/* previously SQLITE_CONFIG_CHUNKALLOC 12 which is now unused. */
 #define SQLITE_CONFIG_LOOKASIDE    13  /* int int */
 #define SQLITE_CONFIG_PCACHE       14  /* no-op */
 #define SQLITE_CONFIG_GETPCACHE    15  /* no-op */
@@ -221,9 +245,10 @@ interpreted as a boolean, which enables or disables the collection of
 memory allocation statistics. When memory allocation statistics are
 disabled, the following SQLite interfaces become non-operational:
 <ul>
+<li> <a href="../c3ref/hard_heap_limit64.html">sqlite3_hard_heap_limit64()</a>
 <li> <a href="../c3ref/memory_highwater.html">sqlite3_memory_used()</a>
 <li> <a href="../c3ref/memory_highwater.html">sqlite3_memory_highwater()</a>
-<li> <a href="../c3ref/soft_heap_limit64.html">sqlite3_soft_heap_limit64()</a>
+<li> <a href="../c3ref/hard_heap_limit64.html">sqlite3_soft_heap_limit64()</a>
 <li> <a href="../c3ref/status.html">sqlite3_status64()</a>
 </ul>
 Memory allocation statistics are enabled by default unless SQLite is
@@ -241,7 +266,7 @@ allocation statistics are disabled by default.
 <dd> The SQLITE_CONFIG_PAGECACHE option specifies a memory pool
 that SQLite can use for the database page cache with the default page
 cache implementation.
-This configuration option is a no-op if an application-define page
+This configuration option is a no-op if an application-defined page
 cache implementation is loaded using the <a href="../c3ref/c_config_covering_index_scan.html#sqliteconfigpcache2">SQLITE_CONFIG_PCACHE2</a>.
 There are three arguments to SQLITE_CONFIG_PAGECACHE: A pointer to
 8-byte aligned memory (pMem), the size of each page cache line (sz),
@@ -507,3 +532,4 @@ compile-time option is not set, then the default maximum is 1073741824.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

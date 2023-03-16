@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_open sqlite3_open16 sqlite3_open_v2 -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -137,10 +161,8 @@ passing it to <a href="../c3ref/close.html">sqlite3_close()</a> when it is no lo
 <p>The sqlite3_open_v2() interface works like sqlite3_open()
 except that it accepts two additional parameters for additional control
 over the new database connection.  The flags parameter to
-sqlite3_open_v2() can take one of
-the following three values, optionally combined with the
-<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_NOMUTEX</a>, <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_FULLMUTEX</a>, <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_SHAREDCACHE</a>,
-<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_PRIVATECACHE</a>, and/or <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_URI</a> flags:</p>
+sqlite3_open_v2() must include, at a minimum, one of the following
+three flag combinations:</p>
 
 <p><dl>
 <dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_READONLY</a></dt>
@@ -158,22 +180,71 @@ it does not already exist. This is the behavior that is always used for
 sqlite3_open() and sqlite3_open16().</dd>
 </dl></p>
 
-<p>If the 3rd parameter to sqlite3_open_v2() is not one of the
-combinations shown above optionally combined with other
-<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_* bits</a>
-then the behavior is undefined.</p>
+<p>In addition to the required flags, the following optional flags are
+also supported:</p>
 
-<p>If the <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_NOMUTEX</a> flag is set, then the database connection
-opens in the multi-thread <a href="../threadsafe.html">threading mode</a> as long as the single-thread
-mode has not been set at compile-time or start-time.  If the
-<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_FULLMUTEX</a> flag is set then the database connection opens
-in the serialized <a href="../threadsafe.html">threading mode</a> unless single-thread was
-previously selected at compile-time or start-time.
-The <a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_SHAREDCACHE</a> flag causes the database connection to be
-eligible to use <a href="../sharedcache.html">shared cache mode</a>, regardless of whether or not shared
-cache is enabled using <a href="../c3ref/enable_shared_cache.html">sqlite3_enable_shared_cache()</a>.  The
-<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_PRIVATECACHE</a> flag causes the database connection to not
-participate in <a href="../sharedcache.html">shared cache mode</a> even if it is enabled.</p>
+<p><dl>
+<dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_URI</a></dt>
+<dd>The filename can be interpreted as a URI if this flag is set.</dd></p>
+
+<p><dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_MEMORY</a></dt>
+<dd>The database will be opened as an in-memory database.  The database
+is named by the "filename" argument for the purposes of cache-sharing,
+if shared cache mode is enabled, but the "filename" is otherwise ignored.
+</dd></p>
+
+<p><dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_NOMUTEX</a></dt>
+<dd>The new database connection will use the "multi-thread"
+<a href="../threadsafe.html">threading mode</a>.  This means that separate threads are allowed
+to use SQLite at the same time, as long as each thread is using
+a different <a href="../c3ref/sqlite3.html">database connection</a>.</p>
+
+<p><dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_FULLMUTEX</a></dt>
+<dd>The new database connection will use the "serialized"
+<a href="../threadsafe.html">threading mode</a>.  This means the multiple threads can safely
+attempt to use the same database connection at the same time.
+(Mutexes will block any actual concurrency, but in this mode
+there is no harm in trying.)</p>
+
+<p><dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_SHAREDCACHE</a></dt>
+<dd>The database is opened <a href="../sharedcache.html">shared cache</a> enabled, overriding
+the default shared cache setting provided by
+<a href="../c3ref/enable_shared_cache.html">sqlite3_enable_shared_cache()</a>.
+The <a href="../sharedcache.html#dontuse">use of shared cache mode is discouraged</a> and hence shared cache
+capabilities may be omitted from many builds of SQLite.  In such cases,
+this option is a no-op.</p>
+
+<p><dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_PRIVATECACHE</a></dt>
+<dd>The database is opened <a href="../sharedcache.html">shared cache</a> disabled, overriding
+the default shared cache setting provided by
+<a href="../c3ref/enable_shared_cache.html">sqlite3_enable_shared_cache()</a>.</p>
+
+<p><a name="openexrescode"></a>
+ <dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_EXRESCODE</a></dt>
+<dd>The database connection comes up in "extended result code mode".
+In other words, the database behaves has if
+<a href="../c3ref/extended_result_codes.html">sqlite3_extended_result_codes(db,1)</a> where called on the database
+connection as soon as the connection is created. In addition to setting
+the extended result code mode, this flag also causes <a href="../c3ref/open.html">sqlite3_open_v2()</a>
+to return an extended result code.</dd></p>
+
+<p><a name="opennofollow"></a>
+ <dt><a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_NOFOLLOW</a></dt>
+<dd>The database filename is not allowed to contain a symbolic link</dd>
+</dl></p>
+
+<p>If the 3rd parameter to sqlite3_open_v2() is not one of the
+required combinations shown above optionally combined with other
+<a href="../c3ref/c_open_autoproxy.html">SQLITE_OPEN_* bits</a>
+then the behavior is undefined.  Historic versions of SQLite
+have silently ignored surplus bits in the flags parameter to
+sqlite3_open_v2(), however that behavior might not be carried through
+into future versions of SQLite and so applications should not rely
+upon it.  Note in particular that the SQLITE_OPEN_EXCLUSIVE flag is a no-op
+for sqlite3_open_v2().  The SQLITE_OPEN_EXCLUSIVE does *not* cause
+the open to fail if the database already exists.  The SQLITE_OPEN_EXCLUSIVE
+flag is intended for use by the <a href="../c3ref/vfs.html">VFS interface</a> only, and not
+by sqlite3_open_v2().</p>
 
 <p>The fourth parameter to sqlite3_open_v2() is the name of the
 <a href="../c3ref/vfs.html">sqlite3_vfs</a> object that defines the operating system interface that
@@ -316,6 +387,7 @@ Open file "/home/fred/data.db". Use the special VFS "unix-dotfile"
 that uses dot-files in place of posix advisory locking.
 <tr><td> file:data.db?mode=readonly <td>
 An error. "readonly" is not a valid option for the "mode" parameter.
+Use "ro" instead:  "file:data.db?mode=ro".
 </table></p>
 
 <p>URI hexadecimal escape sequences (%HH) are supported within the path and
@@ -342,3 +414,4 @@ features that require the use of temporary files may fail.</p>
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

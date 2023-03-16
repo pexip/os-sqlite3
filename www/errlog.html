@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -221,7 +245,7 @@ statement (using <a href="c3ref/step.html">sqlite3_step()</a>) that error is log
 When a schema change occurs that requires a prepared statement to be reparsed
 and reprepared, that event is logged with the error code SQLITE_SCHEMA.
 The reparse and reprepare is normally automatic (assuming that
-<a href="c3ref/prepare.html">sqlite3_prepare_v2()</a> has been used to prepared the statements originally,
+<a href="c3ref/prepare.html">sqlite3_prepare_v2()</a> has been used to prepare the statements originally,
 which is recommended) and so these logging events are normally the only
 way to know that reprepares are taking place.</p>
 
@@ -265,7 +289,7 @@ are not consistently checked in the application code.
 <p>SQLite strives to keep error logger traffic low and only send messages
 to the error logger when there really is something wrong.  Applications
 might further cull the error message traffic 
-by deliberately ignore certain classes of error
+by deliberately ignoring certain classes of error
 messages that they do not care about.  For example, an application that
 makes frequent database schema changes might want to ignore all
 SQLITE_SCHEMA errors.</p>
@@ -274,9 +298,9 @@ SQLITE_SCHEMA errors.</p>
 
 <p>The use of the error logger callback is highly recommended.
 The debugging information that the error logger provides has proven
-very useful in tracking down obscure problems that occurs with applications
+very useful in tracking down obscure problems that occur with applications
 after they get into the field.  The error logger callback has also 
-proven useful in catching errors occasional errors that the application
+proven useful in catching occasional errors that the application
 misses because of inconsistent checking of API return codes.
 Developers are encouraged to implement an error logger callback early
 in the development cycle in order to spot unexpected behavior quickly,
@@ -284,4 +308,5 @@ and to leave the error logger callback turned on through deployment.
 If the error logger never finds a problem, then no harm is done.  
 But failure to set up an appropriate error logger might compromise
 diagnostic capabilities later on.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/errlog.in?m=20f20663c0c242e97">2022-01-20 21:38:08</a> UTC </small></i></p>
 

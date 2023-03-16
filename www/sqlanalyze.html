@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -197,7 +221,7 @@ MOZ_BOOKMARKS_ROOTS............................... 2            0.90%
 MOZ_HOSTS......................................... 2            0.90% 
 MOZ_INPUTHISTORY.................................. 2            0.90% 
 MOZ_ITEMS_ANNOS................................... 2            0.90% 
-SQLITE_MASTER..................................... 1            0.45% 
+SQLITE_SCHEMA..................................... 1            0.45% 
 SQLITE_SEQUENCE................................... 1            0.45% 
 SQLITE_STAT1...................................... 1            0.45% 
 
@@ -237,7 +261,7 @@ SQLITE_AUTOINDEX_MOZ_BOOKMARKS_ROOTS_1............ 1            0.45%
 SQLITE_AUTOINDEX_MOZ_HOSTS_1...................... 1            0.45% 
 SQLITE_AUTOINDEX_MOZ_INPUTHISTORY_1............... 1            0.45% 
 SQLITE_AUTOINDEX_MOZ_KEYWORDS_1................... 1            0.45% 
-SQLITE_MASTER..................................... 1            0.45% 
+SQLITE_SCHEMA..................................... 1            0.45% 
 SQLITE_SEQUENCE................................... 1            0.45% 
 SQLITE_STAT1...................................... 1            0.45% 
 
@@ -1239,7 +1263,7 @@ Unused bytes on primary pages..................... 32256       24.6%
 Unused bytes on overflow pages.................... 0         
 Unused bytes on all pages......................... 64973       39.7% 
 
-*** Table SQLITE_MASTER *******************************************************
+*** Table SQLITE_SCHEMA *******************************************************
 
 Percentage of total database......................   0.45%   
 Number of entries................................. 36        
@@ -1324,7 +1348,7 @@ Pages of auto-vacuum overhead
 
 Number of tables in the database
 
-    The number of tables in the database, including the SQLITE_MASTER table
+    The number of tables in the database, including the SQLITE_SCHEMA table
     used to store schema information.
 
 Number of indices
@@ -1347,7 +1371,7 @@ Size of the file in bytes
 Bytes of user payload stored
 
     The total number of bytes of user payload stored in the database. The
-    schema information in the SQLITE_MASTER table is not counted when
+    schema information in the SQLITE_SCHEMA table is not counted when
     computing this number.  The percentage at the right shows the payload
     divided by the total file size.
 
@@ -1471,7 +1495,7 @@ CREATE TABLE space_used(
    gap_cnt int,      -- Number of gaps in the page layout
    compressed_size int  -- Total bytes stored on disk
 );
-INSERT INTO space_used VALUES('sqlite_master','sqlite_master',0,36,36,1,5188,0,0,379,0,1,0,0,27309,0,0,32768);
+INSERT INTO space_used VALUES('sqlite_schema','sqlite_schema',0,36,36,1,5188,0,0,379,0,1,0,0,27309,0,0,32768);
 INSERT INTO space_used VALUES('moz_places','moz_places',0,10955,10894,2,1838131,0,0,1867,1,62,0,32207,121406,0,30,2064384);
 INSERT INTO space_used VALUES('moz_historyvisits','moz_historyvisits',0,15884,15873,2,308447,0,0,21,1,12,0,32668,5435,0,8,425984);
 INSERT INTO space_used VALUES('moz_inputhistory','moz_inputhistory',0,8,8,1,341,0,0,71,0,1,0,0,32379,0,0,32768);
@@ -1510,4 +1534,5 @@ INSERT INTO space_used VALUES('moz_items_annos_itemattributeindex','moz_items_an
 INSERT INTO space_used VALUES('moz_keywords_placepostdata_uniqueindex','moz_keywords',1,0,0,1,0,0,0,0,0,1,0,0,32760,0,0,32768);
 COMMIT;
 </pre></blockquote>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/sqlanalyze.in?m=3963fd2c25d51d600">2020-06-18 21:18:56</a> UTC </small></i></p>
 

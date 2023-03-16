@@ -1,9 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
-<title>SQLite Query Language: SQLite Keywords</title>
+<title>SQLite Keywords</title>
 <!-- path= -->
 </head>
 <body>
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,9 +89,42 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
+<div class=fancy>
+<div class=nosearch>
+<div class="fancy_title">
+SQLite Keywords
 </div>
-<div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>SQLite Keywords</h2></div></DIV>
+</div>
+
+
+
+
 
 <p>The SQL standard specifies a large number of keywords which may not
 be used as the names of tables, indices, columns, databases, user-defined
@@ -104,7 +137,7 @@ word as the name of a user-defined object.</p>
 are four ways of quoting keywords in SQLite:</p>
 
 <p>
-<blockquote>
+</p><blockquote>
 <table>
 <tr>	<td valign="top"><b>'keyword'</b></td><td width="20"></td>
 	<td>A keyword in single quotes is a string literal.</td></tr>
@@ -125,7 +158,7 @@ are four ways of quoting keywords in SQLite:</p>
         compatibility.</td></tr>
 </table>
 </blockquote>
-</p>
+
 
 <p>For resilience when confronted with historical SQL statements, SQLite
 will sometimes bend the quoting rules above:</p>
@@ -168,17 +201,20 @@ Applications can use the
 <a href="c3ref/keyword_check.html">sqlite3_keyword_check()</a> interfaces to determine the keywords
 recognized by SQLite at run-time.
 Regardless of the compile-time configuration, any identifier that is not on
-the following 136 element
+the following 147-element
+
 list is not a keyword to the SQL parser in SQLite:
 </p>
 
-<ol>
+<div class="columns" style="columns:11em auto;">
+<ul style="padding-top:0;">
 <li>ABORT</li>
 <li>ACTION</li>
 <li>ADD</li>
 <li>AFTER</li>
 <li>ALL</li>
 <li>ALTER</li>
+<li>ALWAYS</li>
 <li>ANALYZE</li>
 <li>AND</li>
 <li>AS</li>
@@ -219,18 +255,22 @@ list is not a keyword to the SQL parser in SQLite:
 <li>END</li>
 <li>ESCAPE</li>
 <li>EXCEPT</li>
+<li>EXCLUDE</li>
 <li>EXCLUSIVE</li>
 <li>EXISTS</li>
 <li>EXPLAIN</li>
 <li>FAIL</li>
 <li>FILTER</li>
+<li>FIRST</li>
 <li>FOLLOWING</li>
 <li>FOR</li>
 <li>FOREIGN</li>
 <li>FROM</li>
 <li>FULL</li>
+<li>GENERATED</li>
 <li>GLOB</li>
 <li>GROUP</li>
+<li>GROUPS</li>
 <li>HAVING</li>
 <li>IF</li>
 <li>IGNORE</li>
@@ -248,21 +288,25 @@ list is not a keyword to the SQL parser in SQLite:
 <li>ISNULL</li>
 <li>JOIN</li>
 <li>KEY</li>
+<li>LAST</li>
 <li>LEFT</li>
 <li>LIKE</li>
 <li>LIMIT</li>
 <li>MATCH</li>
+<li>MATERIALIZED</li>
 <li>NATURAL</li>
 <li>NO</li>
 <li>NOT</li>
 <li>NOTHING</li>
 <li>NOTNULL</li>
 <li>NULL</li>
+<li>NULLS</li>
 <li>OF</li>
 <li>OFFSET</li>
 <li>ON</li>
 <li>OR</li>
 <li>ORDER</li>
+<li>OTHERS</li>
 <li>OUTER</li>
 <li>OVER</li>
 <li>PARTITION</li>
@@ -281,6 +325,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>RENAME</li>
 <li>REPLACE</li>
 <li>RESTRICT</li>
+<li>RETURNING</li>
 <li>RIGHT</li>
 <li>ROLLBACK</li>
 <li>ROW</li>
@@ -292,6 +337,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>TEMP</li>
 <li>TEMPORARY</li>
 <li>THEN</li>
+<li>TIES</li>
 <li>TO</li>
 <li>TRANSACTION</li>
 <li>TRIGGER</li>
@@ -309,6 +355,7 @@ list is not a keyword to the SQL parser in SQLite:
 <li>WINDOW</li>
 <li>WITH</li>
 <li>WITHOUT</li>
-</ol>
+</ul></div>
 
+</ul></div><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_keywords.in?m=0e6afea91e72a5138">2022-11-26 14:56:19</a> UTC </small></i></p>
 

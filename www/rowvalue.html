@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -104,7 +128,8 @@ Table Of Contents
 <div id="toc_sub"><div class="fancy-toc1"><a href="#definitions">1. Definitions</a></div>
 <div class="fancy-toc1"><a href="#syntax">2. Syntax</a></div>
 <div class="fancy-toc2"><a href="#row_value_comparisons">2.1. Row Value Comparisons</a></div>
-<div class="fancy-toc2"><a href="#row_values_in_update_statements">2.2. Row Values In UPDATE Statements</a></div>
+<div class="fancy-toc2"><a href="#row_value_in_operators">2.2. Row Value IN Operators</a></div>
+<div class="fancy-toc2"><a href="#row_values_in_update_statements">2.3. Row Values In UPDATE Statements</a></div>
 <div class="fancy-toc1"><a href="#example_uses_of_row_values">3. Example Uses Of Row Values</a></div>
 <div class="fancy-toc2"><a href="#scrolling_window_queries">3.1. Scrolling Window Queries</a></div>
 <div class="fancy-toc2"><a href="#comparison_of_dates_stored_as_separate_fields">3.2. Comparison of dates stored as separate fields</a></div>
@@ -140,7 +165,7 @@ Sometimes the qualified name "scalar value" is used to emphasize that
 only a single quantity is involved.
 
 </p><p>A "row value" is an ordered list of two or more scalar values.
-In other words, a "row value" is a vector.
+In other words, a "row value" is a vector or tuple.
 
 </p><p>The "size" of a row value is the number of scalar values the row value contains.
 The size of a row value is always at least 2.
@@ -204,6 +229,10 @@ INSERT INTO t1(a,b,c) VALUES(1,2,3);
 SELECT (1,2,3)=(SELECT * FROM t1); -- 1
 </pre></div>
 
+<a name="rvinop"></a>
+
+<h2 id="row_value_in_operators"><span>2.2. </span>Row Value IN Operators</h2>
+
 <p>For a row-value <a href="lang_expr.html#in_op">IN operator</a>, the left-hand side (hereafter "LHS") can be either
 a parenthesized list of values or a subquery with multiple columns.  But the
 right-hand side (hereafter "RHS") must be a subquery expression.
@@ -216,7 +245,7 @@ SELECT
    (1,3,5) IN (SELECT * FROM t2);  -- NULL
 </pre></div>
 
-<h2 id="row_values_in_update_statements"><span>2.2. </span>Row Values In UPDATE Statements</h2>
+<h2 id="row_values_in_update_statements"><span>2.3. </span>Row Values In UPDATE Statements</h2>
 
 <p>Row values can also be used in the SET clause of an <a href="lang_update.html">UPDATE</a> statement.
 The LHS must be a list of column names.  The RHS can be any row value.
@@ -416,4 +445,5 @@ clause.
 <p>Row values were added to SQLite
 <a href="releaselog/3_15_0.html">version 3.15.0</a> (2016-10-14).  Attempts to use row values in
 prior versions of SQLite will generate syntax errors.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/rowvalue.in?m=97d4d2b36b512b177">2022-03-07 15:31:00</a> UTC </small></i></p>
+

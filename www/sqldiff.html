@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -128,7 +152,7 @@ mk.innerHTML = "&#x25ba;";
 
 <p>
 The <tt>sqldiff.exe</tt> binary is a command-line utility program that
-displays the differences between SQLite databases.  Example
+displays content differences between SQLite databases.  Example
 usage:
 
 </p><div class="codeblock"><pre>sqldiff &#91;options&#93; database1.sqlite database2.sqlite
@@ -144,7 +168,7 @@ altered using command-line switches:
 <dt><b>--changeset FILE</b></dt>
 <dd><p>Do not write changes to standard output.  Instead, write a (binary)
        changeset file into FILE.  The changeset can be interpreted using
-       the sessions extension to SQLite.</p></dd>
+       the <a href="sessionintro.html">session extension</a> to SQLite.</p></dd>
 <dt><b>--lib LIBRARY</b></dt>
 <dt><b>-L LIBRARY</b></dt>
 <dd><p>Load the shared library or DLL file LIBRARY into SQLite prior to
@@ -155,7 +179,8 @@ altered using command-line switches:
        pair rows in the source and destination database.  (See additional
        explanation below.)</p></dd>
 <dt><b>--schema</b></dt>
-<dd><p>Show only differences in the schema not the table content</p></dd>
+<dd><p>Show only column name and table differences in the schema,
+       not the table content</p></dd>
 <dt><b>--summary</b></dt>
 <dd><p>Show how many rows have changed on each table, but do not show
        the actual changes</p></dd>
@@ -193,20 +218,52 @@ NULL.</p>
 
 <ol>
 <li>
-<p>The sqldiff.exe utility is unable to compute differences for
-rowid tables for which the rowid is inaccessible.  An example of
-a table with an inaccessible rowid is:
+<p>The sqldiff.exe utility does not compute changesets for
+either: rowid tables for which the rowid is inaccessible;
+or tables which have no explicit primary key.
+Given the --changeset option, sqldiff omits them from the comparison.
+Examples of such tables are:
 
-</p><div class="codeblock"><pre>CREATE TABLE inaccessible_rowid(
+</p><div class="codeblock"><pre>CREATE TABLE NilChangeset (
+   -- inaccessible rowid due to hiding its aliases
    "rowid" TEXT,
    "oid" TEXT,
    "_rowid_" TEXT
 );
 </pre></div>
 
+and
+
+<div class="codeblock"><pre>CREATE TABLE NilChangeset (
+   -- no explicit primary key
+   "authorId" TEXT,
+   "bookId" TEXT
+);
+</pre></div>
+
+
+When sqldiff is made to compare only such tables, no error occurs.
+However, the result may be unexpected.
+For example, the effect of this invocation:
+
+<div class="codeblock"><pre>sqldiff --changeset CHANGESET_OUT --table NilChangeset db1.sdb db2.sdb
+</pre></div>
+
+will be to produce an empty file named "CHANGESET_OUT". See  <a href="session/intro.html#limitations">session limitations</a> for details.
 </li><li><p>
 The sqldiff.exe utility does not (currently) display differences in
 <a href="lang_createtrigger.html">TRIGGERs</a> or <a href="lang_createview.html">VIEWs</a>.
+
+</p></li><li><p>
+The sqldiff utility is not designed to support schema migrations
+and is forgiving with respect to differing column definitions.
+Normally, only the column names and their order are compared
+for like-named tables before content comparison proceeds.
+
+</p><p>However, the single-table comparison option, with "sqlite_schema"
+named, can be used to show or detect detailed schema differences
+between a pair of databases.
+When doing this, the output should not be used directly to modify a database.
 
 </p></li><li><p id="vtab">
 By default, differences in the schema or content of virtual tables are
@@ -225,4 +282,5 @@ underlying shadow tables belonging to an FTS3, FTS5 or rtree virtual table
 and instead includes the virtual table differences directly.
 
 </p></li></ol>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/sqldiff.in?m=b2cb41a9fddeff1d5">2021-09-07 19:28:01</a> UTC </small></i></p>
 

@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: {database connection} {database connections} sqlite3 -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -109,114 +133,97 @@ interfaces (such as
 <a href="../c3ref/prepare.html">sqlite3_prepare_v2()</a>, <a href="../c3ref/create_function.html">sqlite3_create_function()</a>, and
 <a href="../c3ref/busy_timeout.html">sqlite3_busy_timeout()</a> to name but three) that are methods on an
 sqlite3 object.
-</p><p>Constructors:
+</p><p>3 Constructors:
  <a href="../c3ref/open.html">sqlite3_open()</a>,
 <a href="../c3ref/open.html">sqlite3_open16()</a>,
 <a href="../c3ref/open.html">sqlite3_open_v2()</a></p>
-<p>Destructors:
+<p>2 Destructors:
  <a href="../c3ref/close.html">sqlite3_close()</a>,
 <a href="../c3ref/close.html">sqlite3_close_v2()</a></p>
-<style>
-#listtab26 tr td {vertical-align:top;}
-</style>
-<table id='listtab26' width='100%'></table>
-<script>
-var listitems26 = [{"u":"../c3ref/blob_open.html","x":"sqlite3_blob_open","s":0},
-{"u":"../c3ref/busy_handler.html","x":"sqlite3_busy_handler","s":0},
-{"u":"../c3ref/busy_timeout.html","x":"sqlite3_busy_timeout","s":0},
-{"u":"../c3ref/changes.html","x":"sqlite3_changes","s":0},
-{"u":"../c3ref/collation_needed.html","x":"sqlite3_collation_needed","s":0},
-{"u":"../c3ref/collation_needed.html","x":"sqlite3_collation_needed16","s":0},
-{"u":"../c3ref/commit_hook.html","x":"sqlite3_commit_hook","s":0},
-{"u":"../c3ref/create_collation.html","x":"sqlite3_create_collation","s":0},
-{"u":"../c3ref/create_collation.html","x":"sqlite3_create_collation16","s":0},
-{"u":"../c3ref/create_collation.html","x":"sqlite3_create_collation_v2","s":0},
-{"u":"../c3ref/create_function.html","x":"sqlite3_create_function","s":0},
-{"u":"../c3ref/create_function.html","x":"sqlite3_create_function16","s":0},
-{"u":"../c3ref/create_function.html","x":"sqlite3_create_function_v2","s":0},
-{"u":"../c3ref/create_module.html","x":"sqlite3_create_module","s":0},
-{"u":"../c3ref/create_module.html","x":"sqlite3_create_module_v2","s":0},
-{"u":"../c3ref/create_function.html","x":"sqlite3_create_window_function","s":0},
-{"u":"../c3ref/db_config.html","x":"sqlite3_db_config","s":0},
-{"u":"../c3ref/db_filename.html","x":"sqlite3_db_filename","s":0},
-{"u":"../c3ref/db_mutex.html","x":"sqlite3_db_mutex","s":0},
-{"u":"../c3ref/db_readonly.html","x":"sqlite3_db_readonly","s":0},
-{"u":"../c3ref/db_release_memory.html","x":"sqlite3_db_release_memory","s":0},
-{"u":"../c3ref/db_status.html","x":"sqlite3_db_status","s":0},
-{"u":"../c3ref/enable_load_extension.html","x":"sqlite3_enable_load_extension","s":0},
-{"u":"../c3ref/errcode.html","x":"sqlite3_errcode","s":0},
-{"u":"../c3ref/errcode.html","x":"sqlite3_errmsg","s":0},
-{"u":"../c3ref/errcode.html","x":"sqlite3_errmsg16","s":0},
-{"u":"../c3ref/errcode.html","x":"sqlite3_errstr","s":0},
-{"u":"../c3ref/exec.html","x":"sqlite3_exec","s":0},
-{"u":"../c3ref/errcode.html","x":"sqlite3_extended_errcode","s":0},
-{"u":"../c3ref/extended_result_codes.html","x":"sqlite3_extended_result_codes","s":0},
-{"u":"../c3ref/file_control.html","x":"sqlite3_file_control","s":0},
-{"u":"../c3ref/free_table.html","x":"sqlite3_free_table","s":0},
-{"u":"../c3ref/get_autocommit.html","x":"sqlite3_get_autocommit","s":0},
-{"u":"../c3ref/free_table.html","x":"sqlite3_get_table","s":0},
-{"u":"../c3ref/interrupt.html","x":"sqlite3_interrupt","s":0},
-{"u":"../c3ref/last_insert_rowid.html","x":"sqlite3_last_insert_rowid","s":0},
-{"u":"../c3ref/limit.html","x":"sqlite3_limit","s":0},
-{"u":"../c3ref/load_extension.html","x":"sqlite3_load_extension","s":0},
-{"u":"../c3ref/next_stmt.html","x":"sqlite3_next_stmt","s":0},
-{"u":"../c3ref/overload_function.html","x":"sqlite3_overload_function","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare16","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare16_v2","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare16_v3","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare_v2","s":0},
-{"u":"../c3ref/prepare.html","x":"sqlite3_prepare_v3","s":0},
-{"u":"../c3ref/profile.html","x":"sqlite3_profile","s":0},
-{"u":"../c3ref/progress_handler.html","x":"sqlite3_progress_handler","s":0},
-{"u":"../c3ref/commit_hook.html","x":"sqlite3_rollback_hook","s":0},
-{"u":"../c3ref/set_authorizer.html","x":"sqlite3_set_authorizer","s":0},
-{"u":"../c3ref/set_last_insert_rowid.html","x":"sqlite3_set_last_insert_rowid","s":0},
-{"u":"../c3ref/table_column_metadata.html","x":"sqlite3_table_column_metadata","s":0},
-{"u":"../c3ref/total_changes.html","x":"sqlite3_total_changes","s":0},
-{"u":"../c3ref/profile.html","x":"sqlite3_trace","s":0},
-{"u":"../c3ref/trace_v2.html","x":"sqlite3_trace_v2","s":0},
-{"u":"../c3ref/unlock_notify.html","x":"sqlite3_unlock_notify","s":0},
-{"u":"../c3ref/update_hook.html","x":"sqlite3_update_hook","s":0},
-{"u":"../c3ref/wal_autocheckpoint.html","x":"sqlite3_wal_autocheckpoint","s":0},
-{"u":"../c3ref/wal_checkpoint.html","x":"sqlite3_wal_checkpoint","s":0},
-{"u":"../c3ref/wal_checkpoint_v2.html","x":"sqlite3_wal_checkpoint_v2","s":0},
-{"u":"../c3ref/wal_hook.html","x":"sqlite3_wal_hook","s":0}];
-var j = 0;
-var w = Math.max(document.documentElement.clientWidth,  window.innerWidth || 0);
-var nCol = Math.floor(w/350);
-if(nCol<=0) nCol=1;
-var nRow = Math.ceil((listitems26.length+1)/nCol);
-var h="<tr><td colspan="+nCol;
-h += ">Methods:</td></tr><tr><td><ul class='multicol_list'>"
-var ea
-for(var i=0; i<listitems26.length; i++){
-  if( (++j)>nRow ){
-    h += "</ul></td>\n<td><ul class='multicol_list'>\n";
-    j = 1;
-  }
-  if(listitems26[i].u=="" || listitems26[i].s==2){
-    h += "<li>"
-    ea = ""
-  }else{
-    h += "<li><a href='";
-    h += listitems26[i].u;
-    h += "'>";
-    ea = "</a>"
-  }
-  if(listitems26[i].s==2 || listitems26[i].s==3) h += "<s>"
-  h += listitems26[i].x;
-  if(listitems26[i].s==2 || listitems26[i].s==3) h += "</s>"
-  h += ea
-  if(listitems26[i].s==1) h += "<small><i>(exp)</i></small>\n";
-  if(listitems26[i].s==3) h += "&sup1\n";
-  if(listitems26[i].s==4) h += "&sup2\n";
-  if(listitems26[i].s==5) h += "&sup3\n";
-}
-document.getElementById("listtab26").innerHTML = h;
-</script>
+<p>76 Methods:
+<div class='columns' style='columns: 17em auto;'>
+<ul style='padding-top:0;'>
+<li><a href='../c3ref/autovacuum_pages.html'>sqlite3_autovacuum_pages</a></li>
+<li><a href='../c3ref/blob_open.html'>sqlite3_blob_open</a></li>
+<li><a href='../c3ref/busy_handler.html'>sqlite3_busy_handler</a></li>
+<li><a href='../c3ref/busy_timeout.html'>sqlite3_busy_timeout</a></li>
+<li><a href='../c3ref/changes.html'>sqlite3_changes</a></li>
+<li><a href='../c3ref/changes.html'>sqlite3_changes64</a></li>
+<li><a href='../c3ref/collation_needed.html'>sqlite3_collation_needed</a></li>
+<li><a href='../c3ref/collation_needed.html'>sqlite3_collation_needed16</a></li>
+<li><a href='../c3ref/commit_hook.html'>sqlite3_commit_hook</a></li>
+<li><a href='../c3ref/create_collation.html'>sqlite3_create_collation</a></li>
+<li><a href='../c3ref/create_collation.html'>sqlite3_create_collation16</a></li>
+<li><a href='../c3ref/create_collation.html'>sqlite3_create_collation_v2</a></li>
+<li><a href='../c3ref/create_function.html'>sqlite3_create_function</a></li>
+<li><a href='../c3ref/create_function.html'>sqlite3_create_function16</a></li>
+<li><a href='../c3ref/create_function.html'>sqlite3_create_function_v2</a></li>
+<li><a href='../c3ref/create_module.html'>sqlite3_create_module</a></li>
+<li><a href='../c3ref/create_module.html'>sqlite3_create_module_v2</a></li>
+<li><a href='../c3ref/create_function.html'>sqlite3_create_window_function</a></li>
+<li><a href='../c3ref/db_cacheflush.html'>sqlite3_db_cacheflush</a></li>
+<li><a href='../c3ref/db_config.html'>sqlite3_db_config</a></li>
+<li><a href='../c3ref/db_filename.html'>sqlite3_db_filename</a></li>
+<li><a href='../c3ref/db_mutex.html'>sqlite3_db_mutex</a></li>
+<li><a href='../c3ref/db_name.html'>sqlite3_db_name</a></li>
+<li><a href='../c3ref/db_readonly.html'>sqlite3_db_readonly</a></li>
+<li><a href='../c3ref/db_release_memory.html'>sqlite3_db_release_memory</a></li>
+<li><a href='../c3ref/db_status.html'>sqlite3_db_status</a></li>
+<li><a href='../c3ref/drop_modules.html'>sqlite3_drop_modules</a></li>
+<li><a href='../c3ref/enable_load_extension.html'>sqlite3_enable_load_extension</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_errcode</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_errmsg</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_errmsg16</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_error_offset</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_errstr</a></li>
+<li><a href='../c3ref/exec.html'>sqlite3_exec</a></li>
+<li><a href='../c3ref/errcode.html'>sqlite3_extended_errcode</a></li>
+<li><a href='../c3ref/extended_result_codes.html'>sqlite3_extended_result_codes</a></li>
+<li><a href='../c3ref/file_control.html'>sqlite3_file_control</a></li>
+<li><a href='../c3ref/free_table.html'>sqlite3_free_table</a></li>
+<li><a href='../c3ref/get_autocommit.html'>sqlite3_get_autocommit</a></li>
+<li><a href='../c3ref/free_table.html'>sqlite3_get_table</a></li>
+<li><a href='../c3ref/interrupt.html'>sqlite3_interrupt</a></li>
+<li><a href='../c3ref/last_insert_rowid.html'>sqlite3_last_insert_rowid</a></li>
+<li><a href='../c3ref/limit.html'>sqlite3_limit</a></li>
+<li><a href='../c3ref/load_extension.html'>sqlite3_load_extension</a></li>
+<li><a href='../c3ref/next_stmt.html'>sqlite3_next_stmt</a></li>
+<li><a href='../c3ref/overload_function.html'>sqlite3_overload_function</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare16</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare16_v2</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare16_v3</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare_v2</a></li>
+<li><a href='../c3ref/prepare.html'>sqlite3_prepare_v3</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_blobwrite</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_count</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_depth</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_hook</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_new</a></li>
+<li><a href='../c3ref/preupdate_blobwrite.html'>sqlite3_preupdate_old</a></li>
+<li><a href='../c3ref/profile.html'>sqlite3_profile</a></li>
+<li><a href='../c3ref/progress_handler.html'>sqlite3_progress_handler</a></li>
+<li><a href='../c3ref/commit_hook.html'>sqlite3_rollback_hook</a></li>
+<li><a href='../c3ref/set_authorizer.html'>sqlite3_set_authorizer</a></li>
+<li><a href='../c3ref/set_last_insert_rowid.html'>sqlite3_set_last_insert_rowid</a></li>
+<li><a href='../c3ref/system_errno.html'>sqlite3_system_errno</a></li>
+<li><a href='../c3ref/table_column_metadata.html'>sqlite3_table_column_metadata</a></li>
+<li><a href='../c3ref/total_changes.html'>sqlite3_total_changes</a></li>
+<li><a href='../c3ref/total_changes.html'>sqlite3_total_changes64</a></li>
+<li><a href='../c3ref/profile.html'>sqlite3_trace</a></li>
+<li><a href='../c3ref/trace_v2.html'>sqlite3_trace_v2</a></li>
+<li><a href='../c3ref/txn_state.html'>sqlite3_txn_state</a></li>
+<li><a href='../c3ref/unlock_notify.html'>sqlite3_unlock_notify</a></li>
+<li><a href='../c3ref/update_hook.html'>sqlite3_update_hook</a></li>
+<li><a href='../c3ref/wal_autocheckpoint.html'>sqlite3_wal_autocheckpoint</a></li>
+<li><a href='../c3ref/wal_checkpoint.html'>sqlite3_wal_checkpoint</a></li>
+<li><a href='../c3ref/wal_checkpoint_v2.html'>sqlite3_wal_checkpoint_v2</a></li>
+<li><a href='../c3ref/wal_hook.html'>sqlite3_wal_hook</a></li>
+</ul>
+</div>
 </p>
 <p>See also lists of
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

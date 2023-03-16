@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h1 align=center>History Of SQLite Releases</h1>
@@ -101,6 +125,78 @@ return false;
 <tr><th class='sort desc'>Date<th class='sort none'>Version
 </thead>
 <tbody>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=df5c253c0b&y=ci'>2022-12-28</a></td>
+<td width='100' align='center' data-sortkey='3400100'><a href="releaselog/3_40_1.html">3.40.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=89c459e766&y=ci'>2022-11-16</a></td>
+<td width='100' align='center' data-sortkey='3400000'><a href="releaselog/3_40_0.html">3.40.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=a29f994989&y=ci'>2022-09-29</a></td>
+<td width='100' align='center' data-sortkey='3390400'><a href="releaselog/3_39_4.html">3.39.4</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=4635f4a69c&y=ci'>2022-09-05</a></td>
+<td width='100' align='center' data-sortkey='3390300'><a href="releaselog/3_39_3.html">3.39.3</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=698edb7753&y=ci'>2022-07-21</a></td>
+<td width='100' align='center' data-sortkey='3390200'><a href="releaselog/3_39_2.html">3.39.2</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=7c16541a0e&y=ci'>2022-07-13</a></td>
+<td width='100' align='center' data-sortkey='3390100'><a href="releaselog/3_39_1.html">3.39.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=14e166f40d&y=ci'>2022-06-25</a></td>
+<td width='100' align='center' data-sortkey='3390000'><a href="releaselog/3_39_0.html">3.39.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=78d9c993d4&y=ci'>2022-05-06</a></td>
+<td width='100' align='center' data-sortkey='3380500'><a href="releaselog/3_38_5.html">3.38.5</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=d402f49871&y=ci'>2022-05-04</a></td>
+<td width='100' align='center' data-sortkey='3380400'><a href="releaselog/3_38_4.html">3.38.4</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=9547e2c38a&y=ci'>2022-04-27</a></td>
+<td width='100' align='center' data-sortkey='3380300'><a href="releaselog/3_38_3.html">3.38.3</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=d33c709cc0&y=ci'>2022-03-26</a></td>
+<td width='100' align='center' data-sortkey='3380200'><a href="releaselog/3_38_2.html">3.38.2</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=38c210fdd2&y=ci'>2022-03-12</a></td>
+<td width='100' align='center' data-sortkey='3380100'><a href="releaselog/3_38_1.html">3.38.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=40fa792d35&y=ci'>2022-02-22</a></td>
+<td width='100' align='center' data-sortkey='3380000'><a href="releaselog/3_38_0.html">3.38.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=872ba256cb&y=ci'>2022-01-06</a></td>
+<td width='100' align='center' data-sortkey='3370200'><a href="releaselog/3_37_2.html">3.37.2</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=378629bf2e&y=ci'>2021-12-30</a></td>
+<td width='100' align='center' data-sortkey='3370100'><a href="releaselog/3_37_1.html">3.37.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=bd41822c74&y=ci'>2021-11-27</a></td>
+<td width='100' align='center' data-sortkey='3370000'><a href="releaselog/3_37_0.html">3.37.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=5c9a6c0687&y=ci'>2021-06-18</a></td>
+<td width='100' align='center' data-sortkey='3360000'><a href="releaselog/3_36_0.html">3.36.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=1b256d97b5&y=ci'>2021-04-19</a></td>
+<td width='100' align='center' data-sortkey='3350500'><a href="releaselog/3_35_5.html">3.35.5</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=5d4c65779d&y=ci'>2021-04-02</a></td>
+<td width='100' align='center' data-sortkey='3350400'><a href="releaselog/3_35_4.html">3.35.4</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=4c5e6c200a&y=ci'>2021-03-26</a></td>
+<td width='100' align='center' data-sortkey='3350300'><a href="releaselog/3_35_3.html">3.35.3</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=ea80f3002f&y=ci'>2021-03-17</a></td>
+<td width='100' align='center' data-sortkey='3350200'><a href="releaselog/3_35_2.html">3.35.2</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=aea12399bf&y=ci'>2021-03-15</a></td>
+<td width='100' align='center' data-sortkey='3350100'><a href="releaselog/3_35_1.html">3.35.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=acd63062eb&y=ci'>2021-03-12</a></td>
+<td width='100' align='center' data-sortkey='3350000'><a href="releaselog/3_35_0.html">3.35.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=10e20c0b43&y=ci'>2021-01-20</a></td>
+<td width='100' align='center' data-sortkey='3340100'><a href="releaselog/3_34_1.html">3.34.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=a26b6597e3&y=ci'>2020-12-01</a></td>
+<td width='100' align='center' data-sortkey='3340000'><a href="releaselog/3_34_0.html">3.34.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=fca8dc8b57&y=ci'>2020-08-14</a></td>
+<td width='100' align='center' data-sortkey='3330000'><a href="releaselog/3_33_0.html">3.33.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=7ebdfa80be&y=ci'>2020-06-18</a></td>
+<td width='100' align='center' data-sortkey='3320300'><a href="releaselog/3_32_3.html">3.32.3</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=ec02243ea6&y=ci'>2020-06-04</a></td>
+<td width='100' align='center' data-sortkey='3320200'><a href="releaselog/3_32_2.html">3.32.2</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=0c1fcf4711&y=ci'>2020-05-25</a></td>
+<td width='100' align='center' data-sortkey='3320100'><a href="releaselog/3_32_1.html">3.32.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=5998789c9c&y=ci'>2020-05-22</a></td>
+<td width='100' align='center' data-sortkey='3320000'><a href="releaselog/3_32_0.html">3.32.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=3bfa9cc97d&y=ci'>2020-01-27</a></td>
+<td width='100' align='center' data-sortkey='3310100'><a href="releaselog/3_31_1.html">3.31.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=f6affdd416&y=ci'>2020-01-22</a></td>
+<td width='100' align='center' data-sortkey='3310000'><a href="releaselog/3_31_0.html">3.31.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=18db032d05&y=ci'>2019-10-10</a></td>
+<td width='100' align='center' data-sortkey='3300100'><a href="releaselog/3_30_1.html">3.30.1</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=c20a353364&y=ci'>2019-10-04</a></td>
+<td width='100' align='center' data-sortkey='3300000'><a href="releaselog/3_30_0.html">3.30.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=fc82b73eaa&y=ci'>2019-07-10</a></td>
+<td width='100' align='center' data-sortkey='3290000'><a href="releaselog/3_29_0.html">3.29.0</a></td></tr>
+<tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=884b4b7e50&y=ci'>2019-04-16</a></td>
+<td width='100' align='center' data-sortkey='3280000'><a href="releaselog/3_28_0.html">3.28.0</a></td></tr>
 <tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=bd49a8271d&y=ci'>2019-02-25</a></td>
 <td width='100' align='center' data-sortkey='3270200'><a href="releaselog/3_27_2.html">3.27.2</a></td></tr>
 <tr><td width='100' align='center'><a href='https://www.sqlite.org/src/timeline?c=0eca3dd3d3&y=ci'>2019-02-08</a></td>
@@ -820,7 +916,8 @@ var t = new SortableTable(document.getElementById("chrontab"),"TK",1);
 </script>
 
 <p>
-<i>298 releases
-over 18.5 years.</i>
+<i>334 releases
+over 22.4 years.</i>
 
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/chronology.in?m=5a279b547839d9754">2022-12-28 14:21:19</a> UTC </small></i></p>
 

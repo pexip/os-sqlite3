@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,34 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
+
+
 
 
 <div class="rightsidebar desktoponly border2px">
@@ -98,16 +124,17 @@ return false;
 <ul class=nounderline>
 <li> <a href="features.html">Features</a> </li>
 <li> <a href="whentouse.html">When to use SQLite</a> </li>
-<li> <a href="faq.html">Frequently Asked Questions</a> </li>
 <li> <a href="quickstart.html">Getting Started</a> </li>
+<li> <a href="https://sqlite.org/fiddle">Try it live!</li>
 <li> <a href="chronology.html">Prior Releases</a>
 <li> <a href="lang.html">SQL Syntax</a>
 <ul>
 <li> <a href="pragma.html#toc">Pragmas</a>
 <li> <a href="lang_corefunc.html">SQL functions</a>
 <li> <a href="lang_datefunc.html">Date &amp; time functions</a>
-<li> <a href="lang_aggfunc.html">Aggregate functions</a>
+<li> <a href="lang_aggfunc.html#aggfunclist">Aggregate functions</a>
 <li> <a href="windowfunctions.html#biwinfunc">Window functions</a>
+<li> <a href="lang_mathfunc.html">Math functions</a>
 <li> <a href="json1.html">JSON functions</a>
 </ul>
 </li>
@@ -118,8 +145,10 @@ return false;
 </ul>
 </li>
 <li> <a href="tclsqlite.html">The TCL Interface Spec</a>
-<li> <a href="http://www.sqlite.org/src/timeline">Commit History</a> </li>
-<li> <a href="http://www.sqlite.org/src/wiki?name=Bug+Reports">Report a Bug</a> </li>
+<li> <a href="quirks.html">Quirks and Gotchas</a> </li>
+<li> <a href="faq.html">Frequently Asked Questions</a> </li>
+<li> <a href="http://www.sqlite.org/src/timeline?n=100&y=ci">Commit History</a> </li>
+<li> <a href="http://www.sqlite.org/src/wiki?name=Bug+Reports">Bugs</a> </li>
 <li> <a href="news.html">News</a> </li>
 </ul>
 
@@ -143,7 +172,7 @@ use every day.
 <p>
 The SQLite <a href="fileformat2.html">file format</a> is stable, cross-platform, and
 backwards compatible and the developers pledge to keep it
-that way through at least the year 2050.  SQLite database
+that way <a href="lts.html">through the year 2050</a>.  SQLite database
 files are commonly used as containers to transfer rich 
 content between systems
 <a href="aff_short.html">&#91;1&#93;</a>
@@ -162,7 +191,7 @@ is in the <a href="copyright.html">public-domain</a> and is free to
 everyone to use for any purpose.
 
 <h3>Latest Release</h3>
-<a href="releaselog/3_27_2.html">Version 3.27.2</a> (2019-02-25).
+<a href="releaselog/3_40_1.html">Version 3.40.1</a> (2022-12-28).
 <a class="button" href="download.html">Download</a>
 <a class="button" href="chronology.html">Prior Releases</a>
 
@@ -171,16 +200,17 @@ everyone to use for any purpose.
 <ul class=nounderline>
 <li> <a href="features.html">Features</a> </li>
 <li> <a href="whentouse.html">When to use SQLite</a> </li>
-<li> <a href="faq.html">Frequently Asked Questions</a> </li>
 <li> <a href="quickstart.html">Getting Started</a> </li>
+<li> <a href="https://sqlite.org/fiddle">Try it live!</li>
 <li> <a href="chronology.html">Prior Releases</a>
 <li> <a href="lang.html">SQL Syntax</a>
 <ul>
 <li> <a href="pragma.html#toc">Pragmas</a>
 <li> <a href="lang_corefunc.html">SQL functions</a>
 <li> <a href="lang_datefunc.html">Date &amp; time functions</a>
-<li> <a href="lang_aggfunc.html">Aggregate functions</a>
+<li> <a href="lang_aggfunc.html#aggfunclist">Aggregate functions</a>
 <li> <a href="windowfunctions.html#biwinfunc">Window functions</a>
+<li> <a href="lang_mathfunc.html">Math functions</a>
 <li> <a href="json1.html">JSON functions</a>
 </ul>
 </li>
@@ -191,8 +221,10 @@ everyone to use for any purpose.
 </ul>
 </li>
 <li> <a href="tclsqlite.html">The TCL Interface Spec</a>
-<li> <a href="http://www.sqlite.org/src/timeline">Commit History</a> </li>
-<li> <a href="http://www.sqlite.org/src/wiki?name=Bug+Reports">Report a Bug</a> </li>
+<li> <a href="quirks.html">Quirks and Gotchas</a> </li>
+<li> <a href="faq.html">Frequently Asked Questions</a> </li>
+<li> <a href="http://www.sqlite.org/src/timeline?n=100&y=ci">Commit History</a> </li>
+<li> <a href="http://www.sqlite.org/src/wiki?name=Bug+Reports">Bugs</a> </li>
 <li> <a href="news.html">News</a> </li>
 </ul>
 
@@ -218,7 +250,7 @@ by <a href="consortium.html">SQLite Consortium</a> members, including:</p>
 <script>
   var sponsors = [{
     "name":"Bloomberg",
-    "href":"https://www.bloomberg.com/",
+    "href":"https://www.techatbloomberg.com/",
     "src":"bloomberg.png",
     "wx":0
   },{
@@ -254,4 +286,5 @@ by <a href="consortium.html">SQLite Consortium</a> members, including:</p>
 </script>
 <br clear="both">
 <hr class="xhr">
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/index.in?m=e00bc27018a99438d">2022-12-27 16:51:24</a> UTC </small></i></p>
 

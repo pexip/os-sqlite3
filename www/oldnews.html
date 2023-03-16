@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <?xml version="1.0" encoding="Windows-1252"?>
 
 
@@ -795,7 +819,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
   available by default and is only omitted upon request.</p>
 
 <p>  The <a href="fts3.html#fts4">FTS4</a> full-text search engine has been enhanced such that tokens in
-  the search string that begin with "&#94" must be the first token in their
+  the search string that begin with "&#94;" must be the first token in their
   respective columns in order to match.   Formerly, "&#94;" characters in the
   search string were simply ignored.  Hence, if a legacy application was
   including "&#94;" characters in FTS4 search strings, thinking that they would
@@ -1025,7 +1049,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
 <p>  This release adds two new interfaces (really just variations on existing
   interfaces).  The <a href="c3ref/create_function.html">sqlite3_create_function_v2()</a> interface adds a 
   destructor for the application-data pointer.  The new 
-  <a href="c3ref/soft_heap_limit64.html">sqlite3_soft_heap_limit64()</a> interface allows the soft heap limit to
+  <a href="c3ref/hard_heap_limit64.html">sqlite3_soft_heap_limit64()</a> interface allows the soft heap limit to
   be set to a value greater than 2<sup>31</sup>. </p>
 
 <p>  The <a href="rtree.html">RTREE</a> extension has been enhanced with the ability to have an
@@ -1226,7 +1250,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
 </blockquote><hr width="50%"><a name="2009_06_27"></a><h3>2009-06-27 - Version 3.6.16</h3><blockquote>
   SQLite <a href="releaselog/3_6_16.html">version 3.6.16</a> is another general maintenance release containing
   performance and robustness enhancements.  A single notable bug was fixed
-  (ticket #3929).  This bug cause cause INSERT or UPDATE statements to fail
+  (ticket #3929).  This bug can cause INSERT or UPDATE statements to fail
   on indexed tables that have AFTER triggers that modify the same table and
   index.
 </blockquote><hr width="50%"><a name="2009_06_15"></a><h3>2009-06-15 - Version 3.6.15</h3><blockquote>
@@ -1827,4 +1851,5 @@ Annual Tcl/Tk Conference</h3><blockquote>
 <p>  Plans are to continue to support SQLite version 2.8 with
   bug fixes.  But all new development will occur in version 3.0.
 </blockquote><hr width="50%">
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/oldnews.in?m=b255cc82f4af93bcb">2022-08-10 18:45:48</a> UTC </small></i></p>
 

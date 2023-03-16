@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -133,7 +157,7 @@ mk.innerHTML = "&#x25ba;";
 <h1 id="overview"><span>1. </span>Overview</h1>
 
 <p>SQLite has the ability to load extensions (including new
-<a href="c3ref/create_function.html">application-defined SQL functions</a>,
+<a href="appfunc.html">application-defined SQL functions</a>,
 <a href="datatype3.html#collation">collating sequences</a>, <a href="vtab.html">virtual tables</a>, and <a href="vfs.html">VFSes</a>) at run-time.
 This feature allows the code for extensions to be developed and
 tested separately from the application and then loaded
@@ -156,7 +180,7 @@ In C code, this information is supplied using the
 routine for additional information.</p>
 
 <p>Note that different operating systems use different filename
-suffixes for their shared libraries.  Windows use ".dll", Mac uses
+suffixes for their shared libraries.  Windows uses ".dll", Mac uses
 ".dylib", and most unixes other than mac use ".so".  If you want to
 make your code portable, you can omit the suffix from the shared
 library filename and the appropriate suffix will be added automatically
@@ -353,7 +377,7 @@ the <a href="https://www.sqlite.org/src/file/ext/misc">ext/misc</a> subdirectory
 Implementation of the <a href="carray.html">carray table-valued function</a>.
 </p></li><li><p>
 <a href="https://www.sqlite.org/src/file/ext/misc/compress.c">compress.c</a> &mdash;
-Implementation of <a href="c3ref/create_function.html">application-defined SQL functions</a> compress() and
+Implementation of <a href="appfunc.html">application-defined SQL functions</a> compress() and
 uncompress() that do zLib compression of text or blob content.
 </p></li><li><p>
 <a href="https://www.sqlite.org/src/file/ext/misc/json1.c">json1.c</a> &mdash;
@@ -384,7 +408,7 @@ under <a href="https://www.sqlite.org/src/file/ext">ext/</a> other than ext/misc
 
 <p>The default behavior for a loadable extension is that it is unloaded
 from process memory when the database connection that originally invoked
-<a href="c3ref/load_extension.html">sqlite3_load_extension()</a> closes.  (In other words, the xDlUnload method 
+<a href="c3ref/load_extension.html">sqlite3_load_extension()</a> closes.  (In other words, the xDlClose method
 of the <a href="c3ref/vfs.html">sqlite3_vfs</a> object is called for all extensions when a database
 connection closes.)  However, if the initialization procedure returns
 <a href="rescode.html#ok_load_permanently">SQLITE_OK_LOAD_PERMANENTLY</a> instead of SQLITE_OK, then the extension will
@@ -456,7 +480,7 @@ interface implicitly calls <a href="c3ref/initialize.html">sqlite3_initialize()<
 xDlOpen(), xDlError(), xDlSym(), and xDlClose() methods of the
 <a href="c3ref/vfs.html">sqlite3_vfs</a> object.  These methods are implemented using
 the dlopen() library on unix (which explains why SQLite commonly
-need to be linked against the "-ldl" library on unix systems)
+needs to be linked against the "-ldl" library on unix systems)
 and using LoadLibrary() API on Windows.  In a custom <a href="vfs.html">VFS</a> for
 unusual systems, these methods can all be omitted, in which case
 the run-time extension loading mechanism will not work (though
@@ -465,4 +489,5 @@ the entry pointers are uniquely named).
 SQLite can be compiled with
 <a href="compile.html#omit_load_extension">SQLITE_OMIT_LOAD_EXTENSION</a> to omit the extension loading code
 from the build.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/loadext.in?m=b7044b2344d956155">2022-03-08 04:52:03</a> UTC </small></i></p>
+

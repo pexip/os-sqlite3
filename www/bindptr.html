@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -523,13 +547,6 @@ consumer, with no intermediate operators or functions.  Any transformation
 of a pointer value destroys the pointer and transforms the value into
 an ordinary SQL NULL.
 
-</p><p>
-Both the pointer and the pointer type parameter to the
-<a href="c3ref/bind_blob.html">sqlite3_bind_pointer()</a> and <a href="c3ref/result_blob.html">sqlite3_result_pointer()</a> interfaces
-are "owned" by the caller.  In other words, the caller is responsible
-for ensuring that both values remain valid until after the last access
-via <a href="c3ref/value_blob.html">sqlite3_value_pointer()</a>.
-
 </p><h1 id="summary"><span>5. </span>Summary</h1>
 
 <p>Key take-aways from this essay:
@@ -575,4 +592,5 @@ pointer-passing interfaces should be a distinct, application-specific
 string literal that appears directly in the API call.  The pointer type
 should not be a parameter passed in from a higher-level function.
 </p></li></ol>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/bindptr.in?m=0313c341708d7be8d">2022-10-07 10:23:26</a> UTC </small></i></p>
 

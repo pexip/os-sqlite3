@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -118,13 +142,24 @@ decisions in important ways.
 
 </p><ul>
 <li><p>
-<b>Cross-platform</b> &rarr;
+<b>Cross-platform Code</b> &rarr;
 SQLite runs on any platform with an 8-bit byte,
 two's complement 32-bit and 64-bit integers, 
 and a C compiler.  It is actively
 tested on all currently popular CPUs and operating
-systems.  The extreme portability of the SQLite code will
-help it remain viable on future platforms.
+systems.
+The extreme portability of the SQLite code and file
+format will help it remain viable on future platforms.
+
+</p></li><li><p>
+<b>Stable, Cross-platform Database Files</b> &rarr;
+SQLite <a href="fileformat2.html">database files</a> are bit-for-bit identical on
+32-bit, 64-bit, big-endian, and little-endian platforms.  You
+can copy an SQLite database file from one system to another
+without having to translate or convert the database.
+Furthermore, the file format is well documented and stable.
+Database files created today will be readable and writable by
+future versions of SQLite decades in the future.
 
 </p></li><li><p>
 <b><a href="testing.html">Aviation-grade testing</a></b> &rarr;
@@ -196,10 +231,11 @@ Our goal is to make the content you store in SQLite today as
 easily accessible to your grandchildren as it is to you.
 
 </p><p>
-<b>Update on 2018-05-39:</b>
+<b>Update on 2018-05-31:</b>
 Our goal of supporting SQLite long-term have apparently come to the
 notice of the preservationist at the 
 <a href="https://www.loc.gov">US Library Of Congress</a> who have identified
 SQLite as a <a href="locrsf.html">recommended storage format</a> for the preservation of
 digital content.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lts.in?m=c7fb3381bbf0ac7c9">2020-12-01 19:58:42</a> UTC </small></i></p>
+

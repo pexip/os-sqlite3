@@ -1,9 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <link href="sqlite.css" rel="stylesheet">
-<title>SQLite Query Language: Core Functions</title>
+<title>Built-In Scalar SQL Functions</title>
 <!-- path= -->
 </head>
 <body>
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,105 +89,117 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
+<div class=fancy>
+<div class=nosearch>
+<div class="fancy_title">
+Built-In Scalar SQL Functions
 </div>
-<div class=nosearch><h1 align="center">SQL As Understood By SQLite</h1><p><a href="lang.html">[Top]</a></p><h2>Core Functions</h2></div>
+</div>
+
+
+
+
+
+<h1 id="overview"><span>1. </span>Overview</h1>
 
 <p>The core functions shown below are available by default. 
 <a href="lang_datefunc.html">Date &amp; Time functions</a>,
 <a href="lang_aggfunc.html">aggregate functions</a>,
-<a href="windowfunctions.html#biwinfunc">window functions</a>, and
+<a href="windowfunctions.html#biwinfunc">window functions</a>,
+<a href="lang_mathfunc.html">math functions</a>, and
 <a href="json1.html">JSON functions</a> are documented separately.  An
 application may define additional
 functions written in C and added to the database engine using
 the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 
-<style>
-#listtab32 tr td {vertical-align:top;}
-</style>
-<table id='listtab32' width='100%'></table>
-<script>
-var listitems32 = [{"u":"lang_corefunc.html#abs","x":"abs(X)","s":0},
-{"u":"lang_corefunc.html#changes","x":"changes()","s":0},
-{"u":"lang_corefunc.html#char","x":"char(X1,X2,...,XN)","s":0},
-{"u":"lang_corefunc.html#coalesce","x":"coalesce(X,Y,...)","s":0},
-{"u":"lang_corefunc.html#glob","x":"glob(X,Y)","s":0},
-{"u":"lang_corefunc.html#hex","x":"hex(X)","s":0},
-{"u":"lang_corefunc.html#ifnull","x":"ifnull(X,Y)","s":0},
-{"u":"lang_corefunc.html#instr","x":"instr(X,Y)","s":0},
-{"u":"lang_corefunc.html#last_insert_rowid","x":"last_insert_rowid()","s":0},
-{"u":"lang_corefunc.html#length","x":"length(X)","s":0},
-{"u":"lang_corefunc.html#like","x":"like(X,Y)","s":0},
-{"u":"lang_corefunc.html#like","x":"like(X,Y,Z)","s":0},
-{"u":"lang_corefunc.html#likelihood","x":"likelihood(X,Y)","s":0},
-{"u":"lang_corefunc.html#likely","x":"likely(X)","s":0},
-{"u":"lang_corefunc.html#load_extension","x":"load_extension(X)","s":0},
-{"u":"lang_corefunc.html#load_extension","x":"load_extension(X,Y)","s":0},
-{"u":"lang_corefunc.html#lower","x":"lower(X)","s":0},
-{"u":"lang_corefunc.html#ltrim","x":"ltrim(X)","s":0},
-{"u":"lang_corefunc.html#ltrim","x":"ltrim(X,Y)","s":0},
-{"u":"lang_corefunc.html#maxoreunc","x":"max(X,Y,...)","s":0},
-{"u":"lang_corefunc.html#minoreunc","x":"min(X,Y,...)","s":0},
-{"u":"lang_corefunc.html#nullif","x":"nullif(X,Y)","s":0},
-{"u":"lang_corefunc.html#printf","x":"printf(FORMAT,...)","s":0},
-{"u":"lang_corefunc.html#quote","x":"quote(X)","s":0},
-{"u":"lang_corefunc.html#random","x":"random()","s":0},
-{"u":"lang_corefunc.html#randomblob","x":"randomblob(N)","s":0},
-{"u":"lang_corefunc.html#replace","x":"replace(X,Y,Z)","s":0},
-{"u":"lang_corefunc.html#round","x":"round(X)","s":0},
-{"u":"lang_corefunc.html#round","x":"round(X,Y)","s":0},
-{"u":"lang_corefunc.html#rtrim","x":"rtrim(X)","s":0},
-{"u":"lang_corefunc.html#rtrim","x":"rtrim(X,Y)","s":0},
-{"u":"lang_corefunc.html#soundex","x":"soundex(X)","s":0},
-{"u":"lang_corefunc.html#sqlite_compileoption_get","x":"sqlite_compileoption_get(N)","s":0},
-{"u":"lang_corefunc.html#sqlite_compileoption_used","x":"sqlite_compileoption_used(X)","s":0},
-{"u":"lang_corefunc.html#sqlite_offset","x":"sqlite_offset(X)","s":0},
-{"u":"lang_corefunc.html#sqlite_source_id","x":"sqlite_source_id()","s":0},
-{"u":"lang_corefunc.html#sqlite_version","x":"sqlite_version()","s":0},
-{"u":"lang_corefunc.html#substr","x":"substr(X,Y)","s":0},
-{"u":"lang_corefunc.html#substr","x":"substr(X,Y,Z)","s":0},
-{"u":"lang_corefunc.html#total_changes","x":"total_changes()","s":0},
-{"u":"lang_corefunc.html#trim","x":"trim(X)","s":0},
-{"u":"lang_corefunc.html#trim","x":"trim(X,Y)","s":0},
-{"u":"lang_corefunc.html#typeof","x":"typeof(X)","s":0},
-{"u":"lang_corefunc.html#unicode","x":"unicode(X)","s":0},
-{"u":"lang_corefunc.html#unlikely","x":"unlikely(X)","s":0},
-{"u":"lang_corefunc.html#upper","x":"upper(X)","s":0},
-{"u":"lang_corefunc.html#zeroblob","x":"zeroblob(N)","s":0}];
-var j = 0;
-var w = Math.max(document.documentElement.clientWidth,  window.innerWidth || 0);
-var nCol = Math.floor(w/225);
-if(nCol<=0) nCol=1;
-var nRow = Math.ceil((listitems32.length+1)/nCol);
-var h="<tr><td><ul class='multicol_list'>"
-var ea
-for(var i=0; i<listitems32.length; i++){
-  if( (++j)>nRow ){
-    h += "</ul></td>\n<td><ul class='multicol_list'>\n";
-    j = 1;
-  }
-  if(listitems32[i].u=="" || listitems32[i].s==2){
-    h += "<li>"
-    ea = ""
-  }else{
-    h += "<li><a href='";
-    h += listitems32[i].u;
-    h += "'>";
-    ea = "</a>"
-  }
-  if(listitems32[i].s==2 || listitems32[i].s==3) h += "<s>"
-  h += listitems32[i].x;
-  if(listitems32[i].s==2 || listitems32[i].s==3) h += "</s>"
-  h += ea
-  if(listitems32[i].s==1) h += "<small><i>(exp)</i></small>\n";
-  if(listitems32[i].s==3) h += "&sup1\n";
-  if(listitems32[i].s==4) h += "&sup2\n";
-  if(listitems32[i].s==5) h += "&sup3\n";
-}
-document.getElementById("listtab32").innerHTML = h;
-</script>
-<hr class='xhr'>
+<p>
+<div class='columns' style='columns: 15em auto;'>
+<ul style='padding-top:0;'>
+<li><a href='lang_corefunc.html#abs'>abs(X)</a></li>
+<li><a href='lang_corefunc.html#changes'>changes()</a></li>
+<li><a href='lang_corefunc.html#char'>char(X1,X2,...,XN)</a></li>
+<li><a href='lang_corefunc.html#coalesce'>coalesce(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#format'>format(FORMAT,...)</a></li>
+<li><a href='lang_corefunc.html#glob'>glob(X,Y)</a></li>
+<li><a href='lang_corefunc.html#hex'>hex(X)</a></li>
+<li><a href='lang_corefunc.html#ifnull'>ifnull(X,Y)</a></li>
+<li><a href='lang_corefunc.html#iif'>iif(X,Y,Z)</a></li>
+<li><a href='lang_corefunc.html#instr'>instr(X,Y)</a></li>
+<li><a href='lang_corefunc.html#last_insert_rowid'>last_insert_rowid()</a></li>
+<li><a href='lang_corefunc.html#length'>length(X)</a></li>
+<li><a href='lang_corefunc.html#like'>like(X,Y)</a></li>
+<li><a href='lang_corefunc.html#like'>like(X,Y,Z)</a></li>
+<li><a href='lang_corefunc.html#likelihood'>likelihood(X,Y)</a></li>
+<li><a href='lang_corefunc.html#likely'>likely(X)</a></li>
+<li><a href='lang_corefunc.html#load_extension'>load_extension(X)</a></li>
+<li><a href='lang_corefunc.html#load_extension'>load_extension(X,Y)</a></li>
+<li><a href='lang_corefunc.html#lower'>lower(X)</a></li>
+<li><a href='lang_corefunc.html#ltrim'>ltrim(X)</a></li>
+<li><a href='lang_corefunc.html#ltrim'>ltrim(X,Y)</a></li>
+<li><a href='lang_corefunc.html#max_scalar'>max(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#min_scalar'>min(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#nullif'>nullif(X,Y)</a></li>
+<li><a href='lang_corefunc.html#printf'>printf(FORMAT,...)</a></li>
+<li><a href='lang_corefunc.html#quote'>quote(X)</a></li>
+<li><a href='lang_corefunc.html#random'>random()</a></li>
+<li><a href='lang_corefunc.html#randomblob'>randomblob(N)</a></li>
+<li><a href='lang_corefunc.html#replace'>replace(X,Y,Z)</a></li>
+<li><a href='lang_corefunc.html#round'>round(X)</a></li>
+<li><a href='lang_corefunc.html#round'>round(X,Y)</a></li>
+<li><a href='lang_corefunc.html#rtrim'>rtrim(X)</a></li>
+<li><a href='lang_corefunc.html#rtrim'>rtrim(X,Y)</a></li>
+<li><a href='lang_corefunc.html#sign'>sign(X)</a></li>
+<li><a href='lang_corefunc.html#soundex'>soundex(X)</a></li>
+<li><a href='lang_corefunc.html#sqlite_compileoption_get'>sqlite_compileoption_get(N)</a></li>
+<li><a href='lang_corefunc.html#sqlite_compileoption_used'>sqlite_compileoption_used(X)</a></li>
+<li><a href='lang_corefunc.html#sqlite_offset'>sqlite_offset(X)</a></li>
+<li><a href='lang_corefunc.html#sqlite_source_id'>sqlite_source_id()</a></li>
+<li><a href='lang_corefunc.html#sqlite_version'>sqlite_version()</a></li>
+<li><a href='lang_corefunc.html#substr'>substr(X,Y)</a></li>
+<li><a href='lang_corefunc.html#substr'>substr(X,Y,Z)</a></li>
+<li><a href='lang_corefunc.html#substr'>substring(X,Y)</a></li>
+<li><a href='lang_corefunc.html#substr'>substring(X,Y,Z)</a></li>
+<li><a href='lang_corefunc.html#total_changes'>total_changes()</a></li>
+<li><a href='lang_corefunc.html#trim'>trim(X)</a></li>
+<li><a href='lang_corefunc.html#trim'>trim(X,Y)</a></li>
+<li><a href='lang_corefunc.html#typeof'>typeof(X)</a></li>
+<li><a href='lang_corefunc.html#unicode'>unicode(X)</a></li>
+<li><a href='lang_corefunc.html#unlikely'>unlikely(X)</a></li>
+<li><a href='lang_corefunc.html#upper'>upper(X)</a></li>
+<li><a href='lang_corefunc.html#zeroblob'>zeroblob(N)</a></li>
+</ul>
+</div>
+
+
+<h1 id="descriptions_of_built_in_scalar_sql_functions"><span>2. </span>Descriptions of built-in scalar SQL functions</h1>
 <dl>
+
 <a name="abs"></a>
 <dt><p><b>abs(<i>X</i>)</b></dt><dd><p>
   The abs(X) function returns the absolute value of the numeric
@@ -202,7 +214,7 @@ document.getElementById("listtab32").innerHTML = h;
   The changes() function returns the number of database rows that were changed
   or inserted or deleted by the most recently completed INSERT, DELETE,
   or UPDATE statement, exclusive of statements in lower-level triggers.
-  The changes() SQL function is a wrapper around the <a href="c3ref/changes.html">sqlite3_changes()</a>
+  The changes() SQL function is a wrapper around the <a href="c3ref/changes.html">sqlite3_changes64()</a>
   C/C++ function and hence follows the same rules for counting changes.
 </dd>
 <a name="char"></a>
@@ -215,6 +227,19 @@ document.getElementById("listtab32").innerHTML = h;
   The coalesce() function returns a copy of its first non-NULL argument, or
   NULL if all arguments are NULL.  Coalesce() must have at least 
   2 arguments.
+</dd>
+<a name="format"></a>
+<dt><p><b>format(<i>FORMAT</i>,...)</b></dt><dd><p>
+  The format(FORMAT,...) SQL function works like the <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> C-language
+  function and the printf() function from the standard C library.
+  The first argument is a format string that specifies how to construct the output
+  string using values taken from subsequent arguments.  If the FORMAT argument is
+  missing or NULL then the result is NULL.  The %n format is silently ignored and
+  does not consume an argument.  The %p format is an alias for %X.  The %z format
+  is interchangeable with %s.  If there are too few arguments in the argument list,
+  missing arguments are assumed to have a NULL value, which is translated into
+  0 or 0.0 for numeric formats or an empty string for %s.  See the
+  <a href="printf.html">built-in printf()</a> documentation for additional information.
 </dd>
 <a name="glob"></a>
 <dt><p><b>glob(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
@@ -236,12 +261,25 @@ document.getElementById("listtab32").innerHTML = h;
   The hex() function interprets its argument as a BLOB and returns
   a string which is the upper-case hexadecimal rendering of the content of
   that blob.
+  <p>
+  If the argument <i>X</i> in "hex(<i>X</i>)" is an
+  integer or floating point number, then "interprets its argument as a BLOB" means
+  that the binary number is first converted into a UTF8 text representation, then
+  that text is interpreted as a BLOB.  Hence, "hex(12345678)" renders
+  as "3132333435363738" not the binary representation of the integer value
+  "0000000000BC614E".
 </dd>
 <a name="ifnull"></a>
 <dt><p><b>ifnull(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
   The ifnull() function returns a copy of its first non-NULL argument, or
   NULL if both arguments are NULL.  Ifnull() must have exactly 2 arguments.
   The ifnull() function is equivalent to <a href="lang_corefunc.html#coalesce">coalesce()</a> with two arguments.
+</dd>
+<a name="iif"></a>
+<dt><p><b>iif(<i>X</i>,<i>Y</i>,<i>Z</i>)</b></dt><dd><p>
+  The iif(X,Y,Z) function returns the value Y if X is true, and Z otherwise.
+  The iif(X,Y,Z) function is logically equivalent to and generates the same
+  <a href="opcode.html">bytecode</a> as the <a href="lang_expr.html#case">CASE expression</a> "CASE WHEN X THEN Y ELSE Z END".
 </dd>
 <a name="instr"></a>
 <dt><p><b>instr(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
@@ -273,6 +311,20 @@ document.getElementById("listtab32").innerHTML = h;
   If X is NULL then length(X) is NULL.
   If X is numeric then length(X) returns the length of a string
   representation of X.
+  <p>
+  Note that for strings, the length(X) function returns the <i>character</i>
+  length of the string, not the byte length.  The character length is the number
+  of characters in the string.  The character length is always different from
+  the byte length for UTF-16 strings, and can be different from the byte length
+  for UTF-8 strings if the string contains multi-byte characters.
+  <p>
+  For BLOB values, length(X) always returns the byte-length of the BLOB.
+  <p>
+  For string values, length(X) must read the entire string into memory in order
+  to compute the character length.  But for BLOB values, that is not necessary as
+  SQLite knows how many bytes are in the BLOB.  Hence, for multi-megabyte values,
+  the length(X) function is usually much faster for BLOBs than for strings, since
+  it does not need to load the value into memory.
 </dd>
 <a name="like"></a>
 <dt><p><b>like(<i>X</i>,<i>Y</i>)<br />like(<i>X</i>,<i>Y</i>,<i>Z</i>)</b></dt><dd><p>
@@ -288,7 +340,7 @@ document.getElementById("listtab32").innerHTML = h;
      name LIKE '%neon%'
      like('%neon%',name)
   </pre></blockquote>
-  The <a href="c3ref/create_function.html">sqlite3_create_function()</a> interface can be used to override the
+  <p>The <a href="c3ref/create_function.html">sqlite3_create_function()</a> interface can be used to override the
   like() function and thereby change the operation of the
   <a href="lang_expr.html#like">LIKE</a> operator.  When overriding the like() function, it may be important
   to override both the two and three argument versions of the like() 
@@ -338,7 +390,7 @@ document.getElementById("listtab32").innerHTML = h;
   changes or deletes functions or collating sequences, use the
   <a href="c3ref/load_extension.html">sqlite3_load_extension()</a> C-language API.</p>
 
-  <p>For security reasons, extension loaded is turned off by default and must
+  <p>For security reasons, extension loading is disabled by default and must
   be enabled by a prior call to <a href="c3ref/enable_load_extension.html">sqlite3_enable_load_extension()</a>.</p>
 </dd>
 <a name="lower"></a>
@@ -355,7 +407,7 @@ document.getElementById("listtab32").innerHTML = h;
   If the Y argument is omitted, ltrim(X) removes spaces from the left side
   of X.
 </dd>
-<a name="maxoreunc"></a>
+<a name="max_scalar"></a>
 <dt><p><b>max(<i>X</i>,<i>Y</i>,...)</b></dt><dd><p>
   The multi-argument max() function returns the argument with the 
   maximum value, or return NULL if any argument is NULL. 
@@ -365,9 +417,9 @@ document.getElementById("listtab32").innerHTML = h;
   define a collating function, then the BINARY collating function is used.
   Note that <b>max()</b> is a simple function when
   it has 2 or more arguments but operates as an
-  <a href="lang_aggfunc.html#maxggunc">aggregate function</a> if given only a single argument.
+  <a href="lang_aggfunc.html#max_agg">aggregate function</a> if given only a single argument.
 </dd>
-<a name="minoreunc"></a>
+<a name="min_scalar"></a>
 <dt><p><b>min(<i>X</i>,<i>Y</i>,...)</b></dt><dd><p>
   The multi-argument min() function returns the argument with the
   minimum value.
@@ -377,7 +429,7 @@ document.getElementById("listtab32").innerHTML = h;
   define a collating function, then the BINARY collating function is used.
   Note that <b>min()</b> is a simple function when
   it has 2 or more arguments but operates as an 
-  <a href="lang_aggfunc.html#minggunc">aggregate function</a> if given
+  <a href="lang_aggfunc.html#min_agg">aggregate function</a> if given
   only a single argument.
 </dd>
 <a name="nullif"></a>
@@ -387,20 +439,14 @@ document.getElementById("listtab32").innerHTML = h;
   searches its arguments from left to right for an argument that defines a
   collating function and uses that collating function for all string
   comparisons.  If neither argument to nullif() defines a collating function
-  then the BINARY is used.
+  then the BINARY collating function is used.
 </dd>
 <a name="printf"></a>
 <dt><p><b>printf(<i>FORMAT</i>,...)</b></dt><dd><p>
-  The printf(FORMAT,...) SQL function works like the <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> C-language
-  function and the printf() function from the standard C library.
-  The first argument is a format string that specifies how to construct the output
-  string using values taken from subsequent arguments.  If the FORMAT argument is
-  missing or NULL then the result is NULL.  The %n format is silently ignored and
-  does not consume an argument.  The %p format is an alias for %X.  The %z format
-  is interchangeable with %s.  If there are too few arguments in the argument list,
-  missing arguments are assumed to have a NULL value, which is translated into
-  0 or 0.0 for numeric formats or an empty string for %s.  See the
-  <a href="printf.html">built-in printf()</a> documentation for additional information.
+  The printf() SQL function is an alias for the <a href="lang_corefunc.html#format">format() SQL function</a>.
+  The format() SQL function was original named printf(). But the name was later
+  changed to format() for compatibility with other database engines.  The original
+  printf() name is retained as an alias so as not to break any legacy code.
 </dd>
 <a name="quote"></a>
 <dt><p><b>quote(<i>X</i>)</b></dt><dd><p>
@@ -443,7 +489,7 @@ document.getElementById("listtab32").innerHTML = h;
 <dt><p><b>round(<i>X</i>)<br />round(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
   The round(X,Y) function returns a floating-point
   value X rounded to Y digits to the right of the decimal point.
-  If the Y argument is omitted, it is assumed to be 0.
+  If the Y argument is omitted or negative, it is taken to be 0.
 </dd>
 <a name="rtrim"></a>
 <dt><p><b>rtrim(<i>X</i>)<br />rtrim(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
@@ -451,6 +497,13 @@ document.getElementById("listtab32").innerHTML = h;
   characters that appear in Y from the right side of X.
   If the Y argument is omitted, rtrim(X) removes spaces from the right
   side of X.
+</dd>
+<a name="sign"></a>
+<dt><p><b>sign(<i>X</i>)</b></dt><dd><p>
+  The sign(X) function returns -1, 0, or +1 if the argument X is a numeric
+  value that is negative, zero, or positive, respectively.  If the argument
+  to sign(X) is NULL or is a string or blob that cannot be losslessly converted
+  into a number, then sign(X) returns NULL.
 </dd>
 <a name="soundex"></a>
 <dt><p><b>soundex(<i>X</i>)</b></dt><dd><p>
@@ -499,7 +552,7 @@ document.getElementById("listtab32").innerHTML = h;
   specific version of the source code that was used to build the SQLite
   library.  The string returned by sqlite_source_id() is
   the date and time that the source code was checked in followed by
-  the SHA1 hash for that check-in.  This function is
+  the SHA3-256 hash for that check-in.  This function is
   an SQL wrapper around the <a href="c3ref/libversion.html">sqlite3_sourceid()</a> C interface.
 </dd>
 <a name="sqlite_version"></a>
@@ -509,7 +562,7 @@ document.getElementById("listtab32").innerHTML = h;
   wrapper around the <a href="c3ref/libversion.html">sqlite3_libversion()</a> C-interface.
 </dd>
 <a name="substr"></a>
-<dt><p><b>substr(<i>X</i>,<i>Y</i>,<i>Z</i>)<br />substr(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
+<dt><p><b>substr(<i>X</i>,<i>Y</i>,<i>Z</i>)<br />substr(<i>X</i>,<i>Y</i>)<br />substring(<i>X</i>,<i>Y</i>,<i>Z</i>)<br />substring(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
   The substr(X,Y,Z) function returns a substring of input string X that begins
   with the Y-th character and which is Z characters long.
   If Z is omitted then substr(X,Y) returns all characters through the end
@@ -520,13 +573,15 @@ document.getElementById("listtab32").innerHTML = h;
   the abs(Z) characters preceding the Y-th character are returned.
   If X is a string then characters indices refer to actual UTF-8 
   characters.  If X is a BLOB then the indices refer to bytes.
+  <p>
+  "substring()" is an alias for "substr()" beginning with SQLite version 3.34.
 </dd>
 <a name="total_changes"></a>
 <dt><p><b>total_changes()</b></dt><dd><p>
   The total_changes() function returns the number of row changes
   caused by INSERT, UPDATE or DELETE
   statements since the current database connection was opened.
-  This function is a wrapper around the <a href="c3ref/total_changes.html">sqlite3_total_changes()</a>
+  This function is a wrapper around the <a href="c3ref/total_changes.html">sqlite3_total_changes64()</a>
   C/C++ interface.
 </dd>
 <a name="trim"></a>
@@ -571,5 +626,7 @@ document.getElementById("listtab32").innerHTML = h;
   This SQL function is implemented using the <a href="c3ref/result_blob.html">sqlite3_result_zeroblob()</a>
   routine from the C/C++ interface.
 </dd>
+
 </dl>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_corefunc.in?m=bc476ffe9a17c53dd">2022-07-16 18:39:09</a> UTC </small></i></p>
 

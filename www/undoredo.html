@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -229,6 +253,7 @@ opened used as a database object named "db".
 
 <h2>Example Code</h2>
 
+
 <blockquote><pre>
 # Everything goes in a private namespace
 namespace eval ::undo {
@@ -272,9 +297,9 @@ proc deactivate {} {
 #
 proc freeze {} {
   variable _undo
-  if {!}; hd_resolve_one {info exists _undo(freeze)}; hd_puts {} return
+  if {!&#91;info exists _undo(freeze)&#93;} return
   if {$_undo(freeze)>=0} {error "recursive call to ::undo::freeze"}
-  set _undo(freeze) }; hd_resolve_one {db one {SELECT coalesce(max(seq),0) FROM undolog}}; hd_puts {
+  set _undo(freeze) &#91;db one {SELECT coalesce(max(seq),0) FROM undolog}&#93;
 }
 
 # proc:  ::undo::unfreeze
@@ -282,7 +307,7 @@ proc freeze {} {
 #
 proc unfreeze {} {
   variable _undo
-  if {!}; hd_resolve_one {info exists _undo(freeze)}; hd_puts {} return
+  if {!&#91;info exists _undo(freeze)&#93;} return
   if {$_undo(freeze)<0} {error "called ::undo::unfreeze while not frozen"}
   db eval "DELETE FROM undolog WHERE seq>$_undo(freeze)"
   set _undo(freeze) -1
@@ -297,7 +322,7 @@ proc unfreeze {} {
 proc event {} {
   variable _undo
   if {$_undo(pending)==""} {
-    set _undo(pending) }; hd_resolve_one {after idle ::undo::barrier}; hd_puts {
+    set _undo(pending) &#91;after idle ::undo::barrier&#93;
   }
 }
 
@@ -312,7 +337,7 @@ proc barrier {} {
     refresh
     return
   }
-  set end }; hd_resolve_one {db one {SELECT coalesce(max(seq),0) FROM undolog}}; hd_puts {
+  set end &#91;db one {SELECT coalesce(max(seq),0) FROM undolog}&#93;
   if {$_undo(freeze)>=0 && $end>$_undo(freeze)} {set end $_undo(freeze)}
   set begin $_undo(firstlog)
   _start_interval
@@ -320,7 +345,7 @@ proc barrier {} {
     refresh
     return
   }
-  lappend _undo(undostack) }; hd_resolve_one {list $begin $end}; hd_puts {
+  lappend _undo(undostack) &#91;list $begin $end&#93;
   set _undo(redostack) {}
   refresh
 }
@@ -349,8 +374,8 @@ proc redo {} {
 #
 proc refresh {} {
   set body {}
-  foreach ns }; hd_resolve_one {namespace children ::}; hd_puts { {
-    if {}; hd_resolve_one {info proc ${ns}::status_refresh}; hd_puts {==""} continue
+  foreach ns &#91;namespace children ::&#93; {
+    if {&#91;info proc ${ns}::status_refresh&#93;==""} continue
     append body ${ns}::status_refresh\n
   }
   proc ::undo::refresh {} $body
@@ -367,8 +392,8 @@ proc refresh {} {
 #
 proc reload_all {} {
   set body {}
-  foreach ns }; hd_resolve_one {namespace children ::}; hd_puts { {
-    if {}; hd_resolve_one {info proc ${ns}::reload}; hd_puts {==""} continue
+  foreach ns &#91;namespace children ::&#93; {
+    if {&#91;info proc ${ns}::reload&#93;==""} continue
     append body ${ns}::reload\n
   }
   proc ::undo::reload_all {} $body
@@ -395,14 +420,14 @@ set _undo(startstate) {}
 #
 proc status_refresh {} {
   variable _undo
-  if {!$_undo(active) || }; hd_resolve_one {llength $_undo(undostack)}; hd_puts {==0} {
+  if {!$_undo(active) || &#91;llength $_undo(undostack)&#93;==0} {
     .mb.edit entryconfig Undo -state disabled
     .bb.undo config -state disabled
   } else {
     .mb.edit entryconfig Undo -state normal
     .bb.undo config -state normal
   }
-  if {!$_undo(active) || }; hd_resolve_one {llength $_undo(redostack)}; hd_puts {==0} {
+  if {!$_undo(active) || &#91;llength $_undo(redostack)&#93;==0} {
     .mb.edit entryconfig Redo -state disabled
     .bb.redo config -state disabled
   } else {
@@ -423,7 +448,7 @@ proc _create_triggers {db args} {
   catch {$db eval {DROP TABLE undolog}}
   $db eval {CREATE TEMP TABLE undolog(seq integer primary key, sql text)}
   foreach tbl $args {
-    set collist }; hd_resolve_one {$db eval "pragma table_info($tbl)"}; hd_puts {
+    set collist &#91;$db eval "pragma table_info($tbl)"&#93;
     set sql "CREATE TEMP TRIGGER _${tbl}_it AFTER INSERT ON $tbl BEGIN\n"
     append sql "  INSERT INTO undolog VALUES(NULL,"
     append sql "'DELETE FROM $tbl WHERE rowid='||new.rowid);\nEND;\n"
@@ -454,10 +479,10 @@ proc _create_triggers {db args} {
 # title:  Drop all of the triggers that _create_triggers created
 #
 proc _drop_triggers {db} {
-  set tlist }; hd_resolve_one {$db eval {SELECT name FROM sqlite_temp_master
-                       WHERE type='trigger'}}; hd_puts {
+  set tlist &#91;$db eval {SELECT name FROM sqlite_temp_schema
+                       WHERE type='trigger'}&#93;
   foreach trigger $tlist {
-    if {!}; hd_resolve_one {regexp {_.*_(i|u|d)t$} $trigger}; hd_puts {} continue
+    if {!&#91;regexp {_.*_(i|u|d)t$} $trigger&#93;} continue
     $db eval "DROP TRIGGER $trigger;"
   }
   catch {$db eval {DROP TABLE undolog}}
@@ -468,7 +493,7 @@ proc _drop_triggers {db} {
 #
 proc _start_interval {} {
   variable _undo
-  set _undo(firstlog) }; hd_resolve_one {db one {SELECT coalesce(max(seq),0)+1 FROM undolog}}; hd_puts {
+  set _undo(firstlog) &#91;db one {SELECT coalesce(max(seq),0)+1 FROM undolog}&#93;
 }
 
 # xproc: ::undo::_step V1 V2
@@ -479,24 +504,24 @@ proc _start_interval {} {
 #
 proc _step {v1 v2} {
   variable _undo
-  set op }; hd_resolve_one {lindex $_undo($v1) end}; hd_puts {
-  set _undo($v1) }; hd_resolve_one {lrange $_undo($v1) 0 end-1}; hd_puts {
+  set op &#91;lindex $_undo($v1) end&#93;
+  set _undo($v1) &#91;lrange $_undo($v1) 0 end-1&#93;
   foreach {begin end} $op break
   db eval BEGIN
   set q1 "SELECT sql FROM undolog WHERE seq>=$begin AND seq<=$end
           ORDER BY seq DESC"
-  set sqllist }; hd_resolve_one {db eval $q1}; hd_puts {
+  set sqllist &#91;db eval $q1&#93;
   db eval "DELETE FROM undolog WHERE seq>=$begin AND seq<=$end"
-  set _undo(firstlog) }; hd_resolve_one {db one {SELECT coalesce(max(seq),0)+1 FROM undolog}}; hd_puts {
+  set _undo(firstlog) &#91;db one {SELECT coalesce(max(seq),0)+1 FROM undolog}&#93;
   foreach sql $sqllist {
     db eval $sql
   }
   db eval COMMIT
   reload_all
 
-  set end }; hd_resolve_one {db one {SELECT coalesce(max(seq),0) FROM undolog}}; hd_puts {
+  set end &#91;db one {SELECT coalesce(max(seq),0) FROM undolog}&#93;
   set begin $_undo(firstlog)
-  lappend _undo($v2) }; hd_resolve_one {list $begin $end}; hd_puts {
+  lappend _undo($v2) &#91;list $begin $end&#93;
   _start_interval
   refresh
 }
@@ -505,4 +530,5 @@ proc _step {v1 v2} {
 # End of the ::undo namespace
 }
 </pre></blockquote>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/undoredo.in?m=741a21510cef6b0d1">2022-02-17 17:47:49</a> UTC </small></i></p>
 

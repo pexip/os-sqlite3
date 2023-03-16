@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -73,7 +73,7 @@ function div_off(nm){document.getElementById(nm).style.display="none";}
 window.onbeforeunload = function(e){div_off("submenu");}
 /* Disable the Search feature if we are not operating from CGI, since */
 /* Search is accomplished using CGI and will not work without it. */
-if( !location.origin.match || !location.origin.match(/http/) ){
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
 document.getElementById("search_menubutton").style.display = "none";
 }
 /* Used by the Hide/Show button beside syntax diagrams, to toggle the */
@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -139,6 +163,7 @@ format of the EXPLAIN QUERY PLAN command.
 </p><p style="margin-left:10ex;margin-right:10ex">
 <b>Alert:</b> As warned above, the EXPLAIN QUERY PLAN output format did
 change substantially with the version 3.24.0 release (2018-06-04).
+Additional minor changes occurred in version 3.36.0 (2021-06-18).
 Further changes are possible in subsequent releases.
 
 
@@ -150,7 +175,8 @@ understanding and interpreting the EXPLAIN QUERY PLAN output.  Background
 information is available separately:
 
 </p><ul>
-<li> Notes on the <a href="optoverview.html">query optimizer</a>.
+<li> A primer on <a href="howitworks.html">How SQLite Works</a>.
+</li><li> Notes on the <a href="optoverview.html">query optimizer</a>.
 </li><li> How <a href="queryplanner.html">indexing</a> works.
 </li><li> The <a href="queryplanner-ng.html">next generation query planner</a>.
 </li></ul>
@@ -163,10 +189,12 @@ of the node.
 The entire tree is therefore a table with four columns and zero or more
 rows.
 The <a href="cli.html">command-line shell</a> will usually intercept this table and renders
-it as an ASCII-art graph for more convenient viewing.  To defeat the
-shells automatic graph rendering, simply include extra white space
-in between any of the "EXPLAIN", "QUERY", and/or "PLAN" keywords and
-the output will appear in a (less helpful) tabular format.
+it as an ASCII-art graph for more convenient viewing.  To disable the
+shells automatic graph rendering and to display EXPLAIN QUERY PLAN
+output in its tabular format, run the command ".explain off" to set
+the "EXPLAIN formatting mode" to off.  To restore automatic graph rendering,
+run ".explain auto".  You can see the current "EXPLAIN formatting mode" 
+setting using the ".show" command.
 
 </p><p>One can also set the <a href="cli.html">CLI</a> into automatic EXPLAIN QUERY PLAN mode
 using the ".eqp on" command:
@@ -204,7 +232,7 @@ tables (e.g. UPDATE, DELETE, INSERT INTO ... SELECT).
   following information:
 
 </p><ul>
-  <li> The name of the table data is read from.
+  <li> The name of the table, view, or subquery that data is read from.
   </li><li> Whether or not an index or <a href="optoverview.html#autoindex">automatic index</a> is used.
   </li><li> Whether or not the <a href="queryplanner.html#covidx">covering index</a> optimization applies.
   </li><li> Which terms of the WHERE clause are used for indexing.
@@ -215,7 +243,7 @@ tables (e.g. UPDATE, DELETE, INSERT INTO ... SELECT).
   statement that is implemented by performing a full-table scan on table t1:
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT a, b FROM t1 WHERE a=1;
 QUERY PLAN
-`--SCAN TABLE t1
+`--SCAN t1
 </pre></div>
 
 <p>
@@ -228,7 +256,7 @@ QUERY PLAN
 </p><div class="codeblock"><pre>sqlite&gt; CREATE INDEX i1 ON t1(a);
 sqlite&gt; EXPLAIN QUERY PLAN SELECT a, b FROM t1 WHERE a=1;
 QUERY PLAN
-`--SEARCH TABLE t1 USING INDEX i1 (a=?)
+`--SEARCH t1 USING INDEX i1 (a=?)
 </pre></div>
 
 <p>
@@ -239,7 +267,7 @@ QUERY PLAN
 </p><div class="codeblock"><pre>sqlite&gt; CREATE INDEX i2 ON t1(a, b);
 sqlite&gt; EXPLAIN QUERY PLAN SELECT a, b FROM t1 WHERE a=1; 
 QUERY PLAN
-`--SEARCH TABLE t1 USING COVERING INDEX i2 (a=?)
+`--SEARCH t1 USING COVERING INDEX i2 (a=?)
 </pre></div>
 
 <p>
@@ -248,8 +276,8 @@ QUERY PLAN
   SCAN or SEARCH record is output for each nested loop. For example:
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT t1.*, t2.* FROM t1, t2 WHERE t1.a=1 AND t1.b>2;
 QUERY PLAN
-|--SEARCH TABLE t1 USING INDEX i2 (a=? AND b>?)
-`--SCAN TABLE t2
+|--SEARCH t1 USING INDEX i2 (a=? AND b>?)
+`--SCAN t2
 </pre></div>
 
 <p>
@@ -264,8 +292,8 @@ QUERY PLAN
   evaluated, not how it is specified in the SQL statement.
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT t1.*, t2.* FROM t2, t1 WHERE t1.a=1 AND t1.b>2;
 QUERY PLAN
-|--SEARCH TABLE t1 USING INDEX i2 (a=? AND b>?)
-`--SCAN TABLE t2
+|--SEARCH t1 USING INDEX i2 (a=? AND b>?)
+`--SCAN t2
 </pre></div>
 
 <a name="or-opt"></a>
@@ -279,8 +307,8 @@ QUERY PLAN
 sqlite&gt; EXPLAIN QUERY PLAN SELECT * FROM t1 WHERE a=1 OR b=2;
 QUERY PLAN
 `--MULTI-INDEX OR
-   |--SEARCH TABLE t1 USING COVERING INDEX i2 (a=?)
-   `--SEARCH TABLE t1 USING INDEX i3 (b=?)
+   |--SEARCH t1 USING COVERING INDEX i2 (a=?)
+   `--SEARCH t1 USING INDEX i3 (b=?)
 </pre></div>
 
 <h2 id="temporary_sorting_b_trees"><span>1.2. </span>Temporary Sorting B-Trees</h2>
@@ -297,7 +325,7 @@ QUERY PLAN
 
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT c, d FROM t2 ORDER BY c;
 QUERY PLAN
-|--SCAN TABLE t2
+|--SCAN t2
 `--USE TEMP B-TREE FOR ORDER BY
 </pre></div>
 
@@ -308,7 +336,7 @@ QUERY PLAN
 </p><div class="codeblock"><pre>sqlite&gt; CREATE INDEX i4 ON t2(c);
 sqlite&gt; EXPLAIN QUERY PLAN SELECT c, d FROM t2 ORDER BY c; 
 QUERY PLAN
-`--SCAN TABLE t2 USING INDEX i4
+`--SCAN t2 USING INDEX i4
 </pre></div>
 
 <h2 id="subqueries"><span>1.3. </span>Subqueries</h2>
@@ -321,9 +349,9 @@ QUERY PLAN
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT (SELECT b FROM t1 WHERE a=0), (SELECT a FROM t1 WHERE b=t2.c) FROM t2;
 |--SCAN TABLE t2 USING COVERING INDEX i4
 |--SCALAR SUBQUERY
-|  `--SEARCH TABLE t1 USING COVERING INDEX i2 (a=?)
+|  `--SEARCH t1 USING COVERING INDEX i2 (a=?)
 `--CORRELATED SCALAR SUBQUERY
-   `--SEARCH TABLE t1 USING INDEX i3 (b=?)
+   `--SEARCH t1 USING INDEX i3 (b=?)
 </pre></div>
 
 <p>
@@ -349,11 +377,13 @@ QUERY PLAN
   produces the desired output row, then control switches back to the main
   routine which continues processing.  
 
-</p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT count(*) FROM (SELECT max(b) AS x FROM t1 GROUP BY a) GROUP BY x;
+</p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT count(*)
+      &gt; FROM (SELECT max(b) AS x FROM t1 GROUP BY a) AS qqq
+      &gt; GROUP BY x;
 QUERY PLAN
-|--CO-ROUTINE 0x20FC3E0
-|  `--SCAN TABLE t1 USING COVERING INDEX i2
-|--SCAN SUBQUERY 0x20FC3E0
+|--CO-ROUTINE qqq
+|  `--SCAN t1 USING COVERING INDEX i2
+|--SCAN qqqq
 `--USE TEMP B-TREE FOR GROUP BY
 </pre></div>
 
@@ -364,10 +394,10 @@ QUERY PLAN
   query.  The output of EXPLAIN QUERY PLAN reflects this, as in the following
   example:
 
-</p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT * FROM (SELECT * FROM t2 WHERE c=1), t1;
+</p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT * FROM (SELECT * FROM t2 WHERE c=1) AS t3, t1;
 QUERY PLAN
-|--SEARCH TABLE t2 USING INDEX i4 (c=?)
-`--SCAN TABLE t1
+|--SEARCH t2 USING INDEX i4 (c=?)
+`--SCAN t1
 </pre></div>
 
 <p>
@@ -381,13 +411,13 @@ QUERY PLAN
       &gt;   (SELECT * FROM t1 WHERE a=1 ORDER BY b LIMIT 2) AS x,
       &gt;   (SELECT * FROM t2 WHERE c=1 ORDER BY d LIMIT 2) AS y;
 QUERY PLAN
-|--MATERIALIZE 0x18F06F0
-|  `--SEARCH TABLE t1 USING COVERING INDEX i2 (a=?)
-|--MATERIALIZE 0x18F80D0
-|  |--SEARCH TABLE t2 USING INDEX i4 (c=?)
+|--MATERIALIZE x
+|  `--SEARCH t1 USING COVERING INDEX i2 (a=?)
+|--MATERIALIZE y
+|  |--SEARCH t2 USING INDEX i4 (c=?)
 |  `--USE TEMP B-TREE FOR ORDER BY
-|--SCAN SUBQUERY 0x18F06F0 AS x
-`--SCAN SUBQUERY 0x18F80D0 AS y
+|--SCAN x
+`--SCAN y
 </pre></div>
 
 <h2 id="compound_queries"><span>1.4. </span>Compound Queries</h2>
@@ -401,9 +431,9 @@ QUERY PLAN
 QUERY PLAN
 `--COMPOUND QUERY
    |--LEFT-MOST SUBQUERY
-   |  `--SCAN TABLE t1 USING COVERING INDEX i1
+   |  `--SCAN t1 USING COVERING INDEX i1
    `--UNION USING TEMP B-TREE
-      `--SCAN TABLE t2 USING COVERING INDEX i4
+      `--SCAN t2 USING COVERING INDEX i4
 </pre></div>
 
 <p>
@@ -419,9 +449,10 @@ QUERY PLAN
 QUERY PLAN
 `--MERGE (EXCEPT)
    |--LEFT
-   |  `--SCAN TABLE t1 USING COVERING INDEX i1
+   |  `--SCAN t1 USING COVERING INDEX i1
    `--RIGHT
-      |--SCAN TABLE t2
+      |--SCAN t2
       `--USE TEMP B-TREE FOR ORDER BY
 </pre></div>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/eqp.in?m=719c38ad7e31ec3d8">2021-03-23 20:19:29</a> UTC </small></i></p>
 
