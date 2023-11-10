@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h1 align="center">List of SQLite Syntax Diagrams</h1>
@@ -146,6 +170,7 @@ return false;
 <li><a href='syntax/reindex-stmt.html'>reindex-stmt</a></li>
 <li><a href='syntax/release-stmt.html'>release-stmt</a></li>
 <li><a href='syntax/result-column.html'>result-column</a></li>
+<li><a href='syntax/returning-clause.html'>returning-clause</a></li>
 <li><a href='syntax/rollback-stmt.html'>rollback-stmt</a></li>
 <li><a href='syntax/savepoint-stmt.html'>savepoint-stmt</a></li>
 <li><a href='syntax/select-core.html'>select-core</a></li>
@@ -156,6 +181,7 @@ return false;
 <li><a href='syntax/sql-stmt.html'>sql-stmt</a></li>
 <li><a href='syntax/sql-stmt-list.html'>sql-stmt-list</a></li>
 <li><a href='syntax/table-constraint.html'>table-constraint</a></li>
+<li><a href='syntax/table-options.html'>table-options</a></li>
 <li><a href='syntax/table-or-subquery.html'>table-or-subquery</a></li>
 <li><a href='syntax/type-name.html'>type-name</a></li>
 <li><a href='syntax/update-stmt.html'>update-stmt</a></li>
@@ -167,5 +193,6 @@ return false;
 <li><a href='syntax/with-clause.html'>with-clause</a></li>
 </ul>
 </div>
+
 
 

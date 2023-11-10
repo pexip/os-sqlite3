@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.30.0 On 2019-10-04</h2><p><ol class='lessindent'>
 <li> Add support for the <a href="../lang_aggfunc.html#aggfilter">FILTER clause on aggregate functions</a>.
 <li> Add support for the <a href="../lang_select.html#nullslast">NULLS FIRST</a> and <a href="../lang_select.html#nullslast">NULLS LAST</a> syntax in <a href="../lang_select.html#orderby">ORDER BY</a> clauses.
@@ -132,3 +156,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

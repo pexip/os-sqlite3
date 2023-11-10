@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -101,6 +125,7 @@ return false;
 <li> <a href="features.html">Features</a> </li>
 <li> <a href="whentouse.html">When to use SQLite</a> </li>
 <li> <a href="quickstart.html">Getting Started</a> </li>
+<li> <a href="https://sqlite.org/fiddle">Try it live!</li>
 <li> <a href="chronology.html">Prior Releases</a>
 <li> <a href="lang.html">SQL Syntax</a>
 <ul>
@@ -109,6 +134,7 @@ return false;
 <li> <a href="lang_datefunc.html">Date &amp; time functions</a>
 <li> <a href="lang_aggfunc.html#aggfunclist">Aggregate functions</a>
 <li> <a href="windowfunctions.html#biwinfunc">Window functions</a>
+<li> <a href="lang_mathfunc.html">Math functions</a>
 <li> <a href="json1.html">JSON functions</a>
 </ul>
 </li>
@@ -165,7 +191,7 @@ is in the <a href="copyright.html">public-domain</a> and is free to
 everyone to use for any purpose.
 
 <h3>Latest Release</h3>
-<a href="releaselog/3_34_1.html">Version 3.34.1</a> (2021-01-20).
+<a href="releaselog/3_40_1.html">Version 3.40.1</a> (2022-12-28).
 <a class="button" href="download.html">Download</a>
 <a class="button" href="chronology.html">Prior Releases</a>
 
@@ -175,6 +201,7 @@ everyone to use for any purpose.
 <li> <a href="features.html">Features</a> </li>
 <li> <a href="whentouse.html">When to use SQLite</a> </li>
 <li> <a href="quickstart.html">Getting Started</a> </li>
+<li> <a href="https://sqlite.org/fiddle">Try it live!</li>
 <li> <a href="chronology.html">Prior Releases</a>
 <li> <a href="lang.html">SQL Syntax</a>
 <ul>
@@ -183,6 +210,7 @@ everyone to use for any purpose.
 <li> <a href="lang_datefunc.html">Date &amp; time functions</a>
 <li> <a href="lang_aggfunc.html#aggfunclist">Aggregate functions</a>
 <li> <a href="windowfunctions.html#biwinfunc">Window functions</a>
+<li> <a href="lang_mathfunc.html">Math functions</a>
 <li> <a href="json1.html">JSON functions</a>
 </ul>
 </li>
@@ -222,7 +250,7 @@ by <a href="consortium.html">SQLite Consortium</a> members, including:</p>
 <script>
   var sponsors = [{
     "name":"Bloomberg",
-    "href":"https://www.bloomberg.com/",
+    "href":"https://www.techatbloomberg.com/",
     "src":"bloomberg.png",
     "wx":0
   },{
@@ -258,4 +286,5 @@ by <a href="consortium.html">SQLite Consortium</a> members, including:</p>
 </script>
 <br clear="both">
 <hr class="xhr">
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/index.in?m=e00bc27018a99438d">2022-12-27 16:51:24</a> UTC </small></i></p>
 

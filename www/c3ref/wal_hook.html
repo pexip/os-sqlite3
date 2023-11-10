@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_wal_hook -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -129,11 +153,13 @@ are undefined.</p>
 
 <p>A single database handle may have at most a single write-ahead log callback
 registered at one time. Calling <a href="../c3ref/wal_hook.html">sqlite3_wal_hook()</a> replaces any
-previously registered write-ahead log callback. Note that the
-<a href="../c3ref/wal_autocheckpoint.html">sqlite3_wal_autocheckpoint()</a> interface and the
+previously registered write-ahead log callback. The return value is
+a copy of the third parameter from the previous call, if any, or 0.
+Note that the <a href="../c3ref/wal_autocheckpoint.html">sqlite3_wal_autocheckpoint()</a> interface and the
 <a href="../pragma.html#pragma_wal_autocheckpoint">wal_autocheckpoint pragma</a> both invoke <a href="../c3ref/wal_hook.html">sqlite3_wal_hook()</a> and will
 overwrite any prior <a href="../c3ref/wal_hook.html">sqlite3_wal_hook()</a> settings.
 </p><p>See also lists of
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

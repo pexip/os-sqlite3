@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -443,7 +467,7 @@ the change-counter does not match the version-valid-for number.</p>
 <p>Unused pages in the database file are stored on a freelist.  The
 4-byte big-endian integer at offset 32 stores the page number of
 the first page of the freelist, or zero if the freelist is empty.
-The 4-byte big-endian integer at offset 36 stores stores the total 
+The 4-byte big-endian integer at offset 36 stores the total 
 number of pages on the freelist.</p>
 
 <h3 id="schema_cookie"><span>1.3.9. </span>Schema cookie</h3>
@@ -1254,6 +1278,8 @@ When a column is indexed, the same collating function specified in the
 though this can be overridden using a COLLATE clause in the 
 <a href="lang_createindex.html">CREATE INDEX</a> statement.
 
+<a name="#sqltab"></a>
+
 </p><h2 id="representation_of_sql_tables"><span>2.3. </span>Representation Of SQL Tables</h2>
 
 <p> Each ordinary SQL table in the database schema is represented on-disk
@@ -1287,7 +1313,7 @@ table and uses a different on-disk representation.  A WITHOUT ROWID
 table uses an index b-tree rather than a table b-tree for storage.
 The key for each entry in the WITHOUT ROWID b-tree is a record composed
 of the columns of the PRIMARY KEY followed by all remaining columns of
-the table.  The primary key columns appear in the order they they were
+the table.  The primary key columns appear in the order that they were
 declared in the PRIMARY KEY clause and the remaining columns appear in
 the order they occur in the CREATE TABLE statement.
 
@@ -1538,7 +1564,7 @@ CREATE TABLE sqlite_sequence(name,seq);
 
 <p>There is a single row in the sqlite_sequence table for each ordinary
 table that uses AUTOINCREMENT.  The name of the table (as it appears in
-sqlite_schema.name) is in the sqlite_sequence.main field and the largest
+sqlite_schema.name) is in the sqlite_sequence.name field and the largest
 <a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> ever inserted into that table is 
 in the sqlite_sequence.seq field.  
 New automatically generated integer primary keys for AUTOINCREMENT
@@ -1590,7 +1616,7 @@ rows in the index is the same as the number of rows in the table,
 except for <a href="partialindex.html">partial indexes</a>.)
 The second integer is the approximate number of rows in the index
 that have the same value in the first column of the index.  The third 
-integer is the number number of rows in the index that have 
+integer is the number of rows in the index that have 
 the same value for the first two columns.  The N-th integer (for N>1) 
 is the estimated average number of rows in 
 the index which have the same value for the first N-1 columns.  For
@@ -2175,4 +2201,5 @@ file, and since the wal-index is a transient structure, no further
 information about the format of the wal-index will be provided here.
 Additional details on the format of the wal-index are contained in
 the separate <a href="walformat.html#walidxfmt">WAL-index File Format</a> document.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/fileformat2.in?m=ba2f97fa24209ae70">2022-08-10 18:45:48</a> UTC </small></i></p>
 

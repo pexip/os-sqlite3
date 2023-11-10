@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h1 align='center'>table-constraint</h1>
 <div class='imgcontainer'>
 <div style="max-width:751px"><svg xmlns='http://www.w3.org/2000/svg' class="pikchr" viewBox="0 0 751.325 261.36">
@@ -203,5 +227,6 @@ Used by:&nbsp;&nbsp; <a href='./create-table-stmt.html'>create-table-stmt</a><br
 References:&nbsp;&nbsp; <a href='./conflict-clause.html'>conflict-clause</a>&nbsp;&nbsp; <a href='./expr.html'>expr</a>&nbsp;&nbsp; <a href='./foreign-key-clause.html'>foreign-key-clause</a>&nbsp;&nbsp; <a href='./indexed-column.html'>indexed-column</a><br></br>
 See also:&nbsp;&nbsp; <a href='../lang_createtable.html'>lang_createtable.html</a>
 </div>
+
 
 

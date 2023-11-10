@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -613,11 +637,11 @@ object and the WAL locks controlled by the xShmLock method of the
 lock for a single database connection can be in exactly one of the
 following states:
 </p><ol>
-<li value="'0'"> SQLITE_LOCK_NONE (unlocked)
-</li><li value="'1'"> SQLITE_LOCK_SHARED (reading)
-</li><li value="'2'"> SQLITE_LOCK_RESERVED (reading, waiting to write)
-</li><li value="'3'"> SQLITE_LOCK_PENDING (new readers blocked, waiting to write)
-</li><li value="'4'"> SQLITE_LOCK_EXCLUSIVE (writing)
+<li value="0"> SQLITE_LOCK_NONE (unlocked)
+</li><li value="1"> SQLITE_LOCK_SHARED (reading)
+</li><li value="2"> SQLITE_LOCK_RESERVED (reading, waiting to write)
+</li><li value="3"> SQLITE_LOCK_PENDING (new readers blocked, waiting to write)
+</li><li value="4"> SQLITE_LOCK_EXCLUSIVE (writing)
 </li></ol>
 <p>The DELETE-mode locks are stored on the <a href="fileformat2.html#lockbyte">lock-byte page</a> of the
 main database file.
@@ -865,4 +889,5 @@ held on WAL_WRITE_LOCK, WAL_CKPT_LOCK, WAL_RECOVER_LOCK, and WAL_READ_LOCK(1) th
 WAL-index except for WAL_READ_LOCK(0) are held exclusively.  This prevents
 any other thread from writing the database and from reading any transactions
 that are held in the WAL, until the recovery is complete.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/walformat.in?m=24994748471a7cea1">2019-04-17 15:17:39</a> UTC </small></i></p>
+

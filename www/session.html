@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h2>SQLite Session Module C/C++ Interface</h2>
@@ -179,6 +203,7 @@ code file sqlite3session.h.</p>
 <li><a href='#sqlite3changegroup_add_strm'>sqlite3rebaser_rebase_strm</a></li>
 <li><a href='#sqlite3session_attach'>sqlite3session_attach</a></li>
 <li><a href='#sqlite3session_changeset'>sqlite3session_changeset</a></li>
+<li><a href='#sqlite3session_changeset_size'>sqlite3session_changeset_size</a></li>
 <li><a href='#sqlite3changegroup_add_strm'>sqlite3session_changeset_strm</a></li>
 <li><a href='#sqlite3session_config'>sqlite3session_config</a></li>
 <li><a href='#sqlite3session_create'>sqlite3session_create</a></li>
@@ -187,6 +212,7 @@ code file sqlite3session.h.</p>
 <li><a href='#sqlite3session_enable'>sqlite3session_enable</a></li>
 <li><a href='#sqlite3session_indirect'>sqlite3session_indirect</a></li>
 <li><a href='#sqlite3session_isempty'>sqlite3session_isempty</a></li>
+<li><a href='#sqlite3session_memory_used'>sqlite3session_memory_used</a></li>
 <li><a href='#sqlite3session_patchset'>sqlite3session_patchset</a></li>
 <li><a href='#sqlite3changegroup_add_strm'>sqlite3session_patchset_strm</a></li>
 <li><a href='#sqlite3session_table_filter'>sqlite3session_table_filter</a></li>
@@ -343,6 +369,7 @@ record changes to a database.
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3session_attach'>sqlite3session_attach</a></li>
 <li><a href='#sqlite3session_changeset'>sqlite3session_changeset</a></li>
+<li><a href='#sqlite3session_changeset_size'>sqlite3session_changeset_size</a></li>
 <li><a href='#sqlite3session_diff'>sqlite3session_diff</a></li>
 <li><a href='#sqlite3session_enable'>sqlite3session_enable</a></li>
 <li><a href='#sqlite3session_indirect'>sqlite3session_indirect</a></li>
@@ -707,18 +734,23 @@ created by <a href="#sqlite3changeset_start">sqlite3changeset_start()</a>. In th
 call to <a href="#sqlite3changeset_next">sqlite3changeset_next()</a> must have returned <a href="rescode.html#row">SQLITE_ROW</a>. If this
 is not the case, this function returns <a href="rescode.html#misuse">SQLITE_MISUSE</a>.</p>
 
-<p>If argument pzTab is not NULL, then *pzTab is set to point to a
-nul-terminated utf-8 encoded string containing the name of the table
-affected by the current change. The buffer remains valid until either
-sqlite3changeset_next() is called on the iterator or until the 
-conflict-handler function returns. If pnCol is not NULL, then *pnCol is 
-set to the number of columns in the table affected by the change. If
-pbIndirect is not NULL, then *pbIndirect is set to true (1) if the change
+<p>Arguments pOp, pnCol and pzTab may not be NULL. Upon return, three
+outputs are set through these pointers: </p>
+
+<p>*pOp is set to one of <a href="c3ref/c_alter_table.html">SQLITE_INSERT</a>, <a href="c3ref/c_alter_table.html">SQLITE_DELETE</a> or <a href="c3ref/c_alter_table.html">SQLITE_UPDATE</a>,
+depending on the type of change that the iterator currently points to;</p>
+
+<p>*pnCol is set to the number of columns in the table affected by the change; and</p>
+
+<p>*pzTab is set to point to a nul-terminated utf-8 encoded string containing
+the name of the table affected by the current change. The buffer remains
+valid until either sqlite3changeset_next() is called on the iterator
+or until the conflict-handler function returns.</p>
+
+<p>If pbIndirect is not NULL, then *pbIndirect is set to true (1) if the change
 is an indirect change, or false (0) otherwise. See the documentation for
 <a href="#sqlite3session_indirect">sqlite3session_indirect()</a> for a description of direct and indirect
-changes. Finally, if pOp is not NULL, then *pOp is set to one of 
-<a href="c3ref/c_alter_table.html">SQLITE_INSERT</a>, <a href="c3ref/c_alter_table.html">SQLITE_DELETE</a> or <a href="c3ref/c_alter_table.html">SQLITE_UPDATE</a>, depending on the 
-type of change that the iterator currently points to.</p>
+changes.</p>
 
 <p>If no error occurs, SQLITE_OK is returned. If an error does occur, an
 SQLite error code is returned. The values of the output variables may not
@@ -956,6 +988,18 @@ changeset, even though the delete took place while the session was disabled.
 Or, if one field of a row is updated while a session is disabled, and 
 another field of the same row is updated while the session is enabled, the
 resulting changeset will contain an UPDATE change that updates both fields.
+</p><hr><a name="sqlite3session_changeset_size"></a>
+<h2>Return An Upper-limit For The Size Of The Changeset</h2><blockquote><pre>sqlite3_int64 sqlite3session_changeset_size(sqlite3_session *pSession);
+</pre></blockquote><p>
+By default, this function always returns 0. For it to return
+a useful result, the sqlite3_session object must have been configured
+to enable this API using sqlite3session_object_config() with the
+SQLITE_SESSION_OBJCONFIG_SIZE verb.</p>
+
+<p>When enabled, this function returns an upper limit, in bytes, for the size 
+of the changeset that might be produced if sqlite3session_changeset() were
+called. The final changeset size might be equal to or smaller than the
+size in bytes returned by this function.
 </p><hr><a name="sqlite3session_config"></a>
 <h2>Configure global parameters</h2><blockquote><pre>int sqlite3session_config(int op, void *pArg);
 </pre></blockquote><p>
@@ -1010,7 +1054,7 @@ the session object is deleted, then the results of calling any session
 module function, including <a href="#sqlite3session_delete">sqlite3session_delete()</a> on the session object
 are undefined.</p>
 
-<p>Because the session module uses the <a href="c3ref/preupdate_count.html">sqlite3_preupdate_hook()</a> API, it
+<p>Because the session module uses the <a href="c3ref/preupdate_blobwrite.html">sqlite3_preupdate_hook()</a> API, it
 is not possible for an application to register a pre-update hook on a
 database handle that has one or more session objects attached. Nor is
 it possible to create a session object attached to a database handle for
@@ -1148,6 +1192,11 @@ an attached table is modified and then later on the original values
 are restored. However, if this function returns non-zero, then it is
 guaranteed that a call to sqlite3session_changeset() will return a 
 changeset containing zero changes.
+</p><hr><a name="sqlite3session_memory_used"></a>
+<h2>Query for the amount of heap memory used by a session object.</h2><blockquote><pre>sqlite3_int64 sqlite3session_memory_used(sqlite3_session *pSession);
+</pre></blockquote><p>
+This API returns the total amount of heap memory in bytes currently 
+used by the session object passed as the only argument.
 </p><hr><a name="sqlite3session_patchset"></a>
 <h2>Generate A Patchset From A Session Object</h2><blockquote><pre>int sqlite3session_patchset(
   sqlite3_session *pSession,      /* Session object */
@@ -1713,4 +1762,5 @@ may be modified by passing a combination of
 <p>Note that the sqlite3changeset_start_v2() API is still <b>experimental</b>
 and therefore subject to change.
 </p><hr>
+
 

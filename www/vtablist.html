@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -156,45 +180,48 @@ implementations.
 <tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://sqlite.org/src/file/ext/misc/amatch.c">approximate_match</a></b></td>
 <td>A demonstration of how to use a virtual table to implement
     approximate string matching.</td></tr>
-<tr style="text-align:left;"><td><b><a href="carray.html">carray</a></b></td>
+<tr style="text-align:left;"><td><b><a href="bytecodevtab.html">bytecode</a></b></td>
+<td>A <a href="vtab.html#tabfunc2">table-valued function</a> that shows the bytecodes of a prepared
+    statement.</td></tr>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="carray.html">carray</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> that allows a C-language array of integers,
     doubles, or strings to be used as table in a query.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://sqlite.org/src/file/ext/misc/closure.c">closure</a></b></td>
+<tr style="text-align:left;"><td><b><a href="https://sqlite.org/src/file/ext/misc/closure.c">closure</a></b></td>
 <td>Compute the transitive closure of a set.</td></tr>
-<tr style="text-align:left;"><td><b><a href="completion.html">completion</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="completion.html">completion</a></b></td>
 <td>Suggests completions for partially-entered words during interactive
     SQL input.  Used by the <a href="cli.html">CLI</a> to help implement tab-completion.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="csv.html">csv</a></b></td>
+<tr style="text-align:left;"><td><b><a href="csv.html">csv</a></b></td>
 <td>A virtual table that represents a comma-separated-value or CSV file
     (<a href="https://www.ietf.org/rfc/rfc4180.txt">RFC 4180</a>) as a read-only
     table so that it can be used as part of a larger query.</td></tr>
-<tr style="text-align:left;"><td><b><a href="dbstat.html">dbstat</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="dbstat.html">dbstat</a></b></td>
 <td>Provides information about the purpose and use of each page in a
     database file.  Used in the implementation of the
     <a href="sqlanalyze.html">sqlite3_analyzer</a> utility program.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://fossil-scm.org/fossil/file/src/foci.c">files_of_checkin</a></b></td>
+<tr style="text-align:left;"><td><b><a href="https://fossil-scm.org/fossil/file/src/foci.c">files_of_checkin</a></b></td>
 <td>Provides information about all files in a single check-in in the
     <a href="https://fossil-scm.org/">Fossil version control system</a>.  This
     virtual table is not part of the SQLite project but is included because
     it provides an example of how to use virtual tables and because it is
     used to help version control the SQLite sources.</td></tr>
-<tr style="text-align:left;"><td><b><a href="https://sqlite.org/src/file/ext/misc/fileio.c">fsdir</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://sqlite.org/src/file/ext/misc/fileio.c">fsdir</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> returning one row for each file in a
     selected file hierarchy of the host computer.  Used by the
     <a href="cli.html">CLI</a> to help implement the <a href="cli.html#sqlar">.archive command</a>.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="fts3.html">FTS3</a></b></td>
+<tr style="text-align:left;"><td><b><a href="fts3.html">FTS3</a></b></td>
 <td>A high-performance full-text search index.</td></tr>
-<tr style="text-align:left;"><td><b><a href="fts5.html">FTS5</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="fts5.html">FTS5</a></b></td>
 <td>A higher-performance full-text search index</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="series.html">generate_series</a></b></td>
+<tr style="text-align:left;"><td><b><a href="series.html">generate_series</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> returning a sequence of increasing
     integers, modeled after the table-valued function by the same
     name in PostgreSQL.</td></tr>
-<tr style="text-align:left;"><td><b><a href="json1.html#jeach">json_each</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="json1.html#jeach">json_each</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> for decomposing a JSON string.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="json1.html#jtree">json_tree</a></b></td>
+<tr style="text-align:left;"><td><b><a href="json1.html#jtree">json_tree</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> for decomposing a JSON string.</td></tr>
-<tr style="text-align:left;"><td><b><a href="https://osquery.readthedocs.io/en/stable/">OsQuery</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://osquery.readthedocs.io/en/stable/">OsQuery</a></b></td>
 <td>Hundreds of virtual tables that publish various aspects of the
     host computer, such as the process table, user lists, active network
     connections, and so forth.
@@ -206,30 +233,33 @@ implementations.
     SQLite virtual table mechanism
     can be leveraged to provide elegant solutions
     to important real-world problems.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="pragma.html#pragfunc">pragma</a></b></td>
+<tr style="text-align:left;"><td><b><a href="pragma.html#pragfunc">pragma</a></b></td>
 <td>Built-in <a href="vtab.html#tabfunc2">table-valued functions</a> that return the results of <a href="pragma.html#syntax">PRAGMA</a>
     statements for use within ordinary SQL queries.</td></tr>
-<tr style="text-align:left;"><td><b><a href="rtree.html">RTree</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="rtree.html">RTree</a></b></td>
 <td>An implementation of the Guttmann R*Tree spatial index idea.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="spellfix1.html">spellfix1</a></b></td>
+<tr style="text-align:left;"><td><b><a href="spellfix1.html">spellfix1</a></b></td>
 <td>A virtual table that implements a spelling correction engine.</td></tr>
-<tr style="text-align:left;"><td><b><a href="https://sqlite.org/src/file/ext/misc/btreeinfo.c">sqlite_btreeinfo</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://sqlite.org/src/file/ext/misc/btreeinfo.c">sqlite_btreeinfo</a></b></td>
 <td>This experimental <a href="vtab.html#tabfunc2">table-valued function</a> provides information about
     a single <a href="fileformat2.html#btree">B-tree</a> in a database file, such as the depth, and estimated
     number of pages and number of entries, and so forth.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="dbpage.html">sqlite_dbpage</a></b></td>
+<tr style="text-align:left;"><td><b><a href="dbpage.html">sqlite_dbpage</a></b></td>
 <td>Key/value store for the raw database file content.  The key is the
     page number and the value is binary page content.</td></tr>
-<tr style="text-align:left;"><td><b><a href="memstat.html">sqlite_memstat</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="memstat.html">sqlite_memstat</a></b></td>
 <td>Provides SQL access to the <a href="c3ref/status.html">sqlite3_status64()</a> and
     <a href="c3ref/db_status.html">sqlite3_db_status()</a> interfaces.</td></tr>
-<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="stmt.html">sqlite_stmt</a></b></td>
+<tr style="text-align:left;"><td><b><a href="stmt.html">sqlite_stmt</a></b></td>
 <td>A <a href="vtab.html#tabfunc2">table-valued function</a> containing one row for each
     <a href="c3ref/stmt.html">prepared statement</a> associated with an open <a href="c3ref/sqlite3.html">database connection</a>.</td></tr>
-<tr style="text-align:left;"><td><b><a href="swarmvtab.html#overview">swarmvtab</a></b></td>
+<tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="swarmvtab.html#overview">swarmvtab</a></b></td>
 <td>An experimental module providing on-demand read-only access to
     multiple tables spread across multiple databases, via a single
     virtual table abstraction.</td></tr>
+<tr style="text-align:left;"><td><b><a href="bytecodevtab.html">tables_used</a></b></td>
+<td>A <a href="vtab.html#tabfunc2">table-valued function</a> that shows the tables and indexes that
+    are accessed by a prepared statement.</td></tr>
 <tr style="text-align:left;background-color:#DDDDDD;"><td><b><a href="https://sqlite.org/src/file/src/test_tclvar.c">tclvar</a></b></td>
 <td>Represents the global variables of a 
     <a href="https://en.wikipedia.org/wiki/Tcl">TCL Interpreter</a> as an SQL
@@ -258,4 +288,5 @@ implementations.
     the <a href="cli.html">CLI</a> to implement the ability to read and write ZIP Archives.</td></tr>
 
 </table>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/vtablist.in?m=32698414014201a28">2022-06-15 10:18:44</a> UTC </small></i></p>
 

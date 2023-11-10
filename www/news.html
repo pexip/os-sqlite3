@@ -89,13 +89,221 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h2>Recent News</h2>
 
-<a name="2020_01_20"></a><h3>2020-01-20 - Release 3.34.1</h3><blockquote>
+<a name="2022_12_28"></a><h3>2022-12-28 - <a href="releaselog/3_40_1.html">Version 3.40.1</a></h3><blockquote>
+Version 3.40.1 is a patch release that fixes some obscure problems
+in version 3.40.0.  The problems fixed have no impact on most applications.
+Upgrading is only necessary if you encounter problems.
+<p>
+The two most important fixes are these:
+<ul>
+<li><p>
+Fix the <a href="cli.html#safemode">--safe command-line option</a> on the <a href="cli.html">CLI</a> so that it
+correctly disallows functions with side-effects.  This is a bug
+in the CLI &mdash; <i>not</i> a bug in the
+SQLite library &mdash; and it only affects the --safe command-line
+option, making that option less than fully "safe".  As the number
+of systems that use the --safe command-line option in the CLI is
+approximately zero, this is not considered an important bug.  However,
+a third-party wrote a CVE against it which caused considerable angst
+among maintainers, so it seems good to get the fix into circulation
+sooner rather than wait on the next major release.
+<li><p>
+The optional <a href="malloc.html#memsys5">memsys5</a> memory allocator picked up a bug that might
+put it into an infinite loop for very large (500MiB) allocations.
+Almost all systems use their native memory allocator, not memsys5.
+Memsys5 is only used if SQLite is compiled using SQLITE_ENABLE_MEMSYS5
+and then initialized using <a href="c3ref/config.html">sqlite3_config</a>(<a href="c3ref/c_config_covering_index_scan.html#sqliteconfigheap">SQLITE_CONFIG_HEAP</a>).
+Very, very few systems do this, and so the problem is not considered
+to be serious.
+</ul>
+<p>
+See the <a href="https://sqlite.org/src/timeline?r=branch-3.40">branch-3.40 timeline</a>
+for a complete listing of changes that have gone into this patch release.
+</blockquote><hr width="50%"><a name="2022_11_16"></a><h3>2022-11-16 - <a href="releaselog/3_40_0.html">Version 3.40.0</a></h3><blockquote>
+Version 3.40.0 is a new feature release of SQLite.  See the
+<a href="releaselog/3_40_0.html">change log</a> for details.
+Key enhancements in this release include:
+<ol>
+<li><p>
+Official support for compiling 
+<a href="https://sqlite.org/wasm/doc/trunk/index.md">SQLite to WASM</a>
+and running it in a web browser.
+<li><p>
+New and improved <a href="recovery.html">recovery extension</a> for extracting
+data from corrupted database files.
+</ol>
+<p>
+This release also includes performance enhancements and
+improvements to the query planner.
+<p>
+A psychological milestone:  The performance benchmark that
+the SQLite developers have used for many years has for
+the first time dropped below 1 billion CPU cycles
+(measured using cachegrind) when run in <a href="wal.html">WAL mode</a>.
+This is less than half the number of CPU cycles used as
+recently as 8 years ago.  (The graph below shows SQLite using
+a <a href="lockingv3.html#rollback">rollback journal</a> which uses fewer CPU cycles at the expense
+of extra I/O.  The benchmark passed through the 1 billion cycle
+barrier for rollback journals for the previous release.)
+<p align="center">
+<img src="images/sschart20221116.jpg" align="center" style="margin:1px solid grey;"></img>
+</p>
+</blockquote><hr width="50%"><a name="2022_09_29"></a><h3>2022-09-29 - <a href="releaselog/3_39_4.html">Version 3.39.4</a></h3><blockquote>
+Version 3.39.4 is a security release that addresses a single
+long-standing problem in the <a href="fts3.html">FTS3 extension</a>.  An attacker
+who is able to execute arbitrary SQL statements and who can create
+a corrupt database that is 2GB or larger in size might be able to trick
+FTS3 into overflowing an integer used to size a memory allocation,
+causing the allocation to be too small and ultimately resulting in
+a buffer overrun.  The release also includes fixes for other
+obscure weaknesses, as described in the release notes.
+</blockquote><hr width="50%"><a name="2022_09_05"></a><h3>2022-09-05 - <a href="releaselog/3_39_3.html">Version 3.39.3</a></h3><blockquote>
+Version 3.39.3 is a patch release that fixes a few obscure problems
+in the 3.39.0 release.  See the release notes for details.
+</blockquote><hr width="50%"><a name="2022_07_21"></a><h3>2022-07-21 - <a href="releaselog/3_39_2.html">Version 3.39.2</a></h3><blockquote>
+Version 3.39.2 is a security release that addresses multiple long-standing
+issues in SQLite.  The most severe problem is identified by CVE-2022-35737.
+That issue is associated with the auxiliary C-language APIs
+of SQLite and cannot be reached using SQL or database inputs, and hence is
+unlikely to affect your application.  Nevertheless, upgrading is recommended.
+The other issues are comparatively minor.
+This release also fixes a performance regression that appeared in version
+3.39.0 that might affect some multi-way joins that use LEFT JOIN.
+</blockquote><hr width="50%"><a name="2022_07_13"></a><h3>2022-07-13 - <a href="releaselog/3_39_1.html">Version 3.39.1</a></h3><blockquote>
+Version 3.39.1 is a patch release that fixes a few minor problem in version
+3.39.0.  Upgrading is optional.
+</blockquote><hr width="50%"><a name="2022_06_25"></a><h3>2022-06-25 - <a href="releaselog/3_39_0.html">Version 3.39.0</a></h3><blockquote>
+Version 3.39.0 is regular maintenance release of SQLite.  The key enhancement
+in this release is added support for RIGHT and FULL JOIN.  There are other
+language and performance enhancements as well &mdash; see the
+<a href="releaselog/3_39_0.html">release notes</a> for details.
+</blockquote><hr width="50%"><a name="2022_05_06"></a><h3>2022-05-06 - <a href="releaselog/3_38_5.html">Version 3.38.5</a></h3><blockquote>
+The 3.38.4 patch release included a minor change to the <a href="cli.html">CLI</a> source code
+that did not work.  The release manager only ran a subset of the normal
+release tests, and hence did not catch the problem. As a result, the CLI
+will segfault when using columnar output modes in version 3.38.4.  This
+blunder did not affect the core SQLite library.  It only affected the CLI.
+<p>
+Take-away lesson:  <b>Always</b> run <b>all</b> of your tests prior to
+a release - even a trival patch release.  <b>Always</b>.
+<p>
+The 3.38.5 patch release fixes the 3.38.4 blunder.
+</blockquote><hr width="50%"><a name="2022_05_04"></a><h3>2022-05-04 - <a href="releaselog/3_38_4.html">Version 3.38.4</a></h3><blockquote>
+Another user-discovered problem in the new Bloom filter optimization
+is fixed in this patch release.  Without the fix, it is possible for
+a multi-way join that uses a Bloom filters for two or more tables in
+the join to enter an infinite loop if the key constraint on one of those
+tables contains a NULL value.
+</blockquote><hr width="50%"><a name="2022_04_27"></a><h3>2022-04-27 - <a href="releaselog/3_38_3.html">Version 3.38.3</a></h3><blockquote>
+Version 3.38.3 fixes a bug in the automatic-index and Bloom filter
+construction logic that might cause SQLite to be overly aggressive
+in the use of ON clause constraints, resulting in a incorret
+automatic-index or Bloom filter that excludes some valid rows from
+output.  The bug was introduced in version 3.38.0.  Other minor
+changes were tossed in to complete the patch.
+</blockquote><hr width="50%"><a name="2022_03_26"></a><h3>2022-03-26 - <a href="releaselog/3_38_2.html">Version 3.38.2</a></h3><blockquote>
+Version 3.38.2 fixes another bug in the new Bloom filter
+optimization that might cause incorrect answers for a
+LEFT JOIN that has an IS NULL constraint on the right-hand
+table.
+</blockquote><hr width="50%"><a name="2022_03_12"></a><h3>2022-03-12 - <a href="releaselog/3_38_1.html">Version 3.38.1</a></h3><blockquote>
+Version 3.38.1 fixes a pair of bugs in the Bloom filter
+optimization that was introduced in version 3.38.0.  These
+bugs might cause incorrect answers for some obscure queries.
+Various other minor problems and documentation typos were
+fixed at the same time.
+</blockquote><hr width="50%"><a name="2022_02_22"></a><h3>2022-02-22 - <a href="releaselog/3_38_0.html">Version 3.38.0</a></h3><blockquote>
+Version 3.38.0 is a routine maintenance release of
+SQLite.  There are various minor enhancements and
+about a 0.5% reduction in the number of CPU cycles
+used. See the
+<a href="releaselog/3_38_0.html">release notes</a> for
+more detail.
+</blockquote><hr width="50%"><a name="2022_01_06"></a><h3>2022-01-06 - <a href="releaselog/3_37_2.html">Version 3.37.2</a></h3><blockquote>
+Version 3.37.2 fixes a
+<a href="howtocorrupt.html#svptbug">database corruption bug</a>.  You are
+encouraged to upgrade, especially if you are using <a href="lang_savepoint.html">SAVEPOINT</a>.</p>
+
+<p>The problem first appeared in version 3.35.0 (2021-03-12) and
+affects all subsequent releases through 3.37.1.
+If temporary files are store in memory (which is not the default
+behavior, but is sometimes selected by applications using either
+<a href="compile.html#temp_store">-DSQLITE_TEMP_STORE</a> or <a href="pragma.html#pragma_temp_store">PRAGMA temp_store</a>) and
+if a <a href="lang_savepoint.html">SAVEPOINT</a> is rolled back and then subsequent changes
+within the same transaction are committed, the database file might
+(with low but non-zero probability) go corrupt.
+</blockquote><hr width="50%"><a name="2021_12_30"></a><h3>2021-12-30 - <a href="releaselog/3_37_1.html">Version 3.37.1</a></h3><blockquote>
+Version 3.37.1 fixes a bug in the <a href="lang_upsert.html">UPSERT</a> logic, introduced by
+the UPSERT enhancements of <a href="releaselog/3_35_0.html">version 3.35.0</a>, that can cause
+incorrect byte-code to be generated in some cases, resulting
+in an infinite loop in the byte code, or a NULL-pointer dereference.
+This patch release also fixes some other minor problems with
+assert() statements and in the <a href="cli.html">CLI</a>.
+</blockquote><hr width="50%"><a name="2021_11_27"></a><h3>2021-11-27 - <a href="releaselog/3_37_0.html">Version 3.37.0</a></h3><blockquote>
+Version 3.37.0 is a routine maintenance release of SQLite.
+The biggest new feature in this release is support for
+<a href="stricttables.html">STRICT tables</a>.  Other enhancements are described in
+the <a href="releaselog/3_37_0.html">release notes</a>.
+</blockquote><hr width="50%"><a name="2021_06_18"></a><h3>2021-06-18 - <a href="releaselog/3_36_0.html">Version 3.36.0</a></h3><blockquote>
+Version 3.36.0 is a routine maintenance release of SQLite.
+There are no new major features, only incremental improvements
+to existing features and small performance improvements.
+</blockquote><hr width="50%"><a name="2021_04_19"></a><h3>2021-04-19 - Patch release 3.35.5</h3><blockquote>
+The new ALTER TABLE DROP COLUMN capability that was added
+in the 3.35.0 release contained a bug that might cause the
+table content to go corrupt when the table was rewritten
+to remove the dropped column.  Fixed by this patch.
+</blockquote><hr width="50%"><a name="2021_04_02"></a><h3>2021-04-02 - Patch release 3.35.4</h3><blockquote>
+Version 3.35.4 is yet another patch release to fix
+obscure problems in features associated with the 3.35.0.
+</blockquote><hr width="50%"><a name="2021_03_26"></a><h3>2021-03-26 - Patch release 3.35.3</h3><blockquote>
+Version 3.35.3 contains patches for a handful of minor
+problems discovered in prior releases.
+</blockquote><hr width="50%"><a name="2021_03_17"></a><h3>2021-03-17 - Patch release 3.35.2</h3><blockquote>
+Version 3.35.2 is a small patch release to fix some minor problems
+that were discovered shortly after the 3.35.1 release.
+</blockquote><hr width="50%"><a name="2021_03_15"></a><h3>2021-03-15 - Patch release 3.35.1</h3><blockquote>
+A user discovered an issue with the new DROP COLUMN capability
+in version 3.35.0, and so version 3.35.1 was created to fix it.
+No need to upgrade if you are not using DROP COLUMN.
+</blockquote><hr width="50%"><a name="2021_03_12"></a><h3>2021-03-12 - Release 3.35.0</h3><blockquote>
+SQLite version 3.35.0 is a routine maintenance release.  This
+release adds a number of new language features, including
+support for ALTER TABLE DROP COLUMN, built-in math functions,
+generalized UPSERT, and the MATERIALIZED hint on common table
+expressions.  There are also query planner optimizations and
+incremental CLI improvements.
+</blockquote><hr width="50%"><a name="2020_01_20"></a><h3>2020-01-20 - Release 3.34.1</h3><blockquote>
 SQLite version 3.34.1 is a patch releases that fixes a possible
 use-after-free bug that can be provoked by malicious SQL.  Other
 minor issues in extensions and documentation are also fixed.
@@ -536,4 +744,5 @@ the Firefox developers at Mozilla.  The differences from version
 </blockquote><hr width="50%">
 
 <a href="oldnews.html">Old news...</a>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/news.in?m=28ed87cc897e1a850">2022-12-27 17:04:09</a> UTC </small></i></p>
 

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <font color="#7f001f"><p>
@@ -541,8 +565,8 @@ SQLite uses the fsync() system call to flush data to the disk under Unix and
 it uses the FlushFileBuffers() to do the same under Windows.  Once again,
 SQLite assumes that these operating system services function as advertised.
 But it has been reported that fsync() and FlushFileBuffers() do not always
-work correctly, especially with inexpensive IDE disks.  Apparently some
-manufactures of IDE disks have controller chips that report
+work correctly, especially with some network filesystems or inexpensive IDE disks.
+Apparently some manufactures of IDE disks have controller chips that report
 that data has reached the disk surface when in fact the data is still
 in volatile cache memory in the disk drive electronics.  There are also
 reports that Windows sometimes chooses to ignore FlushFileBuffers() for
@@ -643,7 +667,7 @@ SELECT statement is executed.  A RESERVED lock will be acquired when
 the first INSERT, UPDATE, or DELETE statement is executed.  No EXCLUSIVE
 lock is acquired until either the memory cache fills up and must
 be spilled to disk or until the transaction commits.  In this way,
-the system delays blocking read access to the file file until the
+the system delays blocking read access to the file until the
 last possible moment.
 </p>
 
@@ -669,4 +693,5 @@ result is returned.  During this pause other INSERT, UPDATE, or DELETE
 commands can be executed against other tables in the database.  But none
 of these changes will commit until the original SELECT statement finishes.
 </p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lockingv3.in?m=d448a10486958226a">2022-08-10 18:45:48</a> UTC </small></i></p>
 

@@ -89,11 +89,81 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
+
+
+
+<div class="rightsidebar desktoponly border2px">
+<h3 align="center">Common Links</h3>
+<ul class=nounderline>
+<li> <a href="features.html">Features</a> </li>
+<li> <a href="whentouse.html">When to use SQLite</a> </li>
+<li> <a href="quickstart.html">Getting Started</a> </li>
+<li> <a href="https://sqlite.org/fiddle">Try it live!</li>
+<li> <a href="chronology.html">Prior Releases</a>
+<li> <a href="lang.html">SQL Syntax</a>
+<ul>
+<li> <a href="pragma.html#toc">Pragmas</a>
+<li> <a href="lang_corefunc.html">SQL functions</a>
+<li> <a href="lang_datefunc.html">Date &amp; time functions</a>
+<li> <a href="lang_aggfunc.html#aggfunclist">Aggregate functions</a>
+<li> <a href="windowfunctions.html#biwinfunc">Window functions</a>
+<li> <a href="lang_mathfunc.html">Math functions</a>
+<li> <a href="json1.html">JSON functions</a>
+</ul>
+</li>
+<li> <a href="c3ref/intro.html">C/C++ Interface Spec</a>
+<ul>
+<li> <a href="cintro.html">Introduction</a>
+<li> <a href="c3ref/funclist.html">List of C-language APIs</a>
+</ul>
+</li>
+<li> <a href="tclsqlite.html">The TCL Interface Spec</a>
+<li> <a href="quirks.html">Quirks and Gotchas</a> </li>
+<li> <a href="faq.html">Frequently Asked Questions</a> </li>
+<li> <a href="http://www.sqlite.org/src/timeline?n=100&y=ci">Commit History</a> </li>
+<li> <a href="http://www.sqlite.org/src/wiki?name=Bug+Reports">Bugs</a> </li>
+<li> <a href="news.html">News</a> </li>
+</ul>
+
 </div>
 
-
 <h2 align="center">Documentation</h1>
+<div class="docsearch" id="docsearch">
+   <form method="GET" action="./search">
+    <select name="s" id="searchtype">
+       <option value="d">Search Documentation</option>
+       <option value="c">Search Changelog</option>
+     </select>
+     <input type="text" name="q" id="searchbox">
+     <input type="submit" value="Go">
+   </form>
+</div>
 <style>
 .showhide {
   margin-left: 0;
@@ -101,7 +171,6 @@ return false;
   list-style-type: none;
 }
 .showhide > li {
-  clear: both;
   padding-left: 1em;
   text-indent: -1em;
 }
@@ -127,6 +196,11 @@ return false;
 .sh_link {
   font-weight: bold;
 }
+.docsearch {
+  margin: auto;
+  width: 450px;
+  padding-bottom: 1.5em;
+}
 </style>
 <script>
 function showhide(n){
@@ -140,7 +214,11 @@ function showhide(n){
     mk.innerHTML = "&#x25ba;";
   }
 }
+if( !location.origin || !location.origin.match || !location.origin.match(/http/) ){
+  document.getElementById("docsearch").style.display = "none";
+}
 </script>
+
 <ul class="showhide">
 <li><a onclick='showhide(1)'><span class='sh_mark' id='sh_mark_1'>&#x25bc;</span> Document Lists And Indexes</a>
 <ul id='sh_sub_1' style='display:block;'>
@@ -670,4 +748,6 @@ function showhide(n){
 </ul>
 
 </ul>
+<br clear="both">
+
 

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.11.1 On 2016-03-03</h2><p><b>Changes in version 3.11.0 (2016-02-15):</b></p>
 <p><ol class='lessindent'>
 <p><b>General improvements:</b>
@@ -133,11 +157,11 @@ return false;
 <li>Reenable the xCurrentTime and xGetLastError methods in the built-in
     unix <a href="../vfs.html">VFSes</a> as long as <a href="../compile.html#omit_deprecated">SQLITE_OMIT_DEPRECATED</a> is not defined.
 <p><b>Backwards Compatibility:</b>
-<li>Because of continuing security concerns, the two-argument version of
+<li>Because of continuing security concerns, the two-argument version
     of the seldom-used and little-known <a href="../fts3.html#f3tknzr">fts3_tokenizer()</a> function is
     disabled unless SQLite is compiled with the <a href="../compile.html#enable_fts3_tokenizer">SQLITE_ENABLE_FTS3_TOKENIZER</a>.
 </ol>
-<p><b>Additional changes in version 3.11.1:</b></p>
+<p><b>Additional changes in version 3.11.1 (2016-03-03):</b></p>
 <p><ol class='lessindent'>
 <li value='19'>Improvements to the Makefiles and build scripts used by VisualStudio.
 <li>Fix an <a href="../fts5.html">FTS5</a> issue in which the 'optimize' command could cause index corruption.
@@ -156,3 +180,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

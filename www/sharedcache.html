@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -102,6 +126,7 @@ SQLite Shared-Cache Mode
 Table Of Contents
 </a>
 <div id="toc_sub"><div class="fancy-toc1"><a href="#sqlite_shared_cache_mode">1. SQLite Shared-Cache Mode</a></div>
+<div class="fancy-toc2"><a href="#use_of_shared_cache_is_discouraged">1.1. Use of shared-cache is discouraged</a></div>
 <div class="fancy-toc1"><a href="#shared_cache_locking_model">2. Shared-Cache Locking Model</a></div>
 <div class="fancy-toc2"><a href="#transaction_level_locking">2.1. Transaction Level Locking</a></div>
 <div class="fancy-toc2"><a href="#table_level_locking">2.2. Table Level Locking</a></div>
@@ -156,7 +181,33 @@ this document. A basic understanding of the normal SQLite locking model (see
 <a href="lockingv3.html">File Locking And Concurrency In SQLite Version 3</a>
 for details) is assumed.</p>
 
-<h1 id="shared_cache_locking_model"><span>2. </span>Shared-Cache Locking Model</h1>
+<a name="dontuse"></a>
+
+<h2 id="use_of_shared_cache_is_discouraged"><span>1.1. </span>Use of shared-cache is discouraged</h2>
+
+<p>Shared-cache mode is an obsolete feature.  The use of shared-cache mode
+is discouraged.  Most use cases for shared-cache are better served by
+<a href="wal.html">WAL mode</a>.
+
+</p><p>Shared-cache mode was invented in 2006 at the request of developers
+of <a href="https://en.wikipedia.org/wiki/Symbian">Symbian</a>.  Their problem was that
+if the contacts database on the phone was being synced, that would lock the
+database file.  Then if a call came in, the database lock would prevent them
+from querying the contacts database in order to find the appropriate 
+ring-tone for the incoming call, or a photo of the caller to show on screen,
+and so forth.
+<a href="wal.html">WAL mode</a> (circa 2010) is a better solution to this problem as it permits 
+simultaneous access without breaking transaction isolation.
+
+</p><p>Applications that build their own copy of SQLite from source code
+are encouraged to use the <a href="compile.html#omit_shared_cache">-DSQLITE_OMIT_SHARED_CACHE</a> compile-time option,
+as the resulting binary will be both smaller and faster.
+
+</p><p>The shared-cache interfaces described here will continue to be supported
+in SQLite, to insure full backwards compatibility.  However, the use of
+shared-cache is discouraged.
+
+</p><h1 id="shared_cache_locking_model"><span>2. </span>Shared-Cache Locking Model</h1>
 
 <p>Externally, from the point of view of another process or thread, two
 or more <a href="c3ref/sqlite3.html">database connections</a> using a shared-cache appear as a single 
@@ -349,4 +400,5 @@ in-memory database.  An in-memory database in shared cache is automatically
 deleted and memory is reclaimed when the last connection to that database
 closes.
 </p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/sharedcache.in?m=2e0ac9c477d633afd">2022-08-15 11:37:22</a> UTC </small></i></p>
 

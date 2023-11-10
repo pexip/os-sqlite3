@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -131,7 +155,7 @@ Most builds also use the system memory allocation routines:
 </li><li>realloc()
 </li><li>free()
 </li></ul>
-<p>But those routines are optional can can be omitted
+<p>But those routines are optional and can be omitted
 using a <a href="compile.html#zero_malloc">compile-time option</a>.
 
 </p><p>
@@ -141,4 +165,5 @@ operating system calls such as open(), read(), write(), fsync(), and
 so forth.  All of these interfaces are readily available on most platforms,
 and custom VFSes can be designed to run SQLite on even the most
 austere embedded devices.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/selfcontained.in?m=54e685acf5ddf6ee4">2022-08-10 18:45:48</a> UTC </small></i></p>
+

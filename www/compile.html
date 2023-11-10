@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -112,7 +136,7 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#_options_to_omit_features">9.  Options To Omit Features</a></div>
 <div class="fancy-toc1"><a href="#_analysis_and_debugging_options">10.  Analysis and Debugging Options</a></div>
 <div class="fancy-toc1"><a href="#_windows_specific_options">11.  Windows-Specific Options</a></div>
-<div class="fancy-toc1"><a href="#compiler_linkage_control">12. Compiler Linkage Control</a></div>
+<div class="fancy-toc1"><a href="#compiler_linkage_and_calling_convention_control">12. Compiler Linkage and Calling Convention Control</a></div>
 </div>
 </div>
 <script>
@@ -648,7 +672,7 @@ some design situations, every little bit helps.
   <a href="c3ref/str_append.html">sqlite3_str_appendf()</a>.  This is turn can prevent a hostile or
   malfunctioning script from using excessive memory by invoking
   a format such as: "<tt>printf('%*s',2147483647,'hi')</tt>".
-  A value for <i>N</i> of around 1000 is normally sufficient.
+  A value for <i>N</i> of around 100000 is normally sufficient.
   <p>
   The <a href="lang_corefunc.html#printf">printf() SQL function</a> is subject to the <a href="c3ref/c_limit_attached.html#sqlitelimitlength">SQLITE_LIMIT_LENGTH</a>
   limit of <a href="c3ref/limit.html">sqlite3_limit()</a>.  Hence any printf() result with a
@@ -664,6 +688,13 @@ some design situations, every little bit helps.
   that prevents excess sizes for the transient buffer used inside
   the low-level formatting subroutine, prior to the
   SQLITE_LIMIT_LENGTH check.
+  <p>
+  Be careful not to set SQLITE_PRINTF_PRECISION_LIMIT too low.
+  SQLite uses its <a href="printf.html">built-in printf()</a> functionality to format the text
+  of CREATE statements stored in the <a href="schematab.html">sqlite_schema table</a>.  So
+  SQLITE_PRINTF_PRECISION_LIMIT should be at least as big as the largest
+  table, index, view, or trigger definition that you are likely to
+  encounter.
   <p>
   No error is raised if a width or precision exceeds
   SQLITE_PRINTF_PRECISION_LIMIT.  Instead, the large width or
@@ -788,6 +819,26 @@ the available settings:</p>
   If this option is present, then SQLite will use the isnan() function from
   the system math library.  This is an alias for the <a href="compile.html#isnan">HAVE_ISNAN</a> configuration
   option.
+</p></blockquote><a name="max_allocation_size"></a>
+<p><b>SQLITE_MAX_ALLOCATION_SIZE=<i>N</i></b></p><blockquote><p>
+  This compile-time option sets an upper bound on the size of memory
+  allocations that can be requested using <a href="c3ref/free.html">sqlite3_malloc64()</a>,
+  <a href="c3ref/free.html">sqlite3_realloc64()</a>, and similar.  The default value is
+  2,147,483,391 (0x7ffffeff) and this should be considered an
+  upper bound.  Most applications can get by with an maximum allocation
+  size of a few million bytes.
+  <p>
+  This is a limit on the maximum size of any single memory allocation.
+  It is <i>not</i> a limit on the total amount of memory allocated.
+  <p>
+  Reducing the maximum size of individual memory allocations provides
+  extra defense against denial-of-service attacks that attempt to exhaust
+  system memory by doing many large allocations.  It is also an extra layer
+  of defense against application bugs where the size of a memory allocation
+  is computed using a signed 32-bit integer that could overflow &rarr;
+  with a small maximum allocation size, such buggy memory allocation size
+  computations are likely to be spotted sooner due to out-of-memory errors
+  and before the integer actually overflows.
 </p></blockquote><a name="os_other"></a>
 <p><b>SQLITE_OS_OTHER=<i>&lt;0 or 1&gt;</i></b></p><blockquote><p>
   The option causes SQLite to omit its built-in operating system interfaces
@@ -992,11 +1043,12 @@ the available settings:</p>
   This option enables the <a href="dbstat.html">dbstat virtual table</a>.
 </p></blockquote><a name="enable_deserialize"></a>
 <p><b>SQLITE_ENABLE_DESERIALIZE</b></p><blockquote><p>
-  This option enables the <a href="c3ref/serialize.html">sqlite3_serialize()</a> and <a href="c3ref/deserialize.html">sqlite3_deserialize()</a>
-  interfaces.
-  <p>
-  Future releases of SQLite might enable those interfaces by default and
-  instead offer an SQLITE_OMIT_DESERIALIZE option to leave them out.
+  This option was formerly used to enable
+  the <a href="c3ref/serialize.html">sqlite3_serialize()</a> and <a href="c3ref/deserialize.html">sqlite3_deserialize()</a>
+  interfaces.  However, as of SQLite 3.36.0 (2021-06-18)
+  those interfaces are enabled by default and a new
+  compile-time option <a href="compile.html#omit_deserialize">SQLITE_OMIT_DESERIALIZE</a> is added
+  to omit them.
 </p></blockquote><a name="enable_explain_comments"></a>
 <p><b>SQLITE_ENABLE_EXPLAIN_COMMENTS</b></p><blockquote><p>
   This option adds extra logic to SQLite that inserts comment text into the
@@ -1055,10 +1107,20 @@ the available settings:</p>
   compiled with this option, then the CLI provides an extra command
   named ".iotrace" that provides a low-level log of I/O activity.
   This option is experimental and may be discontinued in a future release.
+</p></blockquote><a name="enable_math_functions"></a>
+<p><b>SQLITE_ENABLE_MATH_FUNCTIONS</b></p><blockquote><p>
+  This macro enables the <a href="lang_mathfunc.html">built-in SQL math functions</a>.  This option
+  is automatically added to the Makefile by the configure script on unix platforms,
+  unless the --disable-math option is used.
+  This option is also included on Windows builds using the
+  "Makefile.msc" makefile for nmake.
 </p></blockquote><a name="enable_json1"></a>
 <p><b>SQLITE_ENABLE_JSON1</b></p><blockquote><p>
-  When this option is defined in the <a href="amalgamation.html">amalgamation</a>, the
-  <a href="json1.html">JSON SQL functions</a> are added to the build automatically.
+  This compile-time option is a no-op.  Prior to SQLite version 3.38.0
+  (2022-02-22), it was necessary to compile with this option in order
+  to include the <a href="json1.html">JSON SQL functions</a> in the build.  However, beginning
+  with SQLite version 3.38.0, those functions are included by default.
+  Use the <a href="compile.html#omit_json">-DSQLITE_OMIT_JSON</a> option to omit them.
 </p></blockquote><a name="enable_locking_style"></a>
 <p><b>SQLITE_ENABLE_LOCKING_STYLE</b></p><blockquote><p>
   This option enables additional logic in the OS interface layer for
@@ -1126,6 +1188,9 @@ the available settings:</p>
   of two and uses a first-fit, buddy-allocator algorithm
   that provides strong guarantees against fragmentation and breakdown
   subject to certain operating constraints.
+</p></blockquote><a name="enable_normalize"></a>
+<p><b>SQLITE_ENABLE_NORMALIZE</b></p><blockquote><p>
+  This option includes the <a href="c3ref/expanded_sql.html">sqlite3_normalized_sql()</a> API.
 </p></blockquote><a name="enable_null_trim"></a>
 <p><b>SQLITE_ENABLE_NULL_TRIM</b></p><blockquote><p>
   This option enables an optimization that omits NULL columns at
@@ -1152,7 +1217,7 @@ the available settings:</p>
 </p></blockquote><a name="enable_preupdate_hook"></a>
 <p><b>SQLITE_ENABLE_PREUPDATE_HOOK</b></p><blockquote><p>
   This option enables 
-  <a href="c3ref/preupdate_count.html">several new APIs</a> that provide callbacks
+  <a href="c3ref/preupdate_blobwrite.html">several new APIs</a> that provide callbacks
   prior to any change to a <a href="rowidtable.html">rowid table</a>.  The callbacks can be used
   to record the state of the row before the change occurs.
   <p>The action of the preupdate hook is similar to the
@@ -1626,6 +1691,11 @@ The SQLITE_OMIT_* compile-time options are mostly unsupported.
   <a href="pragma.html#pragma_full_column_names">PRAGMA full_column_names</a>,
   <a href="pragma.html#pragma_short_column_names">PRAGMA short_column_names</a>, and
   <a href="pragma.html#pragma_temp_store_directory">PRAGMA temp_store_directory</a>.
+</p></blockquote><a name="omit_deserialize"></a>
+<p><b>SQLITE_OMIT_DESERIALIZE</b></p><blockquote><p>
+  This option causes the
+  <a href="c3ref/serialize.html">sqlite3_serialize()</a> and <a href="c3ref/deserialize.html">sqlite3_deserialize()</a>
+  interfaces to be omitted from the build.
 </p></blockquote><a name="omit_diskio"></a>
 <p><b>SQLITE_OMIT_DISKIO</b></p><blockquote><p>
   This option omits all support for writing to the disk and forces
@@ -1678,6 +1748,9 @@ The SQLITE_OMIT_* compile-time options are mostly unsupported.
   This option omits support for
   <a href="pragma.html#pragma_function_list">PRAGMA function_list</a>, <a href="pragma.html#pragma_module_list">PRAGMA module_list</a>, and
   <a href="pragma.html#pragma_pragma_list">PRAGMA pragma_list</a>.
+</p></blockquote><a name="omit_json"></a>
+<p><b>SQLITE_OMIT_JSON</b></p><blockquote><p>
+  This option omits the <a href="json1.html">JSON SQL functions</a> from the build.
 </p></blockquote><a name="omit_like_optimization"></a>
 <p><b>SQLITE_OMIT_LIKE_OPTIMIZATION</b></p><blockquote><p>
   This option disables the ability of SQLite to use indices to help
@@ -1745,10 +1818,13 @@ The SQLITE_OMIT_* compile-time options are mostly unsupported.
   <a href="pragma.html#pragma_schema_version">schema_version</a> and <a href="pragma.html#pragma_user_version">user_version</a> PRAGMAs are omitted.
 </p></blockquote><a name="omit_shared_cache"></a>
 <p><b>SQLITE_OMIT_SHARED_CACHE</b></p><blockquote><p>
-  This option builds SQLite without support for shared-cache mode.
+  This option builds SQLite without support for <a href="sharedcache.html">shared cache mode</a>.
   The <a href="c3ref/enable_shared_cache.html">sqlite3_enable_shared_cache()</a> is omitted along with a fair
   amount of logic within the B-Tree subsystem associated with shared
-  cache management.
+  cache management.</p>
+
+<p>  This compile-time option is recommended most applications as it
+  results in improved performance and reduced library footprint.
 </p></blockquote><a name="omit_subquery"></a>
 <p><b>SQLITE_OMIT_SUBQUERY</b></p><blockquote><p>
   If defined, support for sub-selects and the IN() operator are omitted.
@@ -1808,6 +1884,9 @@ The SQLITE_OMIT_* compile-time options are mostly unsupported.
 </p></blockquote><a name="omit_wal"></a>
 <p><b>SQLITE_OMIT_WAL</b></p><blockquote><p>
   This option omits the "<a href="wal.html">write-ahead log</a>" (a.k.a. "<a href="wal.html">WAL</a>") capability.
+</p></blockquote><a name="omit_windowfunc"></a>
+<p><b>SQLITE_OMIT_WINDOWFUNC</b></p><blockquote><p>
+  This option omits <a href="windowfunctions.html">window functions</a> from the build.
 </p></blockquote><a name="omit_wsd"></a>
 <p><b>SQLITE_OMIT_WSD</b></p><blockquote><p>
   This option builds a version of the SQLite library that contains no
@@ -1891,13 +1970,13 @@ The SQLITE_OMIT_* compile-time options are mostly unsupported.
   enabled.
 </p></blockquote>
 <a name="linkage"></a>
-<h1 id="compiler_linkage_control"><span>12. </span>Compiler Linkage Control</h1>
+<h1 id="compiler_linkage_and_calling_convention_control"><span>12. </span>Compiler Linkage and Calling Convention Control</h1>
 
-<p>The following macros specify
-interface linkage for certain kinds of SQLite builds.  The Makefiles will normally
+<p>The following macros specify interface details
+for certain kinds of SQLite builds.  The Makefiles will normally
 handle setting these macros automatically.  Application developers should
 not need to worry with these macros.  The following documentation about these 
-macros is included completeness.</p>
+macros is included for completeness.</p>
 
 <a name="api"></a>
 <p><b>SQLITE_API</b></p><blockquote><p>
@@ -1907,25 +1986,21 @@ macros is included completeness.</p>
 </p></blockquote><a name="apicall"></a>
 <p><b>SQLITE_APICALL</b></p><blockquote><p>
   This macro identifies the calling convention used by public interface
-  routines in SQLite.  This macro is normally defined to be nothing,
+  routines in SQLite which accept a fixed number of arguments.
+  This macro is normally defined to be nothing,
   though on Windows builds it can sometimes be set to "__cdecl" or "__stdcall".
   The "__cdecl" setting is the default, but "__stdcall" is used when SQLite
   is intended to be compiled as a Windows system library.
   <p>
   A single function declaration should contain no more than one of
-  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
-  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>, or <a href="compile.html#sysapi">SQLITE_SYSAPI</a>.
 </p></blockquote><a name="callback"></a>
 <p><b>SQLITE_CALLBACK</b></p><blockquote><p>
-  This macro specifies the calling convention used by callback pointers
+  This macro specifies the calling convention used with callback pointers
   in SQLite.  This macro is normally defined to be nothing, though on Windows
   builds it can sometimes be set to "__cdecl" or "__stdcall".  The
   "__cdecl" setting is the default, but "__stdcall" is used when SQLite
   is intended to be compiled as a Windows system library.
-  <p>
-  A single function declaration should contain no more than one of
-  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
-  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
 </p></blockquote><a name="cdecl"></a>
 <p><b>SQLITE_CDECL</b></p><blockquote><p>
   This macro specifies the calling convention used by varargs interface
@@ -1935,18 +2010,23 @@ macros is included completeness.</p>
   since the __stdcall calling convention does not support varargs functions.
   <p>
   A single function declaration should contain no more than one of
-  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
-  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
-</p></blockquote><a name="syscall"></a>
-<p><b>SQLITE_SYSCALL</b></p><blockquote><p>
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>, or <a href="compile.html#sysapi">SQLITE_SYSAPI</a>.
+</p></blockquote><a name="extern"></a>
+<p><b>SQLITE_EXTERN</b></p><blockquote><p>
+  This macro specifies linkage for public interface variables in SQLite.
+  It should normally be allowed to default to "extern".
+</p></blockquote><a name="stdcall"></a>
+<p><b>SQLITE_STDCALL</b></p><blockquote><p>
+  This macro is no longer used and is now deprecated.
+</p></blockquote><a name="sysapi"></a>
+<p><b>SQLITE_SYSAPI</b></p><blockquote><p>
   This macro identifies the calling convention used by operating system
-  interfaces for target the platform for an SQLite build.
-  This macro is normally defined to be nothing, though on Windows
-  builds it can sometimes be set to "__stdcall".
+  interfaces for the target platform for an SQLite build.
+  This macro is normally defined to be nothing,
+  though on Windows builds it can sometimes be set to "__stdcall".
   <p>
   A single function declaration should contain no more than one of
-  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>,
-  or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+  the following:  <a href="compile.html#apicall">SQLITE_APICALL</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>, or <a href="compile.html#sysapi">SQLITE_SYSAPI</a>.
 </p></blockquote><a name="tclapi"></a>
 <p><b>SQLITE_TCLAPI</b></p><blockquote><p>
   This macro specifies the calling convention used by the 
@@ -1957,10 +2037,11 @@ macros is included completeness.</p>
   though on Windows builds it can sometimes be set to "__cdecl".  This
   macro is used on TCL library interface routines which are always compiled
   as __cdecl, even on platforms that prefer to use __stdcall, so this
-  macro should not be set to __stdcall unless the platform as a custom
+  macro should not be set to __stdcall unless the platform has a custom
   TCL library build that supports __stdcall.
   <p>
   This macro may not be used in combination with any of <a href="compile.html#apicall">SQLITE_APICALL</a>,
-  <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a>, or <a href="compile.html#syscall">SQLITE_SYSCALL</a>.
+  <a href="compile.html#callback">SQLITE_CALLBACK</a>, <a href="compile.html#cdecl">SQLITE_CDECL</a> or <a href="compile.html#sysapi">SQLITE_SYSAPI</a>.
 </p></blockquote>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/compile.in?m=509c9df319dd688a4">2022-11-07 14:28:05</a> UTC </small></i></p>
 

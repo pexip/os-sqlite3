@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -112,7 +136,8 @@ Other Documentation Indices:
 <li><b><a href="shortnames.html">8+3 Filenames</a></b></li>
 <li><b><a href="about.html">About SQLite</a></b></li>
 <li><a href="books.html">About SQLite &#151; Books</a></li>
-<li><a href="security.html">Against Dark Arts &#151; Defense</a></li>
+<li><a href="flextypegood.html">Advantages Of Flexible Typing &#151; The</a></li>
+<li><a href="security.html">Against The Dark Arts &#151; Defense</a></li>
 <li><a href="lang_aggfunc.html">Aggregate Functions &#151; Built in</a></li>
 <li><a href="wal.html">Ahead Logging &#151; Write</a></li>
 <li><a href="malloc.html">Allocation In SQLite &#151; Dynamic Memory</a></li>
@@ -123,9 +148,11 @@ Other Documentation Indices:
 <li><b><a href="cintro.html">An Introduction To The SQLite C/C++ Interface</a></b></li>
 <li><b><a href="lang_analyze.html">ANALYZE</a></b></li>
 <li><a href="lockingv3.html">And Concurrency In SQLite Version 3 &#151; File Locking</a></li>
+<li><a href="useovernet.html">and Considerations &#151; SQLite Over a Network, Caveats</a></li>
 <li><a href="rescode.html">and Error Codes &#151; Result</a></li>
 <li><a href="fts3.html">and FTS4 Extensions &#151; SQLite FTS3</a></li>
 <li><a href="quirks.html">and Gotchas In SQLite &#151; Quirks, Caveats,</a></li>
+<li><a href="json1.html">And Operators &#151; JSON Functions</a></li>
 <li><a href="cpu.html">and Reducing CPU Usage in SQLite &#151; Measuring</a></li>
 <li><a href="bytecodevtab.html">And Tables_Used() Table Valued Functions &#151; The Bytecode()</a></li>
 <li><a href="withoutrowid.html">and the WITHOUT ROWID Optimization &#151; Clustered Indexes</a></li>
@@ -143,7 +170,7 @@ Other Documentation Indices:
 <li><a href="sqlar.html">Archive Files &#151; SQLite</a></li>
 <li><a href="https://sqlite.org/sqlar/">Archiver (sqlar.exe) &#151; SQLite</a></li>
 <li><a href="np1queryprob.html">Are Efficient In SQLite &#151; Many Small Queries</a></li>
-<li><a href="security.html">Arts &#151; Defense Against Dark</a></li>
+<li><a href="security.html">Arts &#151; Defense Against The Dark</a></li>
 <li><a href="faq.html">Asked Questions &#151; SQLite Frequently</a></li>
 <li><a href="assert.html">assert() In SQLite &#151; The Use Of</a></li>
 <li><a href="asyncvfs.html">Asynchronous I/O Module For SQLite &#151; An</a></li>
@@ -159,6 +186,7 @@ Other Documentation Indices:
 <li><a href="privatebranch.html">Branches Of SQLite &#151; Maintaining Private</a></li>
 <li><a href="custombuild.html">Builds Of SQLite &#151; Custom</a></li>
 <li><b><a href="lang_aggfunc.html">Built in Aggregate Functions</a></b></li>
+<li><b><a href="lang_mathfunc.html">Built In Mathematical SQL Functions</a></b></li>
 <li><a href="printf.html">Built in printf() &#151; SQLite's</a></li>
 <li><b><a href="lang_corefunc.html">Built In Scalar SQL Functions</a></b></li>
 <li><a href="opcode.html">Bytecode Engine &#151; The SQLite</a></li>
@@ -171,6 +199,7 @@ Other Documentation Indices:
 <li><a href="sharedcache.html">Cache Mode &#151; SQLite Shared</a></li>
 <li><a href="getthecode.html">Canonical SQLite Source Code &#151; How To Download</a></li>
 <li><a href="carray.html">Carray() Table Valued Function &#151; The</a></li>
+<li><a href="useovernet.html">Caveats and Considerations &#151; SQLite Over a Network,</a></li>
 <li><a href="quirks.html">Caveats, and Gotchas In SQLite &#151; Quirks,</a></li>
 <li><b><a href="pgszchng2016.html">Change in Default Page Size in SQLite Version 3.12.0</a></b></li>
 <li><a href="34to35.html">Changes From Version 3.4.2 To 3.5.0 &#151; SQLite</a></li>
@@ -198,12 +227,14 @@ Other Documentation Indices:
 <li><a href="zeroconf.html">Configuration &#151; Zero</a></li>
 <li><a href="lang_conflict.html">CONFLICT Clause &#151; The ON</a></li>
 <li><a href="conflict.html">Conflict Resolution in SQLite &#151; Constraint</a></li>
+<li><a href="useovernet.html">Considerations &#151; SQLite Over a Network, Caveats and</a></li>
 <li><a href="consortium.html">Consortium &#151; SQLite</a></li>
 <li><b><a href="conflict.html">Constraint Conflict Resolution in SQLite</a></b></li>
 <li><a href="selfcontained.html">Contained System &#151; SQLite is a Self</a></li>
 <li><a href="https://www.fossil-scm.org/">Control System &#151; The Fossil Version</a></li>
 <li><a href="copyright.html">Copyright &#151; SQLite</a></li>
 <li><a href="howtocorrupt.html">Corrupt An SQLite Database File &#151; How To</a></li>
+<li><a href="recovery.html">Corrupt SQLite Database &#151; Recovering Data From A</a></li>
 <li><a href="cpu.html">CPU Usage in SQLite &#151; Measuring and Reducing</a></li>
 <li><b><a href="lang_createindex.html">CREATE INDEX</a></b></li>
 <li><b><a href="lang_createtable.html">CREATE TABLE</a></b></li>
@@ -212,8 +243,10 @@ Other Documentation Indices:
 <li><b><a href="lang_createvtab.html">CREATE VIRTUAL TABLE</a></b></li>
 <li><a href="csv.html">CSV Virtual Table &#151; The</a></li>
 <li><b><a href="custombuild.html">Custom Builds Of SQLite</a></b></li>
-<li><a href="security.html">Dark Arts &#151; Defense Against</a></li>
+<li><a href="security.html">Dark Arts &#151; Defense Against The</a></li>
+<li><a href="recovery.html">Data From A Corrupt SQLite Database &#151; Recovering</a></li>
 <li><a href="lang_attach.html">DATABASE &#151; ATTACH</a></li>
+<li><a href="recovery.html">Database &#151; Recovering Data From A Corrupt SQLite</a></li>
 <li><a href="onefile.html">Database &#151; SQLite: Single File</a></li>
 <li><a href="sqldiff.html">Database Difference Utility &#151; sqldiff.exe:</a></li>
 <li><a href="mostdeployed.html">Database Engine &#151; Most Widely Deployed SQL</a></li>
@@ -223,14 +256,14 @@ Other Documentation Indices:
 <li><b><a href="lang_naming.html">Database Object Name Resolution</a></b></li>
 <li><a href="speed.html">Database Speed Comparison &#151; SQLite</a></li>
 <li><a href="inmemorydb.html">Databases &#151; In Memory</a></li>
+<li><b><a href="datatype3.html">Datatypes In SQLite</a></b></li>
 <li><b><a href="datatypes.html">Datatypes In SQLite version 2</a></b></li>
-<li><b><a href="datatype3.html">Datatypes In SQLite Version 3</a></b></li>
 <li><b><a href="lang_datefunc.html">Date And Time Functions</a></b></li>
 <li><a href="dbhash.html">dbhash.exe Utility Program &#151; The</a></li>
 <li><a href="dbstat.html">DBSTAT Virtual Table &#151; The</a></li>
 <li><a href="debugging.html">Debugging SQLite &#151; Hints for</a></li>
 <li><a href="pgszchng2016.html">Default Page Size in SQLite Version 3.12.0 &#151; Change in</a></li>
-<li><b><a href="security.html">Defense Against Dark Arts</a></b></li>
+<li><b><a href="security.html">Defense Against The Dark Arts</a></b></li>
 <li><a href="appfunc.html">Defined SQL Functions &#151; Application</a></li>
 <li><b><a href="lang_delete.html">DELETE</a></b></li>
 <li><a href="mostdeployed.html">Deployed SQL Database Engine &#151; Most Widely</a></li>
@@ -264,7 +297,6 @@ Other Documentation Indices:
 <li><a href="expridx.html">Expressions &#151; Indexes On</a></li>
 <li><a href="lang_expr.html">Expressions &#151; SQL Language</a></li>
 <li><a href="fts5.html">Extension &#151; SQLite FTS5</a></li>
-<li><a href="json1.html">Extension &#151; The JSON1</a></li>
 <li><a href="rbu.html">Extension &#151; The RBU</a></li>
 <li><a href="sessionintro.html">Extension &#151; The Session</a></li>
 <li><a href="loadext.html">Extensions &#151; Run Time Loadable</a></li>
@@ -287,6 +319,7 @@ Other Documentation Indices:
 <li><a href="sqlar.html">Files &#151; SQLite Archive</a></li>
 <li><a href="tempfiles.html">Files Used By SQLite &#151; Temporary</a></li>
 <li><a href="fasterthanfs.html">Filesystem &#151; 35% Faster Than The</a></li>
+<li><a href="flextypegood.html">Flexible Typing &#151; The Advantages Of</a></li>
 <li><b><a href="floatingpoint.html">Floating Point Numbers</a></b></li>
 <li><a href="footprint.html">Footprint &#151; SQLite Library</a></li>
 <li><a href="foreignkeys.html">Foreign Key Support &#151; SQLite</a></li>
@@ -299,6 +332,7 @@ Other Documentation Indices:
 <li><a href="formatchng.html">Format Changes in SQLite &#151; File</a></li>
 <li><a href="https://www.fossil-scm.org/">Fossil Version Control System &#151; The</a></li>
 <li><a href="faq.html">Frequently Asked Questions &#151; SQLite</a></li>
+<li><a href="recovery.html">From A Corrupt SQLite Database &#151; Recovering Data</a></li>
 <li><a href="34to35.html">From Version 3.4.2 To 3.5.0 &#151; SQLite Changes</a></li>
 <li><a href="35to36.html">From Version 3.5.9 To 3.6.0 &#151; SQLite Changes</a></li>
 <li><a href="fts3.html">FTS3 and FTS4 Extensions &#151; SQLite</a></li>
@@ -310,11 +344,13 @@ Other Documentation Indices:
 <li><a href="series.html">Function &#151; The generate_series Table Valued</a></li>
 <li><a href="appfunc.html">Functions &#151; Application Defined SQL</a></li>
 <li><a href="lang_aggfunc.html">Functions &#151; Built in Aggregate</a></li>
+<li><a href="lang_mathfunc.html">Functions &#151; Built In Mathematical SQL</a></li>
 <li><a href="lang_corefunc.html">Functions &#151; Built In Scalar SQL</a></li>
 <li><a href="lang_datefunc.html">Functions &#151; Date And Time</a></li>
 <li><a href="deterministic.html">Functions &#151; Deterministic SQL</a></li>
 <li><a href="bytecodevtab.html">Functions &#151; The Bytecode() And Tables_Used() Table Valued</a></li>
 <li><a href="windowfunctions.html">Functions &#151; Window</a></li>
+<li><a href="json1.html">Functions And Operators &#151; JSON</a></li>
 <li><a href="series.html">generate_series Table Valued Function &#151; The</a></li>
 <li><b><a href="gencol.html">Generated Columns</a></b></li>
 <li><a href="queryplanner-ng.html">Generation Query Planner &#151; The Next</a></li>
@@ -361,9 +397,10 @@ Other Documentation Indices:
 <li><a href="bindptr.html">Interfaces &#151; Pointer Passing</a></li>
 <li><b><a href="intern-v-extern-blob.html">Internal Versus External BLOBs</a></b></li>
 <li><a href="cintro.html">Introduction To The SQLite C/C++ Interface &#151; An</a></li>
+<li><b><a href="invalidutf.html">Invalid UTF Policy</a></b></li>
 <li><b><a href="isolation.html">Isolation In SQLite</a></b></li>
 <li><b><a href="hp1.html">Javascript Required</a></b></li>
-<li><a href="json1.html">JSON1 Extension &#151; The</a></li>
+<li><b><a href="json1.html">JSON Functions And Operators</a></b></li>
 <li><a href="foreignkeys.html">Key Support &#151; SQLite Foreign</a></li>
 <li><a href="keyword_index.html">Keyword Index &#151; Website</a></li>
 <li><a href="lang_keywords.html">Keywords &#151; SQLite</a></li>
@@ -392,6 +429,7 @@ Other Documentation Indices:
 <li><b><a href="np1queryprob.html">Many Small Queries Are Efficient In SQLite</a></b></li>
 <li><a href="sitemap.html">Map &#151; SQLite Site</a></li>
 <li><a href="mmap.html">Mapped I/O &#151; Memory</a></li>
+<li><a href="lang_mathfunc.html">Mathematical SQL Functions &#151; Built In</a></li>
 <li><b><a href="cpu.html">Measuring and Reducing CPU Usage in SQLite</a></b></li>
 <li><a href="vtab.html">Mechanism Of SQLite &#151; The Virtual Table</a></li>
 <li><a href="malloc.html">Memory Allocation In SQLite &#151; Dynamic</a></li>
@@ -408,6 +446,7 @@ Other Documentation Indices:
 <li><b><a href="mostdeployed.html">Most Widely Deployed SQL Database Engine</a></b></li>
 <li><a href="threadsafe.html">Multi Threaded Applications &#151; Using SQLite In</a></li>
 <li><a href="lang_naming.html">Name Resolution &#151; Database Object</a></li>
+<li><a href="useovernet.html">Network, Caveats and Considerations &#151; SQLite Over a</a></li>
 <li><a href="news.html">News &#151; Recent SQLite</a></li>
 <li><a href="oldnews.html">News &#151; SQLite Older</a></li>
 <li><a href="queryplanner-ng.html">Next Generation Query Planner &#151; The</a></li>
@@ -422,10 +461,12 @@ Other Documentation Indices:
 <li><a href="oldnews.html">Older News &#151; SQLite</a></li>
 <li><b><a href="fileformat2.html">On Disk Format</a></b></li>
 <li><a href="affcase1.html">OpenDocument Used SQLite? &#151; What If</a></li>
+<li><a href="json1.html">Operators &#151; JSON Functions And</a></li>
 <li><a href="withoutrowid.html">Optimization &#151; Clustered Indexes and the WITHOUT ROWID</a></li>
 <li><a href="optoverview.html">Optimizer Overview &#151; The SQLite Query</a></li>
 <li><a href="compile.html">Options &#151; Compile time</a></li>
 <li><a href="support.html">Options &#151; SQLite Support</a></li>
+<li><a href="useovernet.html">Over a Network, Caveats and Considerations &#151; SQLite</a></li>
 <li><a href="version3.html">Overview &#151; SQLite Version 3</a></li>
 <li><a href="optoverview.html">Overview &#151; The SQLite Query Optimizer</a></li>
 <li><a href="psow.html">Overwrite &#151; Powersafe</a></li>
@@ -440,6 +481,7 @@ Other Documentation Indices:
 <li><a href="queryplanner.html">Planning &#151; Query</a></li>
 <li><a href="floatingpoint.html">Point Numbers &#151; Floating</a></li>
 <li><b><a href="bindptr.html">Pointer Passing Interfaces</a></b></li>
+<li><a href="invalidutf.html">Policy &#151; Invalid UTF</a></li>
 <li><b><a href="psow.html">Powersafe Overwrite</a></b></li>
 <li><b><a href="pragma.html">Pragma statements supported by SQLite</a></b></li>
 <li><a href="printf.html">printf() &#151; SQLite's Built in</a></li>
@@ -461,6 +503,7 @@ Other Documentation Indices:
 <li><a href="rbu.html">RBU Extension &#151; The</a></li>
 <li><b><a href="news.html">Recent SQLite News</a></b></li>
 <li><a href="locrsf.html">Recommended Storage Format &#151; LoC</a></li>
+<li><b><a href="recovery.html">Recovering Data From A Corrupt SQLite Database</a></b></li>
 <li><a href="cpu.html">Reducing CPU Usage in SQLite &#151; Measuring and</a></li>
 <li><a href="capi3ref.html">Reference &#151; C/C++ API</a></li>
 <li><b><a href="lang_reindex.html">REINDEX</a></b></li>
@@ -474,6 +517,7 @@ Other Documentation Indices:
 <li><a href="conflict.html">Resolution in SQLite &#151; Constraint Conflict</a></li>
 <li><a href="uri.html">Resource Identifiers &#151; Uniform</a></li>
 <li><b><a href="rescode.html">Result and Error Codes</a></b></li>
+<li><b><a href="lang_returning.html">RETURNING</a></b></li>
 <li><b><a href="rowvalue.html">Row Values</a></b></li>
 <li><a href="withoutrowid.html">ROWID Optimization &#151; Clustered Indexes and the WITHOUT</a></li>
 <li><b><a href="rowidtable.html">Rowid Tables</a></b></li>
@@ -502,6 +546,7 @@ Other Documentation Indices:
 <li><a href="mostdeployed.html">SQL Database Engine &#151; Most Widely Deployed</a></li>
 <li><b><a href="omitted.html">SQL Features That SQLite Does Not Implement</a></b></li>
 <li><a href="appfunc.html">SQL Functions &#151; Application Defined</a></li>
+<li><a href="lang_mathfunc.html">SQL Functions &#151; Built In Mathematical</a></li>
 <li><a href="lang_corefunc.html">SQL Functions &#151; Built In Scalar</a></li>
 <li><a href="deterministic.html">SQL Functions &#151; Deterministic</a></li>
 <li><b><a href="lang_expr.html">SQL Language Expressions</a></b></li>
@@ -531,6 +576,7 @@ Other Documentation Indices:
 <li><b><a href="lang_keywords.html">SQLite Keywords</a></b></li>
 <li><b><a href="footprint.html">SQLite Library Footprint</a></b></li>
 <li><b><a href="oldnews.html">SQLite Older News</a></b></li>
+<li><b><a href="useovernet.html">SQLite Over a Network, Caveats and Considerations</a></b></li>
 <li><b><a href="prosupport.html">SQLite Pro Support</a></b></li>
 <li><b><a href="requirements.html">SQLite Requirements</a></b></li>
 <li><b><a href="session.html">SQLite Session Module C/C++ Interface</a></b></li>
@@ -548,6 +594,7 @@ Other Documentation Indices:
 <li><a href="stmt.html">SQLITE_STMT Virtual Table &#151; The</a></li>
 <li><a href="pragma.html">statements supported by SQLite &#151; Pragma</a></li>
 <li><a href="locrsf.html">Storage Format &#151; LoC Recommended</a></li>
+<li><b><a href="stricttables.html">STRICT Tables</a></b></li>
 <li><a href="nulinstr.html">Strings &#151; NUL Characters In</a></li>
 <li><a href="lts.html">Support &#151; Long Term</a></li>
 <li><a href="foreignkeys.html">Support &#151; SQLite Foreign Key</a></li>
@@ -582,6 +629,7 @@ Other Documentation Indices:
 <li><a href="imposter.html">Tables &#151; Imposter</a></li>
 <li><a href="vtablist.html">Tables &#151; List Of Virtual</a></li>
 <li><a href="rowidtable.html">Tables &#151; Rowid</a></li>
+<li><a href="stricttables.html">Tables &#151; STRICT</a></li>
 <li><a href="bytecodevtab.html">Tables_Used() Table Valued Functions &#151; The Bytecode() And</a></li>
 <li><a href="tclsqlite.html">Tcl interface to the SQLite library &#151; The</a></li>
 <li><b><a href="tempfiles.html">Temporary Files Used By SQLite</a></b></li>
@@ -590,6 +638,7 @@ Other Documentation Indices:
 <li><b><a href="th3.html">TH3</a></b></li>
 <li><a href="fasterthanfs.html">Than The Filesystem &#151; 35% Faster</a></li>
 <li><a href="omitted.html">That SQLite Does Not Implement &#151; SQL Features</a></li>
+<li><b><a href="flextypegood.html">The Advantages Of Flexible Typing</a></b></li>
 <li><b><a href="bytecodevtab.html">The Bytecode() And Tables_Used() Table Valued Functions</a></b></li>
 <li><b><a href="c_interface.html">The C language interface to SQLite Version 2</a></b></li>
 <li><b><a href="carray.html">The Carray() Table Valued Function</a></b></li>
@@ -603,7 +652,6 @@ Other Documentation Indices:
 <li><b><a href="series.html">The generate_series Table Valued Function</a></b></li>
 <li><b><a href="geopoly.html">The Geopoly Interface To The SQLite R*Tree Module</a></b></li>
 <li><b><a href="lang_indexedby.html">The INDEXED BY Clause</a></b></li>
-<li><b><a href="json1.html">The JSON1 Extension</a></b></li>
 <li><b><a href="lemon.html">The Lemon LALR(1) Parser Generator</a></b></li>
 <li><b><a href="queryplanner-ng.html">The Next Generation Query Planner</a></b></li>
 <li><b><a href="lang_conflict.html">The ON CONFLICT Clause</a></b></li>
@@ -636,6 +684,7 @@ Other Documentation Indices:
 <li><a href="transactional.html">Transactional &#151; SQLite Is</a></li>
 <li><a href="lang_createtrigger.html">TRIGGER &#151; CREATE</a></li>
 <li><a href="lang_droptrigger.html">TRIGGER &#151; DROP</a></li>
+<li><a href="flextypegood.html">Typing &#151; The Advantages Of Flexible</a></li>
 <li><a href="uintcseq.html">UINT Collating Sequence &#151; The</a></li>
 <li><a href="lang.html">Understood by SQLite &#151; Query Language</a></li>
 <li><a href="undoredo.html">Undo/Redo With SQLite &#151; Automatic</a></li>
@@ -652,6 +701,7 @@ Other Documentation Indices:
 <li><a href="famous.html">Users Of SQLite &#151; Well Known</a></li>
 <li><a href="whentouse.html">Uses For SQLite &#151; Appropriate</a></li>
 <li><b><a href="threadsafe.html">Using SQLite In Multi Threaded Applications</a></b></li>
+<li><a href="invalidutf.html">UTF Policy &#151; Invalid</a></li>
 <li><a href="sqldiff.html">Utility &#151; sqldiff.exe: Database Difference</a></li>
 <li><a href="dbhash.html">Utility Program &#151; The dbhash.exe</a></li>
 <li><a href="sqlanalyze.html">Utility Program &#151; The sqlite3_analyzer.exe</a></li>
@@ -664,7 +714,6 @@ Other Documentation Indices:
 <li><a href="datatypes.html">version 2 &#151; Datatypes In SQLite</a></li>
 <li><a href="c_interface.html">Version 2 &#151; The C language interface to SQLite</a></li>
 <li><a href="capi3ref.html">Version 3 &#151; C/C++ Interface For SQLite</a></li>
-<li><a href="datatype3.html">Version 3 &#151; Datatypes In SQLite</a></li>
 <li><a href="lockingv3.html">Version 3 &#151; File Locking And Concurrency In SQLite</a></li>
 <li><a href="capi3.html">Version 3 (old) &#151; C/C++ Interface For SQLite</a></li>
 <li><a href="version3.html">Version 3 Overview &#151; SQLite</a></li>
@@ -710,4 +759,5 @@ Other Documentation Indices:
 <li><a href="zipfile.html">Zipfile Module &#151; The SQLite</a></li>
 
 </ul>
+
 

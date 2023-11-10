@@ -89,11 +89,35 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.8.2 On 2013-12-06</h2><p><ol class='lessindent'>
 <li>Changed the defined behavior for the <a href="../lang_expr.html#castexpr">CAST expression</a> when floating point values
-    greater than  +9223372036854775807 are cast into into integers so that the
+    greater than  +9223372036854775807 are cast into integers so that the
     result is the largest possible integer, +9223372036854775807, instead of
     the smallest possible integer, -9223372036854775808.  After this change, 
     CAST(9223372036854775809.0 as INT) yields +9223372036854775807 instead
@@ -130,3 +154,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

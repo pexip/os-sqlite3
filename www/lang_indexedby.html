@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -109,8 +133,8 @@ The INDEXED BY phrase is an SQLite extension and
 is not portable to other SQL database engines.</p>
 
 <p><b><a href="syntax/qualified-table-name.html">qualified-table-name:</a></b>
-<button id='x1537' onclick='hideorshow("x1537","x1538")'>hide</button></p>
- <div id='x1538' class='imgcontainer'>
+<button id='x1759' onclick='hideorshow("x1759","x1760")'>hide</button></p>
+ <div id='x1760' class='imgcontainer'>
  <div style="max-width:599px"><svg xmlns='http://www.w3.org/2000/svg' class="pikchr" viewBox="0 0 599.746 182.736">
 <circle cx="5" cy="17" r="3.6"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
 <polygon points="45,17 33,21 33,12" style="fill:rgb(0,0,0)"/>
@@ -191,12 +215,12 @@ can still be used to look up entries even when "NOT INDEXED" is specified.</p>
 
 <p>Some SQL database engines provide non-standard "hint" mechanisms which
 can be used to give the query optimizer clues about what indices it should
-use for a particular statement.  The INDEX BY clause of SQLite is 
+use for a particular statement.  The INDEXED BY clause of SQLite is 
 <em>not</em> a hinting mechanism and it should not be used as such.
 The INDEXED BY clause does not give the optimizer hints about which index
 to use; it gives the optimizer a requirement of which index to use.
 If the query optimizer is unable to use the index specified by the
-INDEX BY clause, then the query will fail with an error.</p>
+INDEXED BY clause, then the query will fail with an error.</p>
 
 <p>The INDEXED BY clause is <em>not</em> intended for use in tuning
 the performance of a query.  The intent of the INDEXED BY clause is
@@ -232,4 +256,5 @@ making effective use of indices.  Many applications may prefer to
 use the <a href="c3ref/stmt_status.html">sqlite3_stmt_status()</a> interface to detect index misuse
 rather than the INDEXED BY phrase described here.</p>
 </li></ol>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_indexedby.in?m=f9785fa831d1b7b96">2021-02-06 15:33:07</a> UTC </small></i></p>
 

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.25.3 On 2018-11-05</h2><p><b>Changes in version 3.25.0 (2018-09-15):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Add support for <a href="../windowfunctions.html">window functions</a>
@@ -174,7 +198,7 @@ return false;
 <li> Fixes for various other compiler warnings and minor problems associated
      with obscure configurations.
 </ol>
-<p><b>Additional changes in version 3.25.3:</b></p>
+<p><b>Additional changes in version 3.25.3 (2018-11-05):</b></p>
 <p><ol class='lessindent'>
 <li value='18'> Disallow the use of <a href="../windowfunctions.html">window functions</a> in the recursive part of
      a CTE. Ticket <a href="https://sqlite.org/src/info/e8275b415a2f03bee">e8275b415a2f03bee</a>
@@ -200,3 +224,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.15.2 On 2016-11-28</h2><p><b>Changes in version 3.15.0 (2016-10-14):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Added support for <a href="../rowvalue.html">row values</a>.
@@ -143,7 +167,7 @@ return false;
      might cause incorrect results.  Ticket
      <a href="https://www.sqlite.org/src/info/fef4bb4bd9185ec8f">fef4bb4bd9185ec8f</a>.
 </ol>
-<p><b>Additional changes in version 3.15.2:</b></p>
+<p><b>Additional changes in version 3.15.2 (2016-11-28):</b></p>
 <p><ol class='lessindent'>
 <li value='18'> Multiple bug fixes to the <a href="../rowvalue.html">row value</a> logic that was introduced in version 3.15.0.
 <li> Fix a NULL pointer dereference in ATTACH/DETACH following a maliciously constructed
@@ -166,3 +190,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

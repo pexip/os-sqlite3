@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.8.10.1 On 2015-05-09</h2><p><b>Changes in version 3.8.10 (2015-05-07):</b></p>
 <p><ol class='lessindent'>
 <li value='1'>Added the <a href="../sqldiff.html">sqldiff.exe</a> utility program for computing the differences between two
@@ -109,7 +133,7 @@ return false;
     compiled with the <a href="../compile.html#enable_dbstat_vtab">SQLITE_ENABLE_DBSTAT_VTAB</a> option.
 
 </ol>
-<p><b>Additional changes in version 3.8.10.1:</b></p>
+<p><b>Additional changes in version 3.8.10.1 (2015-05-09):</b></p>
 <p><ol class='lessindent'>
 <li value='9'>Make <a href="../c3ref/compileoption_get.html">sqlite3_compileoption_used()</a> responsive to the <a href="../compile.html#enable_dbstat_vtab">SQLITE_ENABLE_DBSTAT_VTAB</a>
     compile-time option.
@@ -128,3 +152,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

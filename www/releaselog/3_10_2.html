@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.10.2 On 2016-01-20</h2><p><b>Changes in version 3.10.0 (2016-01-06):</b></p>
 <p><ol class='lessindent'>
 <p><b>General improvements:</b>
@@ -146,7 +170,7 @@ return false;
     when a scalar subquery attempts to use the <a href="../queryplanner.html#partialsort">block sorting</a> optimization.  Ticket
     <a href="https://www.sqlite.org/src/info/cb3aa0641d9a4">cb3aa0641d9a4</a>.
 </ol>
-<p><b>Additional changes in version 3.10.2:</b></p>
+<p><b>Additional changes in version 3.10.2 (2016-01-20):</b></p>
 <p><ol class='lessindent'>
 <p><b>Critical bug fix:</b>
 <li value='24'>Version 3.10.0 introduced a case-folding bug in the <a href="../lang_expr.html#like">LIKE</a> operator which is fixed
@@ -170,3 +194,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

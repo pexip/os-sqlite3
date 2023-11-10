@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.19.2 On 2017-05-25</h2><p><b>Changes in version 3.19.0 (2017-05-22):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> The <a href="../c3ref/c_alter_table.html">SQLITE_READ</a> <a href="../c3ref/set_authorizer.html">authorizer callback</a> is invoked once
@@ -149,7 +173,7 @@ return false;
     <a href="https://www.sqlite.org/src/info/cad1ab4cb7b0fc">cad1ab4cb7b0fc</a>.
 <li>Remove a surplus semicolon that was causing problems for older versions of MSVC.
 </ol>
-<p><b>Additional changes in version 3.19.2:</b></p>
+<p><b>Additional changes in version 3.19.2 (2017-05-25):</b></p>
 <p><ol class='lessindent'>
 <li value='23'>Fix more bugs in the LEFT JOIN <a href="../optoverview.html#flattening">flattening optimization</a>. Ticket
     <a href="https://www.sqlite.org/src/info/7fde638e94287d2c">7fde638e94287d2c</a>.
@@ -166,3 +190,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

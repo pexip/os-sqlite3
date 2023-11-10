@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -136,7 +160,12 @@ parameters START, END, and STEP.  The first row of the table has
 a value of START.  Subsequent rows increase by STEP up to END.
 
 </p><p>Omitted parameters take on default values.  STEP defaults to 1.
-END defaults to 9223372036854775807.  START defaults to 0.
+END defaults to 9223372036854775807.  The START parameter is required
+as of version 3.37.0 (2021-11-27) and later and an error will
+be raised if START is omitted or has a self-referential or otherwise
+uncomputable value.  Older versions used a default of 0 for START.
+The legacy behavior can be obtained from recent code by compiling
+with -DZERO_ARGUMENT_GENERATE_SERIES.
 
 </p><h2 id="equivalent_recursive_common_table_expression"><span>1.1. </span>Equivalent Recursive Common Table Expression</h2>
 
@@ -166,7 +195,7 @@ and faster.
 
 <p>Generate the 20 random integer values:
 
-</p><div class="codeblock"><pre>SELECT random() FROM generate_series LIMIT 20;
+</p><div class="codeblock"><pre>SELECT random() FROM generate_series(1,20);
 </pre></div>
 
 <p>Find the name of every customer whose account number
@@ -180,4 +209,5 @@ SELECT name FROM customer
  WHERE id IN (SELECT value
                 FROM generate_series(10000,20000,200));
 </pre></div>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/series.in?m=2ef7ed3d3eec2b729">2022-01-20 21:38:08</a> UTC </small></i></p>
 

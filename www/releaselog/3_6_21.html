@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.6.21 On 2009-12-07</h2><p><ol class='lessindent'>
 <li>The SQL output resulting from <a href="../c3ref/profile.html">sqlite3_trace()</a> is now modified to include
 the values of <a href="../lang_expr.html#varparam">bound parameters</a>.
@@ -126,3 +150,4 @@ content is deleted even when the <a href="../lang_delete.html#truncateopt">trunc
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.32.1 On 2020-05-25</h2><p><b>Changes in version 3.32.0 (2020-05-22):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Added support for <a href="../lang_analyze.html#approx">approximate ANALYZE</a> using the
@@ -127,7 +151,7 @@ return false;
 <li> The <a href="../lang_expr.html#like">ESCAPE</a> clause of a <a href="../lang_expr.html#like">LIKE</a> operator now overrides wildcard
      characters, so that the behavior matches what PostgreSQL does.
 </ol>
-<p><b>Additional changes in version 3.32.1:</b></p>
+<p><b>Additional changes in version 3.32.1 (2020-05-25):</b></p>
 <p><ol class='lessindent'>
 <li value='11'> Fix two long-standing bugs that allow malicious SQL statements
      to crash the process that is running SQLite.  These bugs were announced
@@ -147,3 +171,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

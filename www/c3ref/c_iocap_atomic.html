@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: SQLITE_IOCAP_ATOMIC SQLITE_IOCAP_ATOMIC16K SQLITE_IOCAP_ATOMIC1K SQLITE_IOCAP_ATOMIC2K SQLITE_IOCAP_ATOMIC32K SQLITE_IOCAP_ATOMIC4K SQLITE_IOCAP_ATOMIC512 SQLITE_IOCAP_ATOMIC64K SQLITE_IOCAP_ATOMIC8K SQLITE_IOCAP_BATCH_ATOMIC SQLITE_IOCAP_IMMUTABLE SQLITE_IOCAP_POWERSAFE_OVERWRITE SQLITE_IOCAP_SAFE_APPEND SQLITE_IOCAP_SEQUENTIAL SQLITE_IOCAP_UNDELETABLE_WHEN_OPEN -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -147,3 +171,4 @@ write operations are bracketed by <a href="../c3ref/c_fcntl_begin_atomic_write.h
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

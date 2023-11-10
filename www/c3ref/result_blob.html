@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_result_blob sqlite3_result_blob64 sqlite3_result_double sqlite3_result_error sqlite3_result_error16 sqlite3_result_error_code sqlite3_result_error_nomem sqlite3_result_error_toobig sqlite3_result_int sqlite3_result_int64 sqlite3_result_null sqlite3_result_pointer sqlite3_result_text sqlite3_result_text16 sqlite3_result_text16be sqlite3_result_text16le sqlite3_result_text64 sqlite3_result_value sqlite3_result_zeroblob sqlite3_result_zeroblob64 -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -193,9 +217,10 @@ specified by the fifth (and last) parameter, which must be one
 of <a href="../c3ref/c_any.html">SQLITE_UTF8</a>, <a href="../c3ref/c_any.html">SQLITE_UTF16</a>, <a href="../c3ref/c_any.html">SQLITE_UTF16BE</a>, or <a href="../c3ref/c_any.html">SQLITE_UTF16LE</a>.
 SQLite takes the text result from the application from
 the 2nd parameter of the sqlite3_result_text* interfaces.
-If the 3rd parameter to the sqlite3_result_text* interfaces
-is negative, then SQLite takes result text from the 2nd parameter
-through the first zero character.
+If the 3rd parameter to any of the sqlite3_result_text* interfaces
+other than sqlite3_result_text64() is negative, then SQLite computes
+the string length itself by searching the 2nd parameter for the first
+zero character.
 If the 3rd parameter to the sqlite3_result_text* interfaces
 is non-negative, then as many bytes (not characters) of the text
 pointed to by the 2nd parameter are taken as the application-defined
@@ -266,3 +291,4 @@ the <a href="../c3ref/context.html">sqlite3_context</a> pointer, the results are
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

@@ -89,18 +89,42 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_uri_boolean sqlite3_uri_int64 sqlite3_uri_key sqlite3_uri_parameter -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Obtain Values For URI Parameters</h2>
 </div>
 <blockquote><pre>
-const char *sqlite3_uri_parameter(const char *zFilename, const char *zParam);
-int sqlite3_uri_boolean(const char *zFile, const char *zParam, int bDefault);
-sqlite3_int64 sqlite3_uri_int64(const char*, const char*, sqlite3_int64);
-const char *sqlite3_uri_key(const char *zFilename, int N);
+const char *sqlite3_uri_parameter(sqlite3_filename z, const char *zParam);
+int sqlite3_uri_boolean(sqlite3_filename z, const char *zParam, int bDefault);
+sqlite3_int64 sqlite3_uri_int64(sqlite3_filename, const char*, sqlite3_int64);
+const char *sqlite3_uri_key(sqlite3_filename z, int N);
 </pre></blockquote>
 <p>
 These are utility routines, useful to <a href="../vfs.html">custom VFS implementations</a>,
@@ -169,3 +193,4 @@ main database file.</p>
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

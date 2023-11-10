@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <?xml version="1.0" encoding="Windows-1252"?>
 
 
@@ -1226,7 +1250,7 @@ WHERE (expr1 OR expr2 OR ... OR exprN) AND column IS NOT NULL
 </blockquote><hr width="50%"><a name="2009_06_27"></a><h3>2009-06-27 - Version 3.6.16</h3><blockquote>
   SQLite <a href="releaselog/3_6_16.html">version 3.6.16</a> is another general maintenance release containing
   performance and robustness enhancements.  A single notable bug was fixed
-  (ticket #3929).  This bug cause cause INSERT or UPDATE statements to fail
+  (ticket #3929).  This bug can cause INSERT or UPDATE statements to fail
   on indexed tables that have AFTER triggers that modify the same table and
   index.
 </blockquote><hr width="50%"><a name="2009_06_15"></a><h3>2009-06-15 - Version 3.6.15</h3><blockquote>
@@ -1827,4 +1851,5 @@ Annual Tcl/Tk Conference</h3><blockquote>
 <p>  Plans are to continue to support SQLite version 2.8 with
   bug fixes.  But all new development will occur in version 3.0.
 </blockquote><hr width="50%">
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/oldnews.in?m=b255cc82f4af93bcb">2022-08-10 18:45:48</a> UTC </small></i></p>
 

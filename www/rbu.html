@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -132,7 +156,7 @@ mk.innerHTML = "&#x25ba;";
 
 
 
-<h1 align="'center'" id="the_rbu_extension"><span>1. </span>The RBU Extension</h1>
+<h1 align="center" id="the_rbu_extension"><span>1. </span>The RBU Extension</h1>
 
 <p>The RBU extension is an add-on for SQLite designed for use with large 
 SQLite database files on low-power devices at the edge of a network. RBU
@@ -737,4 +761,5 @@ int do_rbu_vacuum(const char *zTarget){
   return rc;
 }
 </pre></div>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/rbu.in?m=0f520f8581888500a">2019-09-26 19:34:22</a> UTC </small></i></p>
 

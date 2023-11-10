@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.9.3 On 2016-04-01</h2><p><b>Changes in version 3.9.0 (2015-10-14):</b></p>
 <p><ol class='lessindent'>
 <p><b>Policy Changes:</b>
@@ -159,7 +183,7 @@ return false;
     <a href="https://www.sqlite.org/src/info/8a2adec1">8a2adec1</a>.
 
 </ol>
-<p><b>Additional changes in version 3.9.3:</b></p>
+<p><b>Additional changes in version 3.9.3 (2016-04-01):</b></p>
 <p><ol class='lessindent'>
 <li value='22'>Backport a
     <a href="https://www.sqlite.org/src/info/c648539b52ca28c0">simple query planner optimization</a>
@@ -176,3 +200,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

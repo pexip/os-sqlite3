@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.19.3 On 2017-06-08</h2><p><b>Changes in version 3.19.0 (2017-05-22):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> The <a href="../c3ref/c_alter_table.html">SQLITE_READ</a> <a href="../c3ref/set_authorizer.html">authorizer callback</a> is invoked once
@@ -154,7 +178,7 @@ return false;
 <li value='23'>Fix more bugs in the LEFT JOIN <a href="../optoverview.html#flattening">flattening optimization</a>. Ticket
     <a href="https://www.sqlite.org/src/info/7fde638e94287d2c">7fde638e94287d2c</a>.
 </ol>
-<p><b>Additional changes in version 3.19.3:</b></p>
+<p><b>Additional changes in version 3.19.3 (2017-06-08):</b></p>
 <p><ol class='lessindent'>
 <li value='24'>Fix a bug associated with <a href="../pragma.html#pragma_auto_vacuum">auto_vacuum</a> that can lead to database
     corruption.  The bug was introduced in <a href="../releaselog/3_16_0.html">version 3.16.0</a> (2017-01-02).
@@ -172,3 +196,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+
