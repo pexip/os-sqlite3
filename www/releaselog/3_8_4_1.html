@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.8.4.1 On 2014-03-11</h2><p><b>Changes in version 3.8.4 (2014-03-10):</b></p>
 <p><ol class='lessindent'>
 <li value='1'>Code optimization and refactoring for improved performance.
@@ -130,7 +154,7 @@ return false;
     the column to a floating point value approximately equal to
     +9223372036854775808.0.
 </ol>
-<p><b>Additional changes in version 3.8.4.1:</b></p>
+<p><b>Additional changes in version 3.8.4.1 (2014-03-11):</b></p>
 <p><ol class='lessindent'>
 <li value='17'>Work around a C-preprocessor macro conflict that breaks the build for some
     configurations with Microsoft Visual Studio.
@@ -148,3 +172,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

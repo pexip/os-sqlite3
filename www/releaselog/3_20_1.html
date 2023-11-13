@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.20.1 On 2017-08-24</h2><p><b>Changes in version 3.20.0 (2017-08-01):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Update the text of error messages returned by <a href="../c3ref/errcode.html">sqlite3_errmsg()</a> for some
@@ -187,7 +211,7 @@ return false;
      dodgy CREATE TABLE declarations are used.  Ticket
      <a href="https://sqlite.org/src/info/bc115541132dad136">bc115541132dad136</a>
 </ol>
-<p><b>Additional changes in version 3.20.1:</b></p>
+<p><b>Additional changes in version 3.20.1 (2017-08-24):</b></p>
 <p><ol class='lessindent'>
 <li value='24'> Fix a potential memory leak in the new <a href="../c3ref/result_blob.html">sqlite3_result_pointer()</a> interface.
      Ticket <a href="https://sqlite.org/src/info/7486aa54b968e9b5">7486aa54b968e9b5</a>.
@@ -204,3 +228,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <p>
@@ -1213,4 +1237,5 @@ Additional information about sqlite is available at
 See also the sources to the Tcl interface for SQLite in
 the source file 
 <a href="https://sqlite.org/src/file/src/tclsqlite.c">src/tclsqlite.c</a>.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/c_interface.in?m=37fc83a59c4d4a606">2020-04-14 16:00:55</a> UTC </small></i></p>
 

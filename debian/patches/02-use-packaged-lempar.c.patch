@@ -7,7 +7,7 @@ Last-Update: 2020-12-04
 
 --- a/tool/lemon.c
 +++ b/tool/lemon.c
-@@ -3668,6 +3668,8 @@ PRIVATE FILE *tplt_open(struct lemon *le
+@@ -3673,6 +3673,8 @@ PRIVATE FILE *tplt_open(struct lemon *le
      tpltname = buf;
    }else if( access(templatename,004)==0 ){
      tpltname = templatename;

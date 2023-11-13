@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.3.9 On 2007-01-04</h2><p><ol class='lessindent'>
 <li>Fix bugs in pager.c that could lead to database corruption if two
 processes both try to recover a hot journal at the same instant</li>
@@ -132,3 +156,4 @@ to "etilqs".</li>
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

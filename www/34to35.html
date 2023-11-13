@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <?xml version="1.0" encoding="Windows-1252"?>
 
 <h1> Moving From SQLite 3.4.2 to 3.5.0</h1><p>
@@ -917,4 +941,5 @@ void sqlite3_mutex_leave(sqlite3_mutex*);
   tolerant of highly threaded designs.
 </p>
 
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/34to35.in?m=ea67967bbd60713dd">2020-06-18 21:18:56</a> UTC </small></i></p>
 

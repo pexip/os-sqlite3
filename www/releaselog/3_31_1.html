@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.31.1 On 2020-01-27</h2><p><b>Changes in version 3.31.0 (2020-01-22):</b></p>
 <p><ol class='lessindent'>
 <li value='1'>Add support for <a href="../gencol.html">generated columns</a>.
@@ -132,7 +156,7 @@ return false;
     tables with both generated columns and descending indexes.
     Ticket <a href="https://www.sqlite.org/src/info/6484e6ce678fffab">6484e6ce678fffab</a>
 </ol>
-<p><b>Additional changes in version 3.31.1:</b></p>
+<p><b>Additional changes in version 3.31.1 (2020-01-27):</b></p>
 <p><ol class='lessindent'>
 <li value='17'> Revert the data layout for an internal-use-only SQLite data structure.
      Applications that use SQLite should never reference internal SQLite
@@ -156,3 +180,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

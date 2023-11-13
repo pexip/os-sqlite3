@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -2488,7 +2512,7 @@ SELECT fts3_tokenizer(&lt;tokenizer-name&gt;, &lt;sqlite3_tokenizer_module ptr&g
 
 </p><p>
   Prior to SQLite <a href="releaselog/3_11_0.html">version 3.11.0</a> (2016-02-15), the arguments to
-  fts3_tokenzer() could be literal strings or BLOBs. They did not have to
+  fts3_tokenizer() could be literal strings or BLOBs. They did not have to
   be <a href="lang_expr.html#varparam">bound parameters</a>.  But that could lead to security problems in the
   event of an SQL injection.  Hence, the legacy behavior is now disabled
   by default.  But the old legacy behavior can be enabled, for backwards
@@ -2807,7 +2831,7 @@ CREATE TABLE %_segdir(
 </p><table striped="1" style="margin:1em auto; width:80%; border-spacing:0">
   <tr style="text-align:left"><th>Decimal</th><th>Hexadecimal</th><th width="100%">Encoded Representation
   </th></tr><tr style="text-align:left;background-color:#DDDDDD"><td>43</td><td>0x000000000000002B</td><td>0x2B 
-  </td></tr><tr style="text-align:left"><td>200815</td><td>0x000000000003106F</td><td>0x9C 0xA0 0x0C
+  </td></tr><tr style="text-align:left"><td>200815</td><td>0x000000000003106F</td><td>0xEF 0xA0 0x0C
   </td></tr><tr style="text-align:left;background-color:#DDDDDD"><td>-1</td><td>0xFFFFFFFFFFFFFFFF</td><td>0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x01
 </td></tr></table>
   
@@ -3258,4 +3282,5 @@ wrong_number_args:
   sqlite3_result_error(pCtx, "wrong number of arguments to function rank()", -1);
 }
 </pre></div>
-</integer></language-id>
+</integer></language-id><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/fts3.in?m=8a8aa7fb8b4ab5e5a">2022-08-10 18:11:15</a> UTC </small></i></p>
+

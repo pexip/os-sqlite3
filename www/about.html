@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h1 align=center>About SQLite</h1>
@@ -146,7 +170,7 @@ Think of SQLite not as a replacement for
 as a replacement for <a href="http://man.he.net/man3/fopen">fopen()</a></p>
 
 <p>SQLite is a compact library.
-With all features enabled, the <a href="footprint.html">library size</a> can be less than 600KiB,
+With all features enabled, the <a href="footprint.html">library size</a> can be less than 750KiB,
 depending on the target platform and compiler optimization settings.
 (64-bit code is larger.  And some compiler optimizations
 such as aggressive function inlining and loop unrolling can cause the
@@ -200,4 +224,5 @@ entreat you to use it well: to make good and beautiful products that
 are fast, reliable, and simple to use.  Seek forgiveness for yourself
 as you forgive others.  And just as you have received SQLite for free,
 so also freely give, paying the debt forward.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/about.in?m=46de6e4337000513b">2021-10-06 14:45:14</a> UTC </small></i></p>
 

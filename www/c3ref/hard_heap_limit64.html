@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_hard_heap_limit64 sqlite3_soft_heap_limit64 -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -133,7 +157,7 @@ sqlite3_soft_heap_limit64(-1) or sqlite3_hard_heap_limit(-1).</p>
 <p>The soft heap limit may not be greater than the hard heap limit.
 If the hard heap limit is enabled and if sqlite3_soft_heap_limit(N)
 is invoked with a value of N that is greater than the hard heap limit,
-the the soft heap limit is set to the value of the hard heap limit.
+the soft heap limit is set to the value of the hard heap limit.
 The soft heap limit is automatically enabled whenever the hard heap
 limit is enabled. When sqlite3_hard_heap_limit64(N) is invoked and
 the soft heap limit is outside the range of 1..N, then the soft heap
@@ -165,3 +189,4 @@ changes in future releases of SQLite.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

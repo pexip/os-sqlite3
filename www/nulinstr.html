@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -111,12 +135,12 @@ strings can lead to surprising behaviors:
 
 </p><ol>
 <li><p>
-The <a href="lang_corefunc.html#length">length() SQL function</a> only counts characters up through and excluding
+The <a href="lang_corefunc.html#length">length() SQL function</a> only counts characters up to and excluding
 the first NUL.
 
 
 </p></li><li><p>
-The <a href="lang_corefunc.html#quote">quote() SQL function</a> only shows characters up through and excluding
+The <a href="lang_corefunc.html#quote">quote() SQL function</a> only shows characters up to and excluding
 the first NUL.
 
 </p></li><li><p>
@@ -193,7 +217,7 @@ use an expression like this:
 <p>
 If this expression returns a non-zero value N, then there exists an 
 embedded NUL at the N-th character position.  Thus to count the number
-fo rows that contain embedded NUL characters:
+of rows that contain embedded NUL characters:
 
 </p><div class="codeblock"><pre>SELECT count(*) FROM t1 WHERE instr(b,char(0))>0;
 </pre></div>
@@ -209,4 +233,5 @@ UPDATE statements similar to the following might help:
 </p><div class="codeblock"><pre>UPDATE t1 SET b=substr(b,1,instr(b,char(0)))
  WHERE instr(b,char(0));
 </pre></div>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/nulinstr.in?m=b99fab59ede12dcc2">2022-05-23 22:21:54</a> UTC </small></i></p>
 

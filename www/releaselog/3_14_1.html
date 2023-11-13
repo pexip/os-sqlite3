@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.14.1 On 2016-08-11</h2><p><b>Changes in version 3.14 (2016-08-08):</b></p>
 <p><ol class='lessindent'>
 <div style="width:280px;float:right;padding:10px;margin:0px 10px;">
@@ -148,7 +172,7 @@ with a home-baked pie.</center>
     for some obscure queries following the ORDER BY LIMIT optimization introduced
     in <a href="../releaselog/3_12_0.html">version 3.12.0</a>.
 </ol>
-<p><b>Additional changes in version 3.14.1:</b></p>
+<p><b>Additional changes in version 3.14.1 (2016-08-11):</b></p>
 <p><ol class='lessindent'>
 <li value='23'>A performance enhancement to the page-cache "truncate" operation
     reduces <a href="../lang_transaction.html">COMMIT</a> time by dozens of milliseconds on systems with a
@@ -167,3 +191,4 @@ with a home-baked pie.</center>
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

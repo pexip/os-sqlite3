@@ -89,9 +89,33 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
-<!-- keywords: {SQLITE_STMTSTATUS counter} {SQLITE_STMTSTATUS counters} SQLITE_STMTSTATUS_AUTOINDEX SQLITE_STMTSTATUS_FULLSCAN_STEP SQLITE_STMTSTATUS_MEMUSED SQLITE_STMTSTATUS_REPREPARE SQLITE_STMTSTATUS_RUN SQLITE_STMTSTATUS_SORT SQLITE_STMTSTATUS_VM_STEP -->
+<!-- keywords: {SQLITE_STMTSTATUS counter} {SQLITE_STMTSTATUS counters} SQLITE_STMTSTATUS_AUTOINDEX SQLITE_STMTSTATUS_FILTER_HIT SQLITE_STMTSTATUS_FILTER_MISS SQLITE_STMTSTATUS_FULLSCAN_STEP SQLITE_STMTSTATUS_MEMUSED SQLITE_STMTSTATUS_REPREPARE SQLITE_STMTSTATUS_RUN SQLITE_STMTSTATUS_SORT SQLITE_STMTSTATUS_VM_STEP -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Status Parameters for prepared statements</h2>
@@ -103,6 +127,8 @@ return false;
 #define SQLITE_STMTSTATUS_VM_STEP           4
 #define SQLITE_STMTSTATUS_REPREPARE         5
 #define SQLITE_STMTSTATUS_RUN               6
+#define SQLITE_STMTSTATUS_FILTER_MISS       7
+#define SQLITE_STMTSTATUS_FILTER_HIT        8
 #define SQLITE_STMTSTATUS_MEMUSED           99
 </pre></blockquote>
 <p>
@@ -155,6 +181,18 @@ or more calls to <a href="../c3ref/step.html">sqlite3_step()</a> followed by a c
 The counter is incremented on the first <a href="../c3ref/step.html">sqlite3_step()</a> call of each
 cycle.</p>
 
+<p><a name="sqlitestmtstatusfiltermiss"></a>
+
+<a name="sqlitestmtstatusfilterhit"></a>
+
+<dt>SQLITE_STMTSTATUS_FILTER_HIT<br>
+SQLITE_STMTSTATUS_FILTER_MISS</dt>
+<dd>SQLITE_STMTSTATUS_FILTER_HIT is the number of times that a join
+step was bypassed because a Bloom filter returned not-found.  The
+corresponding SQLITE_STMTSTATUS_FILTER_MISS value is the number of
+times that the Bloom filter returned a find, and thus the join step
+had to be processed as normal.</p>
+
 <p><a name="sqlitestmtstatusmemused"></a>
  <dt>SQLITE_STMTSTATUS_MEMUSED</dt>
 <dd>This is the approximate number of bytes of heap memory
@@ -167,3 +205,4 @@ is ignored when the opcode is SQLITE_STMTSTATUS_MEMUSED.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

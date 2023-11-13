@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h2>Well-Known Users of SQLite</h2>
@@ -193,14 +217,6 @@ developers use it in their projects without ever telling us.
 </p>
 
 <hr class='xhr'>
-<center><a href='http://en.wikipedia.org/wiki/Flame_%28malware%29' border=0>
-<img src='images/foreignlogos/flame.gif' width=215></a></center>
-<p>
-  <a href="http://en.wikipedia.org/wiki/Flame_%28malware%29">Flame</a>
-  is a malware spy program that is reported to make heavy use of SQLite.
-</p>
-
-<hr class='xhr'>
 <center><a href='http://www.ge.com/' border=0>
 <img src='images/foreignlogos/ge.gif' width=215></a></center>
 <p>
@@ -218,7 +234,7 @@ developers use it in their projects without ever telling us.
 <img src='images/foreignlogos/google.gif' width=215></a></center>
 <p>
   uses SQLite in their 
-  in the <a href="http://code.google.com/android/">Android</a> cell-phone 
+  <a href="http://code.google.com/android/">Android</a> cell-phone 
   operating system, and in the 
   <a href="http://www.google.com/chrome">Chrome Web Browser</a>.
 </p>
@@ -416,14 +432,6 @@ developers use it in their projects without ever telling us.
   <a href="https://code.facebook.com/projects/658950180885092">osquery</a> product.
 </td></tr>
 <tr><td valign='top'>
-<a href='http://en.wikipedia.org/wiki/Flame_%28malware%29' border=0>
-<img src='images/foreignlogos/flame.gif' width=215></a>
-</td><td valign='top'>
-
-  <a href="http://en.wikipedia.org/wiki/Flame_%28malware%29">Flame</a>
-  is a malware spy program that is reported to make heavy use of SQLite.
-</td></tr>
-<tr><td valign='top'>
 <a href='http://www.ge.com/' border=0>
 <img src='images/foreignlogos/ge.gif' width=215></a>
 </td><td valign='top'>
@@ -442,7 +450,7 @@ developers use it in their projects without ever telling us.
 </td><td valign='top'>
 
   uses SQLite in their 
-  in the <a href="http://code.google.com/android/">Android</a> cell-phone 
+  <a href="http://code.google.com/android/">Android</a> cell-phone 
   operating system, and in the 
   <a href="http://www.google.com/chrome">Chrome Web Browser</a>.
 </td></tr>
@@ -557,4 +565,5 @@ developers use it in their projects without ever telling us.
 </table>
 </div>
 
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/famous.in?m=e060895d71666a5e0">2022-06-18 09:43:52</a> UTC </small></i></p>
 

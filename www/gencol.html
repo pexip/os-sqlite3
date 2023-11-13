@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -133,7 +157,7 @@ mk.innerHTML = "&#x25ba;";
 are columns of a table whose values are a function of other columns
 in the same row.
 Generated columns can be read, but their values can not be directly
-written.  The only way to change the value of a generated columns is to
+written.  The only way to change the value of a generated column is to
 modify the values of the other columns used to calculate
 the generated column.
 
@@ -209,7 +233,7 @@ to itself.
 
 </p></li><li><p>
 Generated columns can occur anywhere in the table definition.  Generated
-columns can be interspersed among ordinary columns.  It not necessary
+columns can be interspersed among ordinary columns.  It is not necessary
 to put generated columns at the end of the list of columns in the
 table definition, as is shown in the examples above.
 </p></li></ol>
@@ -254,6 +278,11 @@ The datatype and <a href="datatype3.html#collation">collating sequence</a> of th
 only by the datatype and <a href="lang_createtable.html#collateclause">COLLATE clause</a> on the column definition.
 The datatype and collating sequence of the GENERATED ALWAYS AS expression
 have no affect on the datatype and collating sequence of the column itself.
+
+</p></li><li><p>
+Generated columns are not included in the list of columns provided by
+the <a href="pragma.html#pragma_table_info">PRAGMA table_info</a> statement.  But they are included in the output of
+the newer <a href="pragma.html#pragma_table_xinfo">PRAGMA table_xinfo</a> statement.
 </p></li></ol>
 
 <h1 id="compatibility"><span>3. </span>Compatibility</h1>
@@ -275,4 +304,5 @@ Problems only arise if you create a new database that contains
 generated columns, using SQLite version 3.31.0 or later, and then
 try to read or write that database file using an earlier version of
 SQLite that does not understand generated columns.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/gencol.in?m=1b689d97b3fb3c295">2022-11-09 20:09:19</a> UTC </small></i></p>
+

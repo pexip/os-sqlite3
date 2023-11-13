@@ -5,7 +5,7 @@ Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Build-Depends: debhelper-compat (= 13), autoconf (>= 2.59), libtool (>= 1.5.2), automake, chrpath, lynx, libreadline-dev, tcl8.6-dev, libicu-dev (>= 70.1~), pkg-config
 Build-Conflicts: tcl8.4, tcl8.4-dev, tcl8.5, tcl8.5-dev
-Standards-Version: 4.5.1
+Standards-Version: 4.6.2
 Rules-Requires-Root: no
 Homepage: https://www.sqlite.org/
 XS-Pexip-Upstream: http://deb.debian.org/debian/ bookworm
@@ -41,6 +41,7 @@ Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Recommends: sqlite3
+Multi-Arch: foreign
 Description: SQLite 3 documentation
  SQLite is a C library that implements an SQL database engine.
  Programs that link with the SQLite library can have SQL database
@@ -53,7 +54,7 @@ Package: libsqlite3-0
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Breaks: python-migrate (<< 0.11.0-4~), python3-migrate (<< 0.11.0-4~)
+Breaks: python-migrate (<< 0.11.0-4~), python3-migrate (<< 0.11.0-4~), crowdsec (<< 1.4)
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Description: SQLite 3 shared library
@@ -65,7 +66,7 @@ Package: libsqlite3-dev
 Suggests: sqlite3-doc
 Section: libdevel
 Architecture: any
-Depends: libsqlite3-0 (= ${binary:Version}), ${misc:Depends}, libc6-dev
+Depends: libsqlite3-0 (= ${binary:Version}), ${misc:Depends}, libc-dev
 Multi-Arch: same
 Description: SQLite 3 development files
  SQLite is a C library that implements an SQL database engine.
@@ -85,3 +86,21 @@ Description: SQLite 3 Tcl bindings
  access without running a separate RDBMS process.
  .
  This package contains the Tcl bindings.
+
+Package: sqlite3-tools
+Suggests: sqlite3-doc
+Section: database
+Architecture: linux-any hurd-i386
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Breaks: sqlite3 (<< 3.37.0)
+Replaces: sqlite3 (<< 3.37.0)
+Conflicts: emboss
+Multi-Arch: foreign
+Description: Command line interface for SQLite 3 (tools)
+ This package contains various tools such as:
+  - showdb
+  - showjournal
+  - showstat4
+  - showwal
+  - sqldiff
+  - sqlite3_analyzer

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_backup_finish sqlite3_backup_init sqlite3_backup_pagecount sqlite3_backup_remaining sqlite3_backup_step -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -281,7 +305,7 @@ sqlite3_backup_finish().  SQLite does not currently check to see
 if the application incorrectly accesses the destination <a href="../c3ref/sqlite3.html">database connection</a>
 and so no error code is reported, but the operations may malfunction
 nevertheless.  Use of the destination database connection while a
-backup is in progress might also also cause a mutex deadlock.</p>
+backup is in progress might also cause a mutex deadlock.</p>
 
 <p>If running in <a href="../sharedcache.html">shared cache mode</a>, the application must
 guarantee that the shared cache used by the destination database
@@ -300,3 +324,4 @@ possible that they return invalid values.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

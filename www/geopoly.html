@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -540,4 +564,5 @@ polygon is represented in the shadow tables as a rectangular bounding box.
 The underlying R-Tree implementation uses bounding boxes to limit the search
 space.  Then the geoploy_overlap() and/or geopoly_within() routines further
 refine the search to the exact answer.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/geopoly.in?m=b47321138852c597d">2020-04-18 20:02:04</a> UTC </small></i></p>
+

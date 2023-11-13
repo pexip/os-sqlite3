@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -123,7 +147,7 @@ SQL implementation, including:
     <a href="lang_transaction.html">ROLLBACK TO</a>
 </li><li><a href="lang_expr.html#subq">Subqueries</a>, including <a href="lang_expr.html#cosub">correlated subqueries</a>
 </li><li>Up to 64-way joins
-</li><li>LEFT JOIN
+</li><li>LEFT, RIGHT, and FULL OUTER JOINs
 </li><li>DISTINCT, ORDER BY, GROUP BY, HAVING, LIMIT, and OFFSET
 </li><li>UNION, UNION ALL, INTERSECT, and EXCEPT
 </li><li>A rich library of <a href="lang_corefunc.html">standard SQL functions</a>
@@ -159,4 +183,5 @@ SQL implementation, including:
 There are many more features not listed above.
 SQLite may be small in size and have "Lite" in its name, but it is
 not lacking in capability.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/fullsql.in?m=629b1f592bc156d3b">2022-05-10 17:29:14</a> UTC </small></i></p>
+

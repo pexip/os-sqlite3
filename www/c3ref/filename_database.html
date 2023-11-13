@@ -89,17 +89,41 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_filename_database sqlite3_filename_journal sqlite3_filename_wal -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Translate filenames</h2>
 </div>
 <blockquote><pre>
-const char *sqlite3_filename_database(const char*);
-const char *sqlite3_filename_journal(const char*);
-const char *sqlite3_filename_wal(const char*);
+const char *sqlite3_filename_database(sqlite3_filename);
+const char *sqlite3_filename_journal(sqlite3_filename);
+const char *sqlite3_filename_wal(sqlite3_filename);
 </pre></blockquote>
 <p>
 These routines are available to <a href="../vfs.html">custom VFS implementations</a> for
@@ -129,3 +153,4 @@ undefined and is likely a memory access violation.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

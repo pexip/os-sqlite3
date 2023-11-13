@@ -89,10 +89,34 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.6.14.1 On 2009-05-19</h2><p><ol class='lessindent'>
-<li>Fix a bug in <a href="../lang_aggfunc.html#groupconcat">group_concat()</a>, ticket #3841
+<li>Fix a bug in <a href="../lang_aggfunc.html#group_concat">group_concat()</a>, ticket #3841
 <li>Fix a performance bug in the pager cache, ticket #3844
 <li>Fix a bug in the <a href="../c3ref/backup.html">sqlite3_backup</a> implementation that can lead
     to a corrupt backup database.  Ticket #3858.
@@ -106,3 +130,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

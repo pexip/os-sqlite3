@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -108,7 +132,7 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#_multiple_result_rows">1.4.  Multiple Result Rows</a></div>
 <div class="fancy-toc2"><a href="#_multiple_and_connected_where_clause_terms">1.5.  Multiple AND-Connected WHERE-Clause Terms</a></div>
 <div class="fancy-toc2"><a href="#_multi_column_indices">1.6.  Multi-Column Indices</a></div>
-<div class="fancy-toc2"><a href="#_covering_indices">1.7.  Covering Indices</a></div>
+<div class="fancy-toc2"><a href="#_covering_indexes">1.7.  Covering Indexes</a></div>
 <div class="fancy-toc2"><a href="#_or_connected_terms_in_the_where_clause">1.8.  OR-Connected Terms In The WHERE Clause</a></div>
 <div class="fancy-toc1"><a href="#_sorting">2.  Sorting</a></div>
 <div class="fancy-toc2"><a href="#_sorting_by_rowid">2.1.  Sorting By Rowid</a></div>
@@ -579,7 +603,7 @@ lookups with the longer index.
 
 <a name="covidx"></a>
 
-<h2 id="_covering_indices"><span>1.7. </span> Covering Indices</h2>
+<h2 id="_covering_indexes"><span>1.7. </span> Covering Indexes</h2>
 
 <p>
 The "price of California oranges" query was made more efficient through
@@ -1009,4 +1033,5 @@ The only difference is that the rowid column that serves as the key for
 tables and that appears as the right-most term in indexes is replaced by
 the PRIMARY KEY.
 </p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/queryplanner.in?m=baee8e6b0dbeb0173">2022-10-26 13:30:36</a> UTC </small></i></p>
 

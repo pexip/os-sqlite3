@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.9.1 On 2015-10-16</h2><p><b>Changes in version 3.9.0 (2015-10-14):</b></p>
 <p><ol class='lessindent'>
 <p><b>Policy Changes:</b>
@@ -138,7 +162,7 @@ return false;
     <a href="https://www.sqlite.org/src/info/c2a19d81652f40568c">c2a19d81652f40568c</a>.
 
 </ol>
-<p><b>Additional changes in version 3.9.1:</b></p>
+<p><b>Additional changes in version 3.9.1 (2015-10-16):</b></p>
 <p><ol class='lessindent'>
 <li value='18'>Fix <a href="../json1.html">the json1 extension</a> so that it does <u>not</u> recognize ASCII form-feed as a
     whitespace character, in order to comply with RFC-7159.  Fix for ticket
@@ -158,3 +182,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

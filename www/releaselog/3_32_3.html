@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.32.3 On 2020-06-18</h2><p><b>Changes in version 3.32.0 (2020-05-22):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Added support for <a href="../lang_analyze.html#approx">approximate ANALYZE</a> using the
@@ -142,7 +166,7 @@ return false;
      to commit.  Ticket
      <a href="https://www.sqlite.org/src/info/810dc8038872e212">810dc8038872e212</a>
 </ol>
-<p><b>Additional changes in version 3.32.3:</b></p>
+<p><b>Additional changes in version 3.32.3 (2020-06-18):</b></p>
 <p><ol class='lessindent'>
 <li value='14'> Various minor bug fixes including fixes for tickets
      <a href="https://www.sqlite.org/src/info/8f157e8010b22af0">8f157e8010b22af0</a>,
@@ -164,3 +188,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

@@ -89,22 +89,46 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_create_filename sqlite3_free_filename -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Create and Destroy VFS Filenames</h2>
 </div>
 <blockquote><pre>
-char *sqlite3_create_filename(
+sqlite3_filename sqlite3_create_filename(
   const char *zDatabase,
   const char *zJournal,
   const char *zWal,
   int nParam,
   const char **azParam
 );
-void sqlite3_free_filename(char*);
+void sqlite3_free_filename(sqlite3_filename);
 </pre></blockquote>
 <p>
 These interfces are provided for use by <a href="../vfs.html#shim">VFS shim</a> implementations and
@@ -152,3 +176,4 @@ invoked prior to calling sqlite3_free_filename(Y).
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

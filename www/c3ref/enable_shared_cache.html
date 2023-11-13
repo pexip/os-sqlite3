@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: sqlite3_enable_shared_cache -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -104,6 +128,11 @@ This routine enables or disables the sharing of the database cache
 and schema data structures between <a href="../c3ref/sqlite3.html">connections</a>
 to the same database. Sharing is enabled if the argument is true
 and disabled if the argument is false.</p>
+
+<p>This interface is omitted if SQLite is compiled with
+<a href="../compile.html#omit_shared_cache">-DSQLITE_OMIT_SHARED_CACHE</a>.  The <a href="../compile.html#omit_shared_cache">-DSQLITE_OMIT_SHARED_CACHE</a>
+compile-time option is recommended because the
+<a href="../sharedcache.html#dontuse">use of shared cache mode is discouraged</a>.</p>
 
 <p>Cache sharing is enabled and disabled for an entire process.
 This is a change as of SQLite <a href="../releaselog/3_5_0.html">version 3.5.0</a> (2007-09-04).
@@ -139,3 +168,4 @@ shared cache mode should be enabled per-database connection via
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

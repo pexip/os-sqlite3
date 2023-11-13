@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -107,7 +131,7 @@ Porting SQLite To New Operating Systems
 SQLite is to use <a href="amalgamation.html">the amalgamation</a> code
 file, <b>sqlite3.c</b>, and its corresponding header file
 <b>sqlite3.h</b>.  The sqlite3.c code file should compile and
-run on any unix, Windows system without any changes
+run on any Unix, Windows system without any changes
 or special compiler options.  Most applications can simply include
 the sqlite3.c file together with the other C code files that make
 up the application, compile them all together, and have working
@@ -231,7 +255,7 @@ sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 </pre></blockquote>
 
 <p>There are two separate configuration changes here which can
-be used either togethr or separately. The
+be used either together or separately. The
 <a href="c3ref/c_config_covering_index_scan.html#sqliteconfigmultithread">SQLITE_CONFIG_MULTITHREAD</a> setting disables the mutexes that
 serialize access to <a href="c3ref/sqlite3.html">database connection</a> objects and 
 <a href="c3ref/stmt.html">prepared statement</a> objects.  With this setting, the application
@@ -375,4 +399,5 @@ The SQLite core never calls <a href="c3ref/initialize.html">sqlite3_shutdown()</
 official SQLite API and is not otherwise provided when compiled with
 -DSQLITE_OS_OTHER=1, so the auxiliary C code file should probably provide
 it for completeness.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/custombuild.in?m=681be6b966409b3f6">2021-11-17 15:30:21</a> UTC </small></i></p>
 

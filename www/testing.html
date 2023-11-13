@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -168,15 +192,15 @@ mk.innerHTML = "&#x25ba;";
 <p>The reliability and robustness of SQLite is achieved in part
 by thorough and careful testing.</p>
 
-<p>As of <a href="releaselog/3_33_0.html">version 3.33.0</a> (2020-08-14),
+<p>As of <a href="releaselog/3_39_0.html">version 3.39.0</a> (2022-06-25),
 the SQLite library consists of approximately
-143.4 KSLOC of C code.
+151.3 KSLOC of C code.
 (KSLOC means thousands of "Source Lines Of Code" or, in other words,
 lines of code excluding blank lines and comments.)
 By comparison, the project has
-640 times as much
+608 times as much
 test code and test scripts - 
-91911.0 KSLOC.</p>
+92038.3 KSLOC.</p>
 
 <h2 id="executive_summary"><span>1.1. </span>Executive Summary</h2>
 
@@ -212,17 +236,17 @@ from the others.
 <li><p>
 <a name="tcl"></a>
 
-The <b>TCL Tests</b> are the oldest set of tests for SQLite.  
+The <b>TCL Tests</b> are the original tests for SQLite.  
 They are contained in the same source tree as the
 SQLite core and like the SQLite core are in the public domain.  The
 TCL tests are the primary tests used during development.
 The TCL tests are written using the 
 <a href="http://www.tcl-lang.org/">TCL scripting language</a>.
-The TCL test harness itself consists of 27.0 KSLOC 
+The TCL test harness itself consists of 27.7 KSLOC 
 of C code used to create the TCL interface.  The test scripts are contained
-in 1272 files totaling 
-21.1MB in size.  There are
-46363 distinct test cases, but many of the test
+in 1343 files totaling 
+23.5MB in size.  There are
+50240 distinct test cases, but many of the test
 cases are parameterized and run multiple times (with different parameters)
 so that on a full test run millions of
 separate tests are performed.
@@ -237,10 +261,10 @@ the core SQLite library.  The TH3 tests are designed to run
 on embedded and specialized platforms that would not easily support
 TCL or other workstation services.  TH3 tests use only the published 
 SQLite interfaces. TH3 consists of about
-71.5 MB or 978.3 KSLOC
-of C code implementing 46622 distinct test cases.
+75.7 MB or 1038.0 KSLOC
+of C code implementing 49116 distinct test cases.
 TH3 tests are heavily parameterized, though, so a full-coverage test runs
-about 1.9 million different test
+about 2.3 million different test
 instances.  The cases that provide 100% branch test coverage constitute
 a subset of the total TH3 test suite.  A soak test
 prior to release does hundreds of millions of tests.
@@ -265,11 +289,10 @@ mutate either the SQL inputs or the database file.  Dbsqlfuzz mutates
 both the SQL and the database file at the same time, and is thus able
 to reach new error states.  Dbsqlfuzz is built using the
 <a href="http://llvm.org/docs/LibFuzzer.html">libFuzzer</a> framework of LLVM
-with a custom mutator.  Starting from 
-236 seed files, the dbsqlfuzz fuzzer
-has examined many tens of millions of mutations, resulting in 
-63493 distinct test cases that form
-the basis of each new fuzzing session.  Dbsqlfuzz helps ensure
+with a custom mutator.  There are
+303 seed files. The dbsqlfuzz fuzzer
+runs about one billion test mutations per day.
+Dbsqlfuzz helps ensure
 that SQLite is robust against attack via malicious SQL or database
 inputs.
 </p></li></ol>
@@ -295,7 +318,7 @@ before each release of SQLite.</p>
 <p>Prior to each check-in to the SQLite source tree, developers
 typically run a subset (called "veryquick") of the Tcl tests
 consisting of about 
-248.5 thousand test cases.
+300.2 thousand test cases.
 The veryquick tests include most tests other than the anomaly, fuzz, and 
 soak tests.  The idea behind the veryquick tests are that they are
 sufficient to catch most errors, but also run in only a few minutes
@@ -505,25 +528,37 @@ Examples:
 
 </p><h3 id="the_dbsqlfuzz_fuzzer"><span>4.1.3. </span>The dbsqlfuzz fuzzer</h3>
 
-<p>Beginning in late 2018, SQLite has been fuzzed using a new proprietary
+<p>Beginning in late 2018, SQLite has been fuzzed using a proprietary
 fuzzer called "dbsqlfuzz".  Dbsqlfuzz is built using the 
 <a href="http://llvm.org/docs/LibFuzzer.html">libFuzzer</a> framework of LLVM.
 
 </p><p>The dbsqlfuzz fuzzer mutates both the SQL input and the database file
 at the same time.  Dbsqlfuzz uses a custom
-<a href="https://github.com/google/fuzzer-test-suite/blob/master/tutorial/structure-aware-fuzzing.md">Structure-Aware Mutator</a>
+<a href="https://github.com/google/fuzzing/blob/master/docs/structure-aware-fuzzing.md">Structure-Aware Mutator</a>
 on a specialized input file that defines both an input database and SQL
 text to be run against that database. Because it mutates both the input
 database and the input SQL at the same time, dbsqlfuzz has been able to
 find some obscure faults in SQLite that were missed by prior fuzzers that
 mutated only SQL inputs or only the database file.
-The SQLite developers usually leave an instance or two of dbsqlfuzz
-running on the latest trunk code of SQLite whenever they are away from
-the office for an extended period, such as overnight.</p>
+The SQLite developers keep dbsqlfuzz running against trunk in about
+16 cores at all times.  Each instance of dbsqlfuzz program is able to 
+evalutes about 400 test cases per second, meaning that about 500 million
+cases are checked every day.</p>
 
-<p>The dbsqlfuzz fuzzer has been so successful at hardening the
-SQLite code base against malicious attack that it is now considered
-one of the four primary test harnesses for SQLite.
+<p>The dbsqlfuzz fuzzer has been very successful at hardening the
+SQLite code base against malicious attack.  Since dbsqlfuzz has been
+added to the SQLite internal test suite, bug reports from external
+fuzzers such as OSSFuzz have all but stopped.
+
+</p><p>Note that dbsqlfuzz is <i>not</i> the Protobuf-based structure-aware
+fuzzer for SQLite that is used by Chromium and described in the
+<a href="https://github.com/google/fuzzing/blob/master/docs/structure-aware-fuzzing.md#user-content-example-sqlite">Structure-Aware Mutator article</a>.
+There is no connection between these two fuzzers, other than the fact that they
+are both based on <a href="http://llvm.org/docs/LibFuzzer.html">libFuzzer</a>
+The Protobuf fuzzer for SQLite is written and maintained by the Chromium
+team at Google, whereas dbsqlfuzz is written and maintained by the original
+SQLite developers.  Having multiple independently-developed fuzzers for SQLite
+is good, as it means that obscure issues are more likely to be uncovered.
 
 <a name="3pfuzz"></a>
 
@@ -547,7 +582,7 @@ or other easily detected anomalies.  Dr. Rigger's fuzzers, on the other hand,
 are able to find cases where SQLite computes an incorrect answer.
 Rigger has found
 <a href="https://www.sqlite.org/src/timeline?y=t&u=mrigger&n=all">many such cases</a>.
-Most of these finds are fairly obscure corner cases involving type
+Most of these finds are obscure corner cases involving type
 conversions and affinity transformations, and a good number of the finds
 are against unreleased features.  Nevertheless, his finds are still important
 as they are real bugs,
@@ -564,7 +599,7 @@ and profile-guided fuzzing.
 collected in a set of database files in the main SQLite source tree
 and then rerun by the "fuzzcheck" utility program whenever one runs
 "make test".  Fuzzcheck only runs a few thousand "interesting" cases
-out of the hundreds of millions of cases that the various fuzzers have
+out of the billions of cases that the various fuzzers have
 examined over the years.  "Interesting" cases are cases that exhibit
 previously unseen behavior.  Actual bugs found by fuzzers are always
 included among the interesting test cases, but most of the cases run
@@ -583,14 +618,14 @@ well during fuzz testing will tend to have (much) less than
 This is because MC/DC testing discourages <a href="testing.html#defcode">defensive code</a> with
 unreachable branches, but without defensive code, a fuzzer is
 more likely to find a path that causes problems.  MC/DC testing
-seems to work well for building code that is robust during typical
+seems to work well for building code that is robust during
 normal use, whereas fuzz testing is good for building code that is
 robust against malicious attack.
 
 </p><p>Of course, users would prefer code that is both robust in normal
 use and resistant to malicious attack.  The SQLite developers are
 dedicated to providing that.  The purpose of this section is merely
-to point out that doing both at the same time is hard.
+to point out that doing both at the same time is difficult.
 
 </p><p>For much of its history SQLite has been focused on 100% MC/DC testing.
 Resistance to fuzzing attacks only became a concern with the introduction
@@ -830,7 +865,7 @@ testcase( mask & SQLITE_OPEN_TEMP_DB );
 if( (mask & (SQLITE_OPEN_MAIN_DB|SQLITE_OPEN_TEMP_DB))!=0 ){ ... }
 </pre></div>
 
-<p>The SQLite source code contains 1084
+<p>The SQLite source code contains 1143
 uses of the <tt>testcase()</tt> macro.</p>
 
 <a name="mcdc"></a>
@@ -974,7 +1009,7 @@ can be confident that changes made in one part of the code
 do not have unintended consequences in other parts of the code.
 The many new features and performance improvements that have been
 added to SQLite in recent years would not have been possible without
-the availability full-coverage testing.</p>
+the availability of full-coverage testing.</p>
 
 <p>Maintaining 100% MC/DC is laborious and time-consuming.
 The level of effort needed to maintain full-coverage testing
@@ -998,7 +1033,7 @@ quality of SQLite.</p>
 
 <h2 id="assert"><span>8.1. </span>Assert</h2>
 
-<p>The SQLite core contains 5855 <tt>assert()</tt>
+<p>The SQLite core contains 6548 <tt>assert()</tt>
 statements that verify function preconditions and postconditions and
 loop invariants.  Assert() is a macro which is a standard part of
 ANSI-C.  The argument is a boolean value that is assumed to always be
@@ -1238,4 +1273,5 @@ maintaining and improving the quality of SQLite.  This document has
 summarized the testing procedures that every release of SQLite undergoes
 with the hope of inspiring confidence that SQLite is
 suitable for use in mission-critical applications.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/testing.in?m=a6f909eb7e889cd20">2022-05-31 20:17:58</a> UTC </small></i></p>
 

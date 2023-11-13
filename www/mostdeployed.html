@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -117,7 +141,8 @@ of SQLite exist in the wild.  SQLite is found in:
 </ul>
 
 <p>Since SQLite is used extensively in every smartphone, and there are
-roughly 3.5 billion (3.5e9) smartphones in active use, each holding hundreds of
+more than 4.0 billion (4.0e9) smartphones in active use, each holding
+hundreds of
 SQLite database files, it is seems likely that there are over one trillion
 (1e12) SQLite databases in active use.
 
@@ -161,4 +186,5 @@ devices that contain SQLite, the total number of instances per device
 <em>might</em> be higher for SQLite and so SQLite <em>might</em>
 be the single most widely deployed and used software component.
 </p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/mostdeployed.in?m=e39f595cab7018aae">2021-06-03 20:37:13</a> UTC </small></i></p>
 

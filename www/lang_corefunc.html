@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -107,7 +131,8 @@ Built-In Scalar SQL Functions
 <p>The core functions shown below are available by default. 
 <a href="lang_datefunc.html">Date &amp; Time functions</a>,
 <a href="lang_aggfunc.html">aggregate functions</a>,
-<a href="windowfunctions.html#biwinfunc">window functions</a>, and
+<a href="windowfunctions.html#biwinfunc">window functions</a>,
+<a href="lang_mathfunc.html">math functions</a>, and
 <a href="json1.html">JSON functions</a> are documented separately.  An
 application may define additional
 functions written in C and added to the database engine using
@@ -120,6 +145,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 <li><a href='lang_corefunc.html#changes'>changes()</a></li>
 <li><a href='lang_corefunc.html#char'>char(X1,X2,...,XN)</a></li>
 <li><a href='lang_corefunc.html#coalesce'>coalesce(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#format'>format(FORMAT,...)</a></li>
 <li><a href='lang_corefunc.html#glob'>glob(X,Y)</a></li>
 <li><a href='lang_corefunc.html#hex'>hex(X)</a></li>
 <li><a href='lang_corefunc.html#ifnull'>ifnull(X,Y)</a></li>
@@ -136,8 +162,8 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 <li><a href='lang_corefunc.html#lower'>lower(X)</a></li>
 <li><a href='lang_corefunc.html#ltrim'>ltrim(X)</a></li>
 <li><a href='lang_corefunc.html#ltrim'>ltrim(X,Y)</a></li>
-<li><a href='lang_corefunc.html#maxoreunc'>max(X,Y,...)</a></li>
-<li><a href='lang_corefunc.html#minoreunc'>min(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#max_scalar'>max(X,Y,...)</a></li>
+<li><a href='lang_corefunc.html#min_scalar'>min(X,Y,...)</a></li>
 <li><a href='lang_corefunc.html#nullif'>nullif(X,Y)</a></li>
 <li><a href='lang_corefunc.html#printf'>printf(FORMAT,...)</a></li>
 <li><a href='lang_corefunc.html#quote'>quote(X)</a></li>
@@ -148,6 +174,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 <li><a href='lang_corefunc.html#round'>round(X,Y)</a></li>
 <li><a href='lang_corefunc.html#rtrim'>rtrim(X)</a></li>
 <li><a href='lang_corefunc.html#rtrim'>rtrim(X,Y)</a></li>
+<li><a href='lang_corefunc.html#sign'>sign(X)</a></li>
 <li><a href='lang_corefunc.html#soundex'>soundex(X)</a></li>
 <li><a href='lang_corefunc.html#sqlite_compileoption_get'>sqlite_compileoption_get(N)</a></li>
 <li><a href='lang_corefunc.html#sqlite_compileoption_used'>sqlite_compileoption_used(X)</a></li>
@@ -187,7 +214,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   The changes() function returns the number of database rows that were changed
   or inserted or deleted by the most recently completed INSERT, DELETE,
   or UPDATE statement, exclusive of statements in lower-level triggers.
-  The changes() SQL function is a wrapper around the <a href="c3ref/changes.html">sqlite3_changes()</a>
+  The changes() SQL function is a wrapper around the <a href="c3ref/changes.html">sqlite3_changes64()</a>
   C/C++ function and hence follows the same rules for counting changes.
 </dd>
 <a name="char"></a>
@@ -200,6 +227,19 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   The coalesce() function returns a copy of its first non-NULL argument, or
   NULL if all arguments are NULL.  Coalesce() must have at least 
   2 arguments.
+</dd>
+<a name="format"></a>
+<dt><p><b>format(<i>FORMAT</i>,...)</b></dt><dd><p>
+  The format(FORMAT,...) SQL function works like the <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> C-language
+  function and the printf() function from the standard C library.
+  The first argument is a format string that specifies how to construct the output
+  string using values taken from subsequent arguments.  If the FORMAT argument is
+  missing or NULL then the result is NULL.  The %n format is silently ignored and
+  does not consume an argument.  The %p format is an alias for %X.  The %z format
+  is interchangeable with %s.  If there are too few arguments in the argument list,
+  missing arguments are assumed to have a NULL value, which is translated into
+  0 or 0.0 for numeric formats or an empty string for %s.  See the
+  <a href="printf.html">built-in printf()</a> documentation for additional information.
 </dd>
 <a name="glob"></a>
 <dt><p><b>glob(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
@@ -271,6 +311,20 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   If X is NULL then length(X) is NULL.
   If X is numeric then length(X) returns the length of a string
   representation of X.
+  <p>
+  Note that for strings, the length(X) function returns the <i>character</i>
+  length of the string, not the byte length.  The character length is the number
+  of characters in the string.  The character length is always different from
+  the byte length for UTF-16 strings, and can be different from the byte length
+  for UTF-8 strings if the string contains multi-byte characters.
+  <p>
+  For BLOB values, length(X) always returns the byte-length of the BLOB.
+  <p>
+  For string values, length(X) must read the entire string into memory in order
+  to compute the character length.  But for BLOB values, that is not necessary as
+  SQLite knows how many bytes are in the BLOB.  Hence, for multi-megabyte values,
+  the length(X) function is usually much faster for BLOBs than for strings, since
+  it does not need to load the value into memory.
 </dd>
 <a name="like"></a>
 <dt><p><b>like(<i>X</i>,<i>Y</i>)<br />like(<i>X</i>,<i>Y</i>,<i>Z</i>)</b></dt><dd><p>
@@ -336,7 +390,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   changes or deletes functions or collating sequences, use the
   <a href="c3ref/load_extension.html">sqlite3_load_extension()</a> C-language API.</p>
 
-  <p>For security reasons, extension loaded is turned off by default and must
+  <p>For security reasons, extension loading is disabled by default and must
   be enabled by a prior call to <a href="c3ref/enable_load_extension.html">sqlite3_enable_load_extension()</a>.</p>
 </dd>
 <a name="lower"></a>
@@ -353,7 +407,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   If the Y argument is omitted, ltrim(X) removes spaces from the left side
   of X.
 </dd>
-<a name="maxoreunc"></a>
+<a name="max_scalar"></a>
 <dt><p><b>max(<i>X</i>,<i>Y</i>,...)</b></dt><dd><p>
   The multi-argument max() function returns the argument with the 
   maximum value, or return NULL if any argument is NULL. 
@@ -363,9 +417,9 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   define a collating function, then the BINARY collating function is used.
   Note that <b>max()</b> is a simple function when
   it has 2 or more arguments but operates as an
-  <a href="lang_aggfunc.html#maxggunc">aggregate function</a> if given only a single argument.
+  <a href="lang_aggfunc.html#max_agg">aggregate function</a> if given only a single argument.
 </dd>
-<a name="minoreunc"></a>
+<a name="min_scalar"></a>
 <dt><p><b>min(<i>X</i>,<i>Y</i>,...)</b></dt><dd><p>
   The multi-argument min() function returns the argument with the
   minimum value.
@@ -375,7 +429,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   define a collating function, then the BINARY collating function is used.
   Note that <b>min()</b> is a simple function when
   it has 2 or more arguments but operates as an 
-  <a href="lang_aggfunc.html#minggunc">aggregate function</a> if given
+  <a href="lang_aggfunc.html#min_agg">aggregate function</a> if given
   only a single argument.
 </dd>
 <a name="nullif"></a>
@@ -385,20 +439,14 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   searches its arguments from left to right for an argument that defines a
   collating function and uses that collating function for all string
   comparisons.  If neither argument to nullif() defines a collating function
-  then the BINARY is used.
+  then the BINARY collating function is used.
 </dd>
 <a name="printf"></a>
 <dt><p><b>printf(<i>FORMAT</i>,...)</b></dt><dd><p>
-  The printf(FORMAT,...) SQL function works like the <a href="c3ref/mprintf.html">sqlite3_mprintf()</a> C-language
-  function and the printf() function from the standard C library.
-  The first argument is a format string that specifies how to construct the output
-  string using values taken from subsequent arguments.  If the FORMAT argument is
-  missing or NULL then the result is NULL.  The %n format is silently ignored and
-  does not consume an argument.  The %p format is an alias for %X.  The %z format
-  is interchangeable with %s.  If there are too few arguments in the argument list,
-  missing arguments are assumed to have a NULL value, which is translated into
-  0 or 0.0 for numeric formats or an empty string for %s.  See the
-  <a href="printf.html">built-in printf()</a> documentation for additional information.
+  The printf() SQL function is an alias for the <a href="lang_corefunc.html#format">format() SQL function</a>.
+  The format() SQL function was original named printf(). But the name was later
+  changed to format() for compatibility with other database engines.  The original
+  printf() name is retained as an alias so as not to break any legacy code.
 </dd>
 <a name="quote"></a>
 <dt><p><b>quote(<i>X</i>)</b></dt><dd><p>
@@ -441,7 +489,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 <dt><p><b>round(<i>X</i>)<br />round(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
   The round(X,Y) function returns a floating-point
   value X rounded to Y digits to the right of the decimal point.
-  If the Y argument is omitted, it is assumed to be 0.
+  If the Y argument is omitted or negative, it is taken to be 0.
 </dd>
 <a name="rtrim"></a>
 <dt><p><b>rtrim(<i>X</i>)<br />rtrim(<i>X</i>,<i>Y</i>)</b></dt><dd><p>
@@ -449,6 +497,13 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   characters that appear in Y from the right side of X.
   If the Y argument is omitted, rtrim(X) removes spaces from the right
   side of X.
+</dd>
+<a name="sign"></a>
+<dt><p><b>sign(<i>X</i>)</b></dt><dd><p>
+  The sign(X) function returns -1, 0, or +1 if the argument X is a numeric
+  value that is negative, zero, or positive, respectively.  If the argument
+  to sign(X) is NULL or is a string or blob that cannot be losslessly converted
+  into a number, then sign(X) returns NULL.
 </dd>
 <a name="soundex"></a>
 <dt><p><b>soundex(<i>X</i>)</b></dt><dd><p>
@@ -497,7 +552,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   specific version of the source code that was used to build the SQLite
   library.  The string returned by sqlite_source_id() is
   the date and time that the source code was checked in followed by
-  the SHA1 hash for that check-in.  This function is
+  the SHA3-256 hash for that check-in.  This function is
   an SQL wrapper around the <a href="c3ref/libversion.html">sqlite3_sourceid()</a> C interface.
 </dd>
 <a name="sqlite_version"></a>
@@ -526,7 +581,7 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
   The total_changes() function returns the number of row changes
   caused by INSERT, UPDATE or DELETE
   statements since the current database connection was opened.
-  This function is a wrapper around the <a href="c3ref/total_changes.html">sqlite3_total_changes()</a>
+  This function is a wrapper around the <a href="c3ref/total_changes.html">sqlite3_total_changes64()</a>
   C/C++ interface.
 </dd>
 <a name="trim"></a>
@@ -573,4 +628,5 @@ the <a href="c3ref/create_function.html">sqlite3_create_function()</a> API.</p>
 </dd>
 
 </dl>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/lang_corefunc.in?m=bc476ffe9a17c53dd">2022-07-16 18:39:09</a> UTC </small></i></p>
 

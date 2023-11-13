@@ -4,7 +4,7 @@
 30-cross.patch
 10-665363-disable-malloc-usable-size.patch
 31-increase_SQLITE_MAX_DEFAULT_PAGE_SIZE_to_32k.patch
+32-dynamic_link.patch
 02-use-packaged-lempar.c.patch
-40-Incorrect_optimization_of_IN_operator.patch
-41-Issue_with_the_LIKE_operator.patch
+40-amalgamation_configure.patch
 51-fix-robust-open.patch

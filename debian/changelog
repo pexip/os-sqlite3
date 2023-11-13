@@ -1,3 +1,188 @@
+sqlite3 (3.40.1-2) unstable; urgency=medium
+
+  [ Cyril Brulebois <cyril@debamax.com> ]
+  * Add Breaks against crowdsec as found in bullseye, as it relies on a
+    particular table_info format, which changes between 3.36.0 and 3.37.0
+    (closes: #1033029).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 16 Mar 2023 19:54:28 +0100
+
+sqlite3 (3.40.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update symbols file.
+  * Update Standards-Version to 4.6.2 .
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 31 Dec 2022 09:41:40 +0100
+
+sqlite3 (3.40.0-2) unstable; urgency=high
+
+  * Backport upstream security fix for CVE-2022-46908: when relying on --safe
+    for execution of an untrusted CLI script, does not properly implement the
+    azProhibitedFunctions protection mechanism (closes: #1026293).
+
+  [ Helge Deller <deller@gmx.de> ]
+  * Enable large file support (closes: #1026171).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 18 Dec 2022 10:03:56 +0100
+
+sqlite3 (3.40.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove sqlite3StdTypeMap@Base symbol as no longer part of the library.
+  * Update symbols file.
+  * Update patches to apply clean.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 16 Nov 2022 18:21:56 +0100
+
+sqlite3 (3.39.4-1) unstable; urgency=high
+
+  * New upstream release:
+    - fix a possible integer overflow in the size computation for a memory
+      allocation in FTS3.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 02 Oct 2022 18:17:34 +0200
+
+sqlite3 (3.39.3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 05 Sep 2022 17:38:52 +0200
+
+sqlite3 (3.39.2-1) unstable; urgency=high
+
+  * New upstream release:
+    - apply fixes for CVE-2022-35737.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 22 Jul 2022 12:10:48 +0000
+
+sqlite3 (3.39.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 14 Jul 2022 17:51:49 +0200
+
+sqlite3 (3.39.0-3) unstable; urgency=medium
+
+  [ Helmut Grohne <helmut@subdivi.de> ]
+  * libsqlite3-dev: Generalize libc6-dev dependency to libc-dev
+    (closes: #1014893).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 14 Jul 2022 06:23:16 +0200
+
+sqlite3 (3.39.0-2) unstable; urgency=medium
+
+  * Compile with -DSQLITE_ALLOW_ROWID_IN_VIEW to re-enable rowid for views
+    (closes: #1014495).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 07 Jul 2022 00:04:47 +0200
+
+sqlite3 (3.39.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update symbols file.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 29 Jun 2022 23:27:17 +0200
+
+sqlite3 (3.38.5-1) unstable; urgency=high
+
+  * New upstream release:
+    - fix a byte-code problem in the Bloom filter pull-down optimization that
+      enters an infinite loop.
+
+  [ Helmut Grohne <helmut@subdivi.de> ]
+  * Link sqlite3 dynamically with its library (closes: #1010516).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 07 May 2022 13:18:57 +0200
+
+sqlite3 (3.38.3-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update symbols file.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 30 Apr 2022 07:13:56 +0200
+
+sqlite3 (3.38.2-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 28 Mar 2022 17:35:33 +0200
+
+sqlite3 (3.38.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 13 Mar 2022 19:02:54 +0100
+
+sqlite3 (3.38.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Remove sqlite3ParserReset@Base symbol as no longer part of the library.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 27 Feb 2022 19:52:50 +0100
+
+sqlite3 (3.37.2-2) unstable; urgency=medium
+
+  * Fix non-Linux installation.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 16 Jan 2022 11:59:39 +0100
+
+sqlite3 (3.37.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Don't try to build sqlite3-tools on kfreebsd-any.
+  * Update symbols file.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 06 Jan 2022 19:16:04 +0100
+
+sqlite3 (3.37.1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 02 Jan 2022 13:15:04 +0100
+
+sqlite3 (3.37.0-2) experimental; urgency=medium
+
+  * Fix Breaks + Replaces for sqlite3-tools (closes: #1002551).
+  * Declare conflicts with emboss on sqlite3-tools (closes: #1002549).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 24 Dec 2021 12:20:47 +0100
+
+sqlite3 (3.37.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Update symbols file.
+  * Distinct license of the patches (closes: #858756).
+  * Package sqlite3 tools separately.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 12 Dec 2021 23:34:48 +0100
+
+sqlite3 (3.36.0-2) unstable; urgency=high
+
+  * Upload to unstable.
+  * Backport upstream security fix for CVE-2021-36690: segmentation fault
+    vulnerability with the Expert extension when a column has no collating
+    sequence.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 25 Aug 2021 13:04:34 +0200
+
+sqlite3 (3.36.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Remove sqlite3_fts3_may_be_corrupt@Base and
+    sqlite3_fts5_may_be_corrupt@Base symbols as no longer part of the library.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 21 Jun 2021 19:45:18 +0200
+
+sqlite3 (3.35.5-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Remove backported patches.
+  * Remove sqlite3_unsupported_selecttrace@Base symbol as no longer part of
+    the library.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 23 May 2021 08:06:14 +0200
+
 sqlite3 (3.34.1-3pexip4) pexip; urgency=medium
 
   * Rebuild to pick up newer libicu

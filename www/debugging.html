@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h1 align='center'>Debugging Hints</h1>
@@ -128,43 +152,44 @@ and also turns on <a href="pragma.html#pragma_vdbe_trace">VDBE tracing</a>.
 <ul>
 <li><a href="compile.html#debug">-DSQLITE_DEBUG</a>
 <li><a href="compile.html#enable_explain_comments">-DSQLITE_ENABLE_EXPLAIN_COMMENTS</a>
-<li>-DSQLITE_ENABLE_SELECTTRACE
+<li>-DSQLITE_ENABLE_TREETRACE
 <li>-DSQLITE_ENABLE_WHERETRACE
 </ul>
 </li>
 
-<p>The SQLITE_ENABLE_SELECTTRACE and SQLITE_ENABLE_WHERETRACE options
+<p>The SQLITE_ENABLE_TREETRACE and SQLITE_ENABLE_WHERETRACE options
 are not documented in <a href="compile.html">compile-time options</a> document because they
 are not officially supported.  What they do is activate the
-".selecttrace" and ".wheretrace" dot-commands in the command-line
+".treetrace" and ".wheretrace" dot-commands in the command-line
 shell, which provide low-level tracing output for the logic that
-generates code for SELECT statements and WHERE clauses, respectively.
+generates code for SELECT and DML statements and WHERE clauses, respectively.
 
 <li>
-<p><b>Call sqlite3TreeViewExpr() and similar from the debugger.</b>
+<p><b>Call sqlite3ShowExpr() and similar from the debugger.</b>
 
 <p>When compiled with <a href="compile.html#debug">SQLITE_DEBUG</a>, SQLite includes routines that will
-print out various internal parse tree structures as ASCII-art graphs.
+print out various internal abstract syntax tree structures as ASCII-art graphs.
 This can be very useful in a debugging in order to understand the variables
-that SQLite is working with.
+that SQLite is working with.  The following routines are available:
 
-<p>For example, in gdb, to see the complete hierarchy of an Expr node
-(that is to say, the Expr node and all of its children), given a pointer
-"pExpr" to that node, type:
-
-<codeblock>
-print sqlite3TreeViewExpr(0, pExpr, 0)
-</codeblock>
-
-<p>The two "0" parameters do server a purpose in some contexts, but for
-using these routine to print a parse tree as ASCII-art on the terminal,
-they should both be "0".
-
-<p>Other similar tree-display routines include:
 <ul>
-<li>sqlite3TreeViewSelect(0, pSelect, 0)
-<li>sqlite3TreeViewExprList(0, pList, 0, 0)
+<li>  void sqlite3ShowExpr(const Expr*);
+<li>  void sqlite3ShowExprList(const ExprList*);
+<li>  void sqlite3ShowIdList(const IdList*);
+<li>  void sqlite3ShowSrcList(const SrcList*);
+<li>  void sqlite3ShowSelect(const Select*);
+<li>  void sqlite3ShowWith(const With*);
+<li>  void sqlite3ShowUpsert(const Upsert*);
+<li>  void sqlite3ShowTrigger(const Trigger*);
+<li>  void sqlite3ShowTriggerList(const Trigger*);
+<li>  void sqlite3ShowTriggerStep(const TriggerStep*);
+<li>  void sqlite3ShowTriggerStepList(const TriggerStep*);
+<li>  void sqlite3ShowWindow(const Window*);
+<li>  void sqlite3ShowWinFunc(const Window*);
 </ul>
+
+<p>These routines are not APIs and are subject to change.  They are
+for interactive debugging use only.</p>
 </li>
 
 <li>
@@ -183,15 +208,15 @@ in the stack to see where and how it was generated.
 </li>
 
 <li>
-<p><b>Using the ".selecttrace" and ".wheretrace" shell commands</b>
+<p><b>Using the ".treetrace" and ".wheretrace" shell commands</b>
 
 <p>When the command-line shell and the core SQLite library are
 both compiled with <a href="compile.html#debug">SQLITE_DEBUG</a> and
-SQLITE_ENABLE_SELECTTRACE and SQLITE_ENABLE_WHERETRACE, then the
+SQLITE_ENABLE_TREETRACE and SQLITE_ENABLE_WHERETRACE, then the
 shell has two commands used to turn on debugging facilities for the
 most intricate parts of the code generator - the logic dealing with
 SELECT statements and WHERE clauses, respectively.
-The ".selecttrace" and ".wheretrace" commands each take a numeric
+The ".treetrace" and ".wheretrace" commands each take a numeric
 argument which can be expressed in hexadecimal.  Each bit turns on
 various parts of debugging.  Values of "0xfff" and "0xff" are commonly
 used.  Use an argument of "0" to turn all tracing output back off.
@@ -224,4 +249,5 @@ disable lookaside if it is started with the "--lookaside 0 0"
 command line option.
 </li>
 </ol>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/debugging.in?m=ffab87c7343ef0cf5">2022-04-06 18:55:14</a> UTC </small></i></p>
 

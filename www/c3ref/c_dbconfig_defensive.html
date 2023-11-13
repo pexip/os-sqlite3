@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <!-- keywords: SQLITE_DBCONFIG_DEFENSIVE SQLITE_DBCONFIG_DQS_DDL SQLITE_DBCONFIG_DQS_DML SQLITE_DBCONFIG_ENABLE_FKEY SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION SQLITE_DBCONFIG_ENABLE_QPSG SQLITE_DBCONFIG_ENABLE_TRIGGER SQLITE_DBCONFIG_ENABLE_VIEW SQLITE_DBCONFIG_LEGACY_ALTER_TABLE SQLITE_DBCONFIG_LEGACY_FILE_FORMAT SQLITE_DBCONFIG_LOOKASIDE SQLITE_DBCONFIG_MAINDBNAME SQLITE_DBCONFIG_MAX SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE SQLITE_DBCONFIG_RESET_DATABASE SQLITE_DBCONFIG_TRIGGER_EQP SQLITE_DBCONFIG_TRUSTED_SCHEMA SQLITE_DBCONFIG_WRITABLE_SCHEMA -->
 <div class=nosearch>
 <a href="intro.html"><h2>SQLite C Interface</h2></a>
@@ -175,7 +199,13 @@ positive to enable triggers or negative to leave the setting unchanged.
 The second parameter is a pointer to an integer into which
 is written 0 or 1 to indicate whether triggers are disabled or enabled
 following this call.  The second parameter may be a NULL pointer, in
-which case the trigger setting is not reported back. </dd></p>
+which case the trigger setting is not reported back.</p>
+
+<p><p>Originally this option disabled all triggers.  However, since
+SQLite version 3.35.0, TEMP triggers are still allowed even if
+this option is off.  So, in other words, this option now only disables
+triggers in the main database schema or in the schemas of ATTACH-ed
+databases. </dd></p>
 
 <p><a name="sqlitedbconfigenableview"></a>
 
@@ -187,7 +217,13 @@ positive to enable views or negative to leave the setting unchanged.
 The second parameter is a pointer to an integer into which
 is written 0 or 1 to indicate whether views are disabled or enabled
 following this call.  The second parameter may be a NULL pointer, in
-which case the view setting is not reported back. </dd></p>
+which case the view setting is not reported back.</p>
+
+<p><p>Originally this option disabled all views.  However, since
+SQLite version 3.35.0, TEMP views are still allowed even if
+this option is off.  So, in other words, this option now only disables
+views in the main database schema or in the schemas of ATTACH-ed
+databases. </dd></p>
 
 <p><a name="sqlitedbconfigenablefts3tokenizer"></a>
 
@@ -309,6 +345,7 @@ features include but are not limited to the following:
 <ul>
 <li> The <a href="../pragma.html#pragma_writable_schema">PRAGMA writable_schema=ON</a> statement.
 <li> The <a href="../pragma.html#pragma_journal_mode">PRAGMA journal_mode=OFF</a> statement.
+<li> The <a href="../pragma.html#pragma_schema_version">PRAGMA schema_version=N</a> statement.
 <li> Writes to the <a href="../dbpage.html">sqlite_dbpage</a> virtual table.
 <li> Direct writes to <a href="../vtab.html#xshadowname">shadow tables</a>.
 </ul>
@@ -405,3 +442,4 @@ either generated columns or decending indexes.
   <a href="objlist.html">Objects</a>,
   <a href="constlist.html">Constants</a>, and
   <a href="funclist.html">Functions</a>.</p>
+

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -114,27 +138,35 @@ Because there is only this
 one command, the interface is not placed in a separate
 namespace.</p>
 
-<p>The <b>sqlite3</b> command is used as follows:</p>
+<p>The <b>sqlite3</b> command is mostly used as follows
+to open or create a database:</p>
 
 <blockquote>
-<b>sqlite3</b>&nbsp;&nbsp;<i>dbcmd&nbsp;&nbsp;database-name&nbsp;&nbsp;?options?</i>
+<b>sqlite3</b>&nbsp;&nbsp;<i>dbcmd&nbsp;&nbsp;?database-name?&nbsp;&nbsp;?options?</i>
 </blockquote>
 
-<p>
-The <b>sqlite3</b> command opens the database named in the second
-argument.  If the database does not already exist, the default behavior
+<p>To get information only, the <b>sqlite3</b> command may be given exactly
+one argument, either "-version", "-sourceid" or "-has-codec", which will
+return the specified datum with no other effect.
+</p>
+
+<p>With other arguments, the <b>sqlite3</b> command opens the database
+named in the second non-option argument, or named "" if there is no such.
+If the open succeeds, a new Tcl command named by the first argument is created
+and "" is returned.
+(This approach is similar to the way widgets are created in Tk.)
+If the open fails, an error is raised without creating a Tcl command
+and an error message string is returned.
+</p>
+<p>If the database does not already exist, the default behavior
 is for it to be created automatically (though this can be changed by
-using the "<b>-create false</b>" option).
-The <b>sqlite3</b> command always creates a new Tcl
-command to control the database.  The name of the new Tcl command
-is given by the first argument.  This approach is similar to the
-way widgets are created in Tk.
+using the "<b>-create <i>false</i></b>" option).
 </p>
 
 <p>
 The name of the database is usually just the name of a disk file in which
 the database is stored.  If the name of the database is 
-the special name "<a href="inmemorydb.html">:memory:</a>" then a new database is created
+the special name "<a href="inmemorydb.html">:memory:</a>", then a new database is created
 in memory.  If the name of the database is an empty string, then
 the database is created in an empty file that is automatically deleted
 when the database connection closes.  <a href="uri.html">URI filenames</a> can be used if
@@ -183,6 +215,21 @@ false, then the argument is a literal filename.  The default value is
 <dt><b>-vfs</b> <i>VFSNAME</i></dt>
 <dd><p>
 Use an alternative <a href="vfs.html">VFS</a> named by the argument.
+</p></dd>
+
+<dt><b>-fullmutex</b> <i>BOOLEAN</i></dt>
+<dd><p>
+If true, multiple threads can safely attempt to use the database.
+If false, such attempts are unsafe. The default value depends upon
+how the extension is built.
+</p></dd>
+
+<dt><b>-nofollow</b> <i>BOOLEAN</i></dt>
+<dd><p>
+If true, and the database name refers to a symbolic link,
+it will not be followed to open the true database file.
+If false, symbolic links will be followed.
+The default is "false".
 </p></dd>
 
 </dl>
@@ -707,7 +754,18 @@ TCL command before it is invoked.</p>
 For security reasons, it is recommended that applications first set
 <a href="pragma.html#pragma_trusted_schema">PRAGMA trusted_schema=OFF</a> or run the 
 "<a href="#config">db config trusted_schema 0</a>"
-method before using this method.
+method before using this method.</p>
+
+<p>
+The syntax looks like this:
+</p>
+
+<blockquote>
+<i>dbcmd</i>&nbsp;&nbsp;<b>function</b>
+&nbsp;&nbsp;<i>sql-name</i>
+&nbsp;&nbsp;<i>?options?</i>
+&nbsp;&nbsp;<i>script</i>
+</blockquote>
 
 <p>
 The following example creates a new SQL function named "hex" that converts
@@ -1198,4 +1256,5 @@ profile callback is canceled but no new profile script is registered.
    this method by applications is discouraged.
 </p>
 
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/tclsqlite.in?m=dea4497aa28ca1740">2022-12-14 16:19:41</a> UTC </small></i></p>
 

@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 
@@ -102,9 +126,14 @@ return false;
 </table>
 <hr>
 
+<!-- Download product data for scripts to read
+PRODUCT,VERSION,RELATIVE-URL,SIZE-IN-BYTES,SHA3-HASH
+ -->
+
+
 <a name="encoding"></a>
 
-<h3>Build Product Names</h3>
+<h3>Build Product Names and Info</h3>
 
 <p>
 Build products are named using one of the following templates:
@@ -128,6 +157,18 @@ filename encoding is 3XXYY00.  For branch version 3.X.Y.Z, the encoding is
 3XXYYZZ.
 
 <p>The <i>date</i> in template (4) is of the form: YYYYMMDDHHMM
+
+<p>For convenient, script-driven extraction of the downloadable
+file URLs and associated information, an HTML comment is embedded
+in this page's source. Its first line (sans leading tag) reads:
+<blockquote><b>Download product data for scripts to read</b></blockquote>
+Its subsequent lines comprise a CSV table with this column header:
+<blockquote><b>PRODUCT,VERSION,RELATIVE-URL,SIZE-IN-BYTES,SHA3-HASH</b></blockquote>
+The column header and following data lines have no leading space.
+The PRODUCT column is a constant value ("PRODUCT") for convenient
+regular expression matching. Other columns are self-explanatory.
+This format will remain stable except for possible new columns
+appended to the right of older columns.
 
 <a name="cvs"></a>
 <a name="fossil"></a>
@@ -158,6 +199,12 @@ not contained in raw source code tree.</p>
 <a href="https://www3.sqlite.org/cgi/src">https://www3.sqlite.org/cgi/src</a> (San Francisco)<br>
 </blockquote>
 
+<p>There is a GitHub mirror at
+
+<blockquote>
+<a href="https://github.com/sqlite/sqlite">https://github.com/sqlite/sqlite/</a>
+</blockquote>
+
 <p>The documentation is maintained in separate
 <a href="http://www.fossil-scm.org/">Fossil</a> repositories located
 at:</p>
@@ -169,11 +216,11 @@ at:</p>
 </blockquote>
 <script type='text/JavaScript'>
 /* <![CDATA[ */
-function adce4d016d6cd(){
-function d391(a,b){document.getElementById(a).href=b;}
-}
-setTimeout('adce4d016d6cd();',10);
+setTimeout(function(){
+function d391(a,b){document.getElementById(a).href=b;};
+}, 10);
 /* ]]> */
 </script>
+
 
 

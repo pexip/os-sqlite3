@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -148,7 +172,7 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#_partial_file_deletions">9.3.  Partial File Deletions</a></div>
 <div class="fancy-toc2"><a href="#_garbage_written_into_files">9.4.  Garbage Written Into Files</a></div>
 <div class="fancy-toc2"><a href="#_deleting_or_renaming_a_hot_journal">9.5.  Deleting Or Renaming A Hot Journal</a></div>
-<div class="fancy-toc1"><a href="#10_0_future_directions_and_conclusion">10. 10.0 Future Directions And Conclusion</a></div>
+<div class="fancy-toc1"><a href="#_future_directions_and_conclusion">10.  Future Directions And Conclusion</a></div>
 </div>
 </div>
 <script>
@@ -1528,7 +1552,7 @@ subdirectory.</p>
 
 <a name="future"></a>
 
-<h1 id="10_0_future_directions_and_conclusion"><span>10. </span>10.0 Future Directions And Conclusion</h1>
+<h1 id="_future_directions_and_conclusion"><span>10. </span> Future Directions And Conclusion</h1>
 
 <p>Every now and then someone discovers a new failure mode for
 the atomic commit mechanism in SQLite and the developers have to
@@ -1549,4 +1573,5 @@ particular, we suspect that most modern filesystems exhibit the
 safe append property and that many of them might support atomic
 sector writes.  But until this is known for certain, SQLite will
 take the conservative approach and assume the worst.</p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/atomiccommit.in?m=daed65c9ccb4a9262">2021-10-05 17:51:47</a> UTC </small></i></p>
 

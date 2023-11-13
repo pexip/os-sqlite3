@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -212,7 +236,7 @@ default.  To create a database that includes a checksum, change
 the reserve-bytes value to 8 by running code similar to this:
 
 </p><div class="codeblock"><pre>int n = 8;
-sqlite3_file_control(db, 0, SQLITE_FCNTL_RESERVED_BYTES, &n);
+sqlite3_file_control(db, 0, SQLITE_FCNTL_RESERVE_BYTES, &n);
 </pre></div>
 
 <p>If you do this immediately after creating a new database file,
@@ -286,4 +310,5 @@ a checksum error.
 the database file does not have a <a href="fileformat2.html#resbyte">reserve bytes</a> value of 8.  The
 pragma will return no rows at all if the cksumvfs extension is
 not loaded.
-</p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/cksumvfs.in?m=c9b2514ff040a5792">2020-12-10 10:53:35</a> UTC </small></i></p>
+

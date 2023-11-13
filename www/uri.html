@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <div class=fancy>
 <div class=nosearch>
 <div class="fancy_title">
@@ -290,7 +314,7 @@ SQLite that the underlying database file is held on read-only media
 and cannot be modified, even by another process with elevated 
 privileges.  SQLite always opens immutable database files
 read-only and it skips all file locking and change detection
-on immutable database files.  If these query parameter (or
+on immutable database files.  If this query parameter (or
 the <a href="c3ref/c_iocap_atomic.html">SQLITE_IOCAP_IMMUTABLE</a> bit in xDeviceCharacteristics)
 asserts that a database file is immutable and that file 
 changes anyhow, then SQLite might return incorrect query 
@@ -352,4 +376,5 @@ is built into SQLite or that has been previously registered using
 <li> <a href="c3ref/open.html#urifilenamesinsqlite3open">URI filenames in sqlite3_open()</a>
 </li><li> <a href="c3ref/open.html#urifilenameexamples">URI filename examples</a>
 </li></ul>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/uri.in?m=adfa05577ead37cf9">2022-01-20 21:38:08</a> UTC </small></i></p>
 

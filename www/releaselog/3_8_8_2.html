@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h2>SQLite Release 3.8.8.2 On 2015-01-30</h2><p><b>Changes in version 3.8.8 (2015-01-16):</b></p>
 <p><ol class='lessindent'>
 <p><b>New Features:</b>
@@ -159,7 +183,7 @@ return false;
     Ticket <a href="https://www.sqlite.org/src/tktview?name=f97c4637102a3ae72b79">f97c4637102a3ae72b79</a>.
 
 </ol>
-<p><b>Additional changes in version 3.8.8.2:</b></p>
+<p><b>Additional changes in version 3.8.8.2 (2015-01-30):</b></p>
 <p><ol class='lessindent'>
 <li value='23'>Enhance <a href="../c3ref/wal_checkpoint_v2.html">sqlite3_wal_checkpoint_v2(TRUNCATE)</a> interface so that it truncates the
     WAL file even if there is no checkpoint work to be done.
@@ -177,3 +201,4 @@ return false;
       <a href="http://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
+

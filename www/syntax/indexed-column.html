@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 <h1 align='center'>indexed-column</h1>
 <div class='imgcontainer'>
 <div style="max-width:696px"><svg xmlns='http://www.w3.org/2000/svg' class="pikchr" viewBox="0 0 696.36 102.6">
@@ -101,11 +125,11 @@ return false;
 <text x="113" y="17" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">column-name</text>
 <polygon points="246,47 235,51 235,43" style="fill:rgb(0,0,0)"/>
 <path d="M175,17 L 205,17 Q 220,17 220,32 L 220,32 Q 220,47 230,47 L 240,47"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
-<path d="M261,62L325,62A15 15 0 0 0 341 47A15 15 0 0 0 325 32L261,32A15 15 0 0 0 246 47A15 15 0 0 0 261 62Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M261,62L325,62A15 15 0 0 0 341 47L341,47A15 15 0 0 0 325 32L261,32A15 15 0 0 0 246 47L246,47A15 15 0 0 0 261 62Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
 <text x="293" y="47" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">COLLATE</text>
 <polygon points="358,47 346,51 346,43" style="fill:rgb(0,0,0)"/>
 <path d="M341,47L352,47"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
-<path d="M373,62L478,62A15 15 0 0 0 493 47A15 15 0 0 0 478 32L373,32A15 15 0 0 0 358 47A15 15 0 0 0 373 62Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M373,62L478,62A15 15 0 0 0 493 47L493,47A15 15 0 0 0 478 32L373,32A15 15 0 0 0 358 47L358,47A15 15 0 0 0 373 62Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
 <text x="426" y="47" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">collation-name</text>
 <polygon points="511,47 499,51 499,43" style="fill:rgb(0,0,0)"/>
 <path d="M493,47L505,47"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
@@ -144,5 +168,6 @@ Used by:&nbsp;&nbsp; <a href='./create-index-stmt.html'>create-index-stmt</a>&nb
 References:&nbsp;&nbsp; <a href='./expr.html'>expr</a><br></br>
 See also:&nbsp;&nbsp; <a href='../lang_createindex.html'>lang_createindex.html</a>&nbsp;&nbsp; <a href='../lang_createtable.html'>lang_createtable.html</a>&nbsp;&nbsp; <a href='../lang_createtrigger.html'>lang_createtrigger.html</a>&nbsp;&nbsp; <a href='../lang_insert.html'>lang_insert.html</a>&nbsp;&nbsp; <a href='../lang_upsert.html'>lang_upsert.html</a>&nbsp;&nbsp; <a href='../partialindex.html'>partialindex.html</a>
 </div>
+
 
 

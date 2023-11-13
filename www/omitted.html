@@ -89,8 +89,32 @@ b.innerHTML='hide';
 }
 return false;
 }
+var antiRobot = 0;
+function antiRobotGo(){
+if( antiRobot!=3 ) return;
+antiRobot = 7;
+var j = document.getElementById("mtimelink");
+if(j && j.hasAttribute("data-href")) j.href=j.getAttribute("data-href");
+}
+function antiRobotDefense(){
+document.body.onmousedown=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousedown=null;
+}
+document.body.onmousemove=function(){
+antiRobot |= 2;
+antiRobotGo();
+document.body.onmousemove=null;
+}
+setTimeout(function(){
+antiRobot |= 1;
+antiRobotGo();
+}, 100)
+antiRobotGo();
+}
+antiRobotDefense();
 </script>
-</div>
 
 
 <h2>SQL Features That SQLite Does Not Implement</h2>
@@ -107,14 +131,11 @@ See also the
 
 <table cellpadding="10">
 
-<tr><td valign="top"><b><nobr>RIGHT and FULL OUTER JOIN</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
-  LEFT OUTER JOIN is implemented, but not RIGHT OUTER JOIN or
-  FULL OUTER JOIN.
-</td></tr><tr><td valign="top"><b><nobr>Complete ALTER TABLE support</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
-  Only the RENAME TABLE, ADD COLUMN, and RENAME COLUMN variants of the 
-  ALTER TABLE command are supported.  Other kinds of ALTER TABLE operations
-  such as
-  DROP COLUMN, ALTER COLUMN, ADD CONSTRAINT, and so forth are omitted.
+<tr><td valign="top"><b><nobr>Complete ALTER TABLE support</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
+  Only the RENAME TABLE, ADD COLUMN, RENAME COLUMN, and DROP COLUMN
+  variants of the ALTER TABLE command are supported.  Other kinds of
+  ALTER TABLE operations such as
+  ALTER COLUMN, ADD CONSTRAINT, and so forth are omitted.
 </td></tr><tr><td valign="top"><b><nobr>Complete trigger support</nobr></b></td><td width="10">&nbsp;</th><td valign="top">
   FOR EACH ROW triggers are supported but not FOR EACH STATEMENT
   triggers.
@@ -132,4 +153,5 @@ See also the
   for an embedded database engine.
 </td></tr>
 </table>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/omitted.in?m=f9ca306d71e730fbf">2022-04-13 13:11:44</a> UTC </small></i></p>
 
