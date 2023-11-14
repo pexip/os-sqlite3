@@ -1,6 +1,8 @@
---- a/src/os_unix.c
-+++ b/src/os_unix.c
-@@ -655,6 +655,54 @@
+Index: os-sqlite3/src/os_unix.c
+===================================================================
+--- os-sqlite3.orig/src/os_unix.c
++++ os-sqlite3/src/os_unix.c
+@@ -655,6 +655,54 @@ static const char *unixNextSystemCall(sq
  # define SQLITE_MINIMUM_FILE_DESCRIPTOR 3
  #endif
  
@@ -55,7 +57,7 @@
  /*
  ** Invoke open().  Do so multiple times, until it either succeeds or
  ** fails for some reason other than EINTR.
-@@ -673,24 +721,22 @@
+@@ -673,27 +721,24 @@ static const char *unixNextSystemCall(sq
  ** recover the hot journals.
  */
  static int robust_open(const char *z, int f, mode_t m){
@@ -71,21 +73,23 @@
 +    f |= O_CLOEXEC;
  #endif
 +    fd = osOpen(z,f,m2);
-+
      if( fd<0 ){
        if( errno==EINTR ) continue;
        break;
      }
 -    if( fd>=SQLITE_MINIMUM_FILE_DESCRIPTOR ) break;
++    fd = ensure_acceptable_fd(z, fd, f);
++    if (fd < 0) {
++        break;
++    }
+     if( (f & (O_EXCL|O_CREAT))==(O_EXCL|O_CREAT) ){
+       (void)osUnlink(z);
+     }
 -    osClose(fd);
 -    sqlite3_log(SQLITE_WARNING, 
 -                "attempt to open \"%s\" as file descriptor %d", z, fd);
 -    fd = -1;
 -    if( osOpen("/dev/null", O_RDONLY, m)<0 ) break;
-+    fd = ensure_acceptable_fd(z, fd, f);
-+    if( fd<0 ){
-+      break;
-+    }
    }
    if( fd>=0 ){
      if( m!=0 ){
