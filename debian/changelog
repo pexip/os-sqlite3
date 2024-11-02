@@ -1,3 +1,14 @@
+sqlite3 (3.40.1-2+deb12u1) bookworm; urgency=medium
+
+  * Non-maintainer upload.
+  * CVE-2023-7104: Session extension buffer overread
+  * Backport fix for a stack overflow that could be caused by a
+    recursively defined WINDOW() with a strategically embedded error.
+  * Backport fix for a technically undefined signed integer overflow
+    in fts5.
+
+ -- Adrian Bunk <bunk@debian.org>  Sat, 02 Nov 2024 22:03:43 +0200
+
 sqlite3 (3.40.1-2) unstable; urgency=medium
 
   [ Cyril Brulebois <cyril@debamax.com> ]

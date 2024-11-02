@@ -1,0 +1,58 @@
+From da3b3bb73b5483cf9b277501c7020c882db14740 Mon Sep 17 00:00:00 2001
+From: dan <Dan Kennedy>
+Date: Sat, 24 Aug 2024 15:54:15 +0000
+Subject: Avoid a stack overflow that could be caused by a recursively defined
+ WINDOW() with a strategically embedded error.
+
+FossilOrigin-Name: bada54bd6bf54190e40aa721b77081015957d204c7b6a9fdbe8c67bcf20798f8
+---
+ src/resolve.c     |  2 +-
+ test/windowE.test | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/src/resolve.c b/src/resolve.c
+index 1c3a9d9097..05d23ce029 100644
+--- a/src/resolve.c
++++ b/src/resolve.c
+@@ -1159,7 +1159,7 @@ static int resolveExprStep(Walker *pWalker, Expr *pExpr){
+       sqlite3WalkExprList(pWalker, pList);
+       if( is_agg ){
+ #ifndef SQLITE_OMIT_WINDOWFUNC
+-        if( pWin ){
++        if( pWin && pParse->nErr==0 ){
+           Select *pSel = pNC->pWinSelect;
+           assert( pWin==0 || (ExprUseYWin(pExpr) && pWin==pExpr->y.pWin) );
+           if( IN_RENAME_OBJECT==0 ){
+diff --git a/test/windowE.test b/test/windowE.test
+index f20bcdaaa8..9128468b3c 100644
+--- a/test/windowE.test
++++ b/test/windowE.test
+@@ -54,5 +54,25 @@ do_execsql_test 1.3 {
+   5 5,4 5,4,1 5,4,1,6 5,4,1,6,3 5,4,1,6,3,2
+ }
+ 
++#-------------------------------------------------------------------------
++reset_db
++do_execsql_test 2.0 {
++  CREATE TABLE t1(x);
++}
++
++sqlite3_create_aggregate db
++
++breakpoint
++do_catchsql_test 2.1 {
++  SELECT min(x) OVER w1 FROM t1
++    WINDOW w1 AS (PARTITION BY x_count(x) OVER w1);
++} {1 {x_count() may not be used as a window function}}
++
++do_catchsql_test 2.2 {
++  SELECT min(x) FILTER (WHERE x_count(x) OVER w1) OVER w1 FROM t1
++    WINDOW w1 AS (PARTITION BY x OVER w1);
++} {1 {near "OVER": syntax error}}
++
++
+ finish_test
+ 
+-- 
+2.30.2
+
