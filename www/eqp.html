@@ -271,7 +271,7 @@ QUERY PLAN
 </pre></div>
 
 <p>
-  All joins in SQLite are <a href="optoverview.html#table_order">implemented using nested scans</a>. When a
+  All joins in SQLite are <a href="optoverview.html#joins">implemented using nested scans</a>. When a
   SELECT query that features a join is analyzed using EXPLAIN QUERY PLAN, one
   SCAN or SEARCH record is output for each nested loop. For example:
 </p><div class="codeblock"><pre>sqlite&gt; EXPLAIN QUERY PLAN SELECT t1.*, t2.* FROM t1, t2 WHERE t1.a=1 AND t1.b>2;
@@ -454,5 +454,5 @@ QUERY PLAN
       |--SCAN t2
       `--USE TEMP B-TREE FOR ORDER BY
 </pre></div>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/eqp.in?m=719c38ad7e31ec3d8">2021-03-23 20:19:29</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/eqp.in?m=719c38ad7e">2022-01-08 05:02:57</a> UTC </small></i></p>
 

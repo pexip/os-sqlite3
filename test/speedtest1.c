@@ -12,6 +12,7 @@ static const char zHelp[] =
   "  --checkpoint        Run PRAGMA wal_checkpoint after each test case\n"
   "  --exclusive         Enable locking_mode=EXCLUSIVE\n"
   "  --explain           Like --sqlonly but with added EXPLAIN keywords\n"
+  "  --fullfsync         Enable fullfsync=TRUE\n"
   "  --heap SZ MIN       Memory allocator uses SZ bytes & min allocation MIN\n"
   "  --incrvacuum        Enable incremenatal vacuum mode\n"
   "  --journal M         Set the journal_mode to M\n"
@@ -20,6 +21,7 @@ static const char zHelp[] =
   "  --memdb             Use an in-memory database\n"
   "  --mmap SZ           MMAP the first SZ bytes of the database file\n"
   "  --multithread       Set multithreaded mode\n"
+  "  --nolongdouble      Disable the use of long double\n"
   "  --nomemstat         Disable memory statistics\n"
   "  --nomutex           Open db with SQLITE_OPEN_NOMUTEX\n"
   "  --nosync            Set PRAGMA synchronous=OFF\n"
@@ -39,6 +41,7 @@ static const char zHelp[] =
   "  --size N            Relative test size.  Default=100\n"
   "  --strict            Use STRICT table where appropriate\n"
   "  --stats             Show statistics at the end\n"
+  "  --stmtscanstatus    Activate SQLITE_DBCONFIG_STMT_SCANSTATUS\n"
   "  --temp N            N from 0 to 9.  0: no temp table. 9: all temp tables\n"
   "  --testset T         Run test-set T (main, cte, rtree, orm, fp, debug)\n"
   "  --trace             Turn on SQL tracing\n"
@@ -100,6 +103,7 @@ static struct Global {
   int nRepeat;               /* Repeat selects this many times */
   int doCheckpoint;          /* Run PRAGMA wal_checkpoint after each trans */
   int nReserve;              /* Reserve bytes */
+  int stmtScanStatus;        /* True to activate Stmt ScanStatus reporting */
   int doBigTransactions;     /* Enable transactions on tests 410 and 510 */
   const char *zWR;           /* Might be WITHOUT ROWID */
   const char *zNN;           /* Might be NOT NULL */
@@ -2146,6 +2150,50 @@ void testset_debug1(void){
   }
 }
 
+/*
+** This testset focuses on the speed of parsing numeric literals (integers
+** and real numbers). This was added to test the impact of allowing "_"
+** characters to appear in numeric SQL literals to make them easier to read. 
+** For example, "SELECT 1_000_000;" instead of "SELECT 1000000;".
+*/
+void testset_parsenumber(void){
+  const char *zSql1 = "SELECT 1, 12, 123, 1234, 12345, 123456";
+  const char *zSql2 = "SELECT 8227256643844975616, 7932208612563860480, "
+                      "2010730661871032832, 9138463067404021760, "
+                      "2557616153664746496, 2557616153664746496";
+  const char *zSql3 = "SELECT 1.0, 1.2, 1.23, 123.4, 1.2345, 1.23456";
+  const char *zSql4 = "SELECT 8.227256643844975616, 7.932208612563860480, "
+                      "2.010730661871032832, 9.138463067404021760, "
+                      "2.557616153664746496, 2.557616153664746496";
+
+  const int NROW = 100*g.szTest;
+  int ii;
+
+  speedtest1_begin_test(100, "parsing small integers");
+  for(ii=0; ii<NROW; ii++){
+    sqlite3_exec(g.db, zSql1, 0, 0, 0);
+  }
+  speedtest1_end_test();
+
+  speedtest1_begin_test(110, "parsing large integers");
+  for(ii=0; ii<NROW; ii++){
+    sqlite3_exec(g.db, zSql2, 0, 0, 0);
+  }
+  speedtest1_end_test();
+
+  speedtest1_begin_test(200, "parsing small reals");
+  for(ii=0; ii<NROW; ii++){
+    sqlite3_exec(g.db, zSql3, 0, 0, 0);
+  }
+  speedtest1_end_test();
+
+  speedtest1_begin_test(210, "parsing large reals");
+  for(ii=0; ii<NROW; ii++){
+    sqlite3_exec(g.db, zSql4, 0, 0, 0);
+  }
+  speedtest1_end_test();
+}
+
 #ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
@@ -2201,6 +2249,7 @@ int main(int argc, char **argv){
   int doAutovac = 0;            /* True for --autovacuum */
   int cacheSize = 0;            /* Desired cache size.  0 means default */
   int doExclusive = 0;          /* True for --exclusive */
+  int doFullFSync = 0;          /* True for --fullfsync */
   int nHeap = 0, mnHeap = 0;    /* Heap size from --heap */
   int doIncrvac = 0;            /* True for --incrvacuum */
   const char *zJMode = 0;       /* Journal mode */
@@ -2265,6 +2314,8 @@ int main(int argc, char **argv){
         cacheSize = integerValue(argv[++i]);
       }else if( strcmp(z,"exclusive")==0 ){
         doExclusive = 1;
+      }else if( strcmp(z,"fullfsync")==0 ){
+        doFullFSync = 1;
       }else if( strcmp(z,"checkpoint")==0 ){
         g.doCheckpoint = 1;
       }else if( strcmp(z,"explain")==0 ){
@@ -2301,6 +2352,10 @@ int main(int argc, char **argv){
         ARGC_VALUE_CHECK(1);
         mmapSize = integerValue(argv[++i]);
  #endif
+      }else if( strcmp(z,"nolongdouble")==0 ){
+#ifdef SQLITE_TESTCTRL_USELONGDOUBLE
+        sqlite3_test_control(SQLITE_TESTCTRL_USELONGDOUBLE, 0);
+#endif       
       }else if( strcmp(z,"nomutex")==0 ){
         openFlags |= SQLITE_OPEN_NOMUTEX;
       }else if( strcmp(z,"nosync")==0 ){
@@ -2391,6 +2446,8 @@ int main(int argc, char **argv){
       }else if( strcmp(z,"reserve")==0 ){
         ARGC_VALUE_CHECK(1);
         g.nReserve = atoi(argv[++i]);
+      }else if( strcmp(z,"stmtscanstatus")==0 ){
+        g.stmtScanStatus = 1;
       }else if( strcmp(z,"without-rowid")==0 ){
         if( strstr(g.zWR,"WITHOUT")!=0 ){
           /* no-op */
@@ -2474,6 +2531,9 @@ int main(int argc, char **argv){
   if( g.nReserve>0 ){
     sqlite3_file_control(g.db, 0, SQLITE_FCNTL_RESERVE_BYTES, &g.nReserve);
   }
+  if( g.stmtScanStatus ){
+    sqlite3_db_config(g.db, SQLITE_DBCONFIG_STMT_SCANSTATUS, 1, 0);
+  }
 
   /* Set database connection options */
   sqlite3_create_function(g.db, "random", 0, SQLITE_UTF8, 0, randomFunc, 0, 0);
@@ -2504,7 +2564,11 @@ int main(int argc, char **argv){
   if( cacheSize ){
     speedtest1_exec("PRAGMA cache_size=%d", cacheSize);
   }
-  if( noSync ) speedtest1_exec("PRAGMA synchronous=OFF");
+  if( noSync ){
+    speedtest1_exec("PRAGMA synchronous=OFF");
+  }else if( doFullFSync ){
+    speedtest1_exec("PRAGMA fullfsync=ON");
+  }
   if( doExclusive ){
     speedtest1_exec("PRAGMA locking_mode=EXCLUSIVE");
   }
@@ -2537,6 +2601,8 @@ int main(int argc, char **argv){
       testset_fp();
     }else if( strcmp(zThisTest,"trigger")==0 ){
       testset_trigger();
+    }else if( strcmp(zThisTest,"parsenumber")==0 ){
+      testset_parsenumber();
     }else if( strcmp(zThisTest,"rtree")==0 ){
 #ifdef SQLITE_ENABLE_RTREE
       testset_rtree(6, 147);

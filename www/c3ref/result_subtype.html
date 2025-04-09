@@ -117,7 +117,7 @@ antiRobotDefense();
 </script>
 <!-- keywords: sqlite3_result_subtype -->
 <div class=nosearch>
-<a href="intro.html"><h2>SQLite C Interface</h2></a>
+<a href="../c3ref/intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Setting The Subtype Of An SQL Function</h2>
 </div>
 <blockquote><pre>
@@ -130,9 +130,23 @@ the result from the <a href="../appfunc.html">application-defined SQL function</
 of the subtype T are preserved in current versions of SQLite;
 higher order bits are discarded.
 The number of subtype bytes preserved by SQLite might increase
-in future releases of SQLite.
+in future releases of SQLite.</p>
+
+<p>Every <a href="../appfunc.html">application-defined SQL function</a> that invokes this interface
+should include the <a href="../c3ref/c_deterministic.html#sqliteresultsubtype">SQLITE_RESULT_SUBTYPE</a> property in its
+text encoding argument when the SQL function is
+<a href="../c3ref/create_function.html">registered</a>.  If the <a href="../c3ref/c_deterministic.html#sqliteresultsubtype">SQLITE_RESULT_SUBTYPE</a>
+property is omitted from the function that invokes sqlite3_result_subtype(),
+then in some cases the sqlite3_result_subtype() might fail to set
+the result subtype.</p>
+
+<p>If SQLite is compiled with -DSQLITE_STRICT_SUBTYPE=1, then any
+SQL function that invokes the sqlite3_result_subtype() interface
+and that does not have the SQLITE_RESULT_SUBTYPE property will raise
+an error.  Future versions of SQLite might enable -DSQLITE_STRICT_SUBTYPE=1
+by default.
 </p><p>See also lists of
-  <a href="objlist.html">Objects</a>,
-  <a href="constlist.html">Constants</a>, and
-  <a href="funclist.html">Functions</a>.</p>
+  <a href="../c3ref/objlist.html">Objects</a>,
+  <a href="../c3ref/constlist.html">Constants</a>, and
+  <a href="../c3ref/funclist.html">Functions</a>.</p>
 

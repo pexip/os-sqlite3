@@ -115,7 +115,7 @@ antiRobotGo();
 }
 antiRobotDefense();
 </script>
-<h2>SQLite Release 3.40.1 On 2022-12-28</h2><p><b>Changes in version 3.40.0 (2022-11-16):</b></p>
+<h2>SQLite Release 3.40.1 On 2022-12-28</h2><p><b>Prior changes from version 3.40.0 (2022-11-16):</b></p>
 <p><ol class='lessindent'>
 <li value='1'> Add support for compiling <a href="https://sqlite.org/wasm">SQLite to WASM</a>
      and running it in web browsers.  NB:  The WASM build and its interfaces
@@ -142,7 +142,7 @@ antiRobotDefense();
      modified to use the new typedef instead of "char*".  This interface
      change should be fully backwards compatible, though it might cause
      (harmless) compiler warnings when rebuilding some legacy applications.
-<li> Add the <a href="../c3ref/value_blob.html">sqlite3_value_encoding()</a> interface.
+<li> Add the <a href="../c3ref/value_encoding.html">sqlite3_value_encoding()</a> interface.
 <li> Security enhancement: <a href="../c3ref/c_dbconfig_defensive.html#sqlitedbconfigdefensive">SQLITE_DBCONFIG_DEFENSIVE</a> is augmented to prohibit
      changing the <a href="../pragma.html#pragma_schema_version">schema_version</a>.  The schema_version
      becomes read-only in defensive mode.
@@ -167,9 +167,10 @@ antiRobotDefense();
 <li> Miscellaneous performance optimizations result in about 1% fewer CPU cycles
      used on typical workloads.
 </ol>
-<p><b>Additional changes in version 3.40.1 (2022-12-28):</b></p>
+<p><b>Changes in this specific patch release, version 3.40.1 (2022-12-28):</b></p>
 <p><ol class='lessindent'>
-<li value='14'> Fix the <a href="../cli.html#safemode">--safe command-line option</a> to the <a href="../cli.html">CLI</a> such that it correctly disallows the
+<li value='14'> Fix the <a href="../cli.html#safemode">--safe command-line option</a> to the <a href="../cli.html">CLI</a>
+     such that it correctly disallows the
      use of SQL functions like writefile() that can cause harmful side-effects.
 <li> Fix a potential infinite loop in the <a href="../malloc.html#memsys5">memsys5</a> alternative memory allocator.  This
      bug was introduced by a performance optimization in version 3.39.0.
@@ -181,10 +182,10 @@ antiRobotDefense();
 </ol></p>
 
       <p>A <a href="../changes.html">complete list of SQLite releases</a>
-      in a single page and a <a href="../chronology.html">chronology</a> are both also available.  
+      in a single page and a <a href="../chronology.html">chronology</a> are both also available.
       A detailed history of every
       check-in is available at
-      <a href="http://www.sqlite.org/src/timeline">
+      <a href="https://www.sqlite.org/src/timeline">
       SQLite version control site</a>.</p>
     
 

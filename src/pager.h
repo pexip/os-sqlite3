@@ -216,7 +216,7 @@ sqlite3_file *sqlite3PagerJrnlFile(Pager*);
 const char *sqlite3PagerJournalname(Pager*);
 void *sqlite3PagerTempSpace(Pager*);
 int sqlite3PagerIsMemdb(Pager*);
-void sqlite3PagerCacheStat(Pager *, int, int, int *);
+void sqlite3PagerCacheStat(Pager *, int, int, u64*);
 void sqlite3PagerClearCache(Pager*);
 int sqlite3SectorSize(sqlite3_file *);
 
@@ -238,6 +238,10 @@ void sqlite3PagerRekey(DbPage*, Pgno, u16);
 #else
 # define disable_simulated_io_errors()
 # define enable_simulated_io_errors()
+#endif
+
+#if defined(SQLITE_USE_SEH) && !defined(SQLITE_OMIT_WAL)
+int sqlite3PagerWalSystemErrno(Pager*);
 #endif
 
 #endif /* SQLITE_PAGER_H */

@@ -97,7 +97,7 @@ const unsigned char *sqlite3aGTb = &sqlite3UpperToLower[256+12-OP_Ne];
 **   isalnum()                        0x06
 **   isxdigit()                       0x08
 **   toupper()                        0x20
-**   SQLite identifier character      0x40
+**   SQLite identifier character      0x40   $, _, or non-ascii
 **   Quote character                  0x80
 **
 ** Bit 0x20 is set if the mapped character requires translation to upper
@@ -243,6 +243,10 @@ SQLITE_WSD struct Sqlite3Config sqlite3Config = {
    SQLITE_ALLOW_COVERING_INDEX_SCAN,   /* bUseCis */
    0,                         /* bSmallMalloc */
    1,                         /* bExtraSchemaChecks */
+   sizeof(LONGDOUBLE_TYPE)>8, /* bUseLongDouble */
+#ifdef SQLITE_DEBUG
+   0,                         /* bJsonSelfcheck */
+#endif
    0x7ffffffe,                /* mxStrlen */
    0,                         /* neverCorrupt */
    SQLITE_DEFAULT_LOOKASIDE,  /* szLookaside, nLookaside */
@@ -285,13 +289,16 @@ SQLITE_WSD struct Sqlite3Config sqlite3Config = {
 #ifndef SQLITE_UNTESTABLE
    0,                         /* xTestCallback */
 #endif
+#ifdef SQLITE_ALLOW_ROWID_IN_VIEW
+   0,                         /* mNoVisibleRowid.  0 == allow rowid-in-view */
+#endif
    0,                         /* bLocaltimeFault */
    0,                         /* xAltLocaltime */
    0x7ffffffe,                /* iOnceResetThreshold */
    SQLITE_DEFAULT_SORTERREF_SIZE,   /* szSorterRef */
    0,                         /* iPrngSeed */
 #ifdef SQLITE_DEBUG
-   {0,0,0,0,0,0}              /* aTune */
+   {0,0,0,0,0,0},             /* aTune */
 #endif
 };
 

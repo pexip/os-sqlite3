@@ -67,13 +67,13 @@ struct VdbeOp {
 #ifdef SQLITE_ENABLE_EXPLAIN_COMMENTS
   char *zComment;          /* Comment to improve readability */
 #endif
-#ifdef VDBE_PROFILE
-  u32 cnt;                 /* Number of times this instruction was executed */
-  u64 cycles;              /* Total time spent executing this instruction */
-#endif
 #ifdef SQLITE_VDBE_COVERAGE
   u32 iSrcLine;            /* Source-code line that generated this opcode
                            ** with flags in the upper 8 bits */
+#endif
+#if defined(SQLITE_ENABLE_STMT_SCANSTATUS) || defined(VDBE_PROFILE)
+  u64 nExec;
+  u64 nCycle;
 #endif
 };
 typedef struct VdbeOp VdbeOp;
@@ -126,6 +126,7 @@ typedef struct VdbeOpList VdbeOpList;
 #define P4_INT64      (-13) /* P4 is a 64-bit signed integer */
 #define P4_INTARRAY   (-14) /* P4 is a vector of 32-bit integers */
 #define P4_FUNCCTX    (-15) /* P4 is a pointer to an sqlite3_context object */
+#define P4_TABLEREF   (-16) /* Like P4_TABLE, but reference counted */
 
 /* Error message codes for OP_Halt */
 #define P5_ConstraintNotNull 1
@@ -205,14 +206,20 @@ void sqlite3VdbeEndCoroutine(Vdbe*,int);
 #endif
 VdbeOp *sqlite3VdbeAddOpList(Vdbe*, int nOp, VdbeOpList const *aOp,int iLineno);
 #ifndef SQLITE_OMIT_EXPLAIN
-  void sqlite3VdbeExplain(Parse*,u8,const char*,...);
+  int sqlite3VdbeExplain(Parse*,u8,const char*,...);
   void sqlite3VdbeExplainPop(Parse*);
   int sqlite3VdbeExplainParent(Parse*);
 # define ExplainQueryPlan(P)        sqlite3VdbeExplain P
+# ifdef SQLITE_ENABLE_STMT_SCANSTATUS
+#  define ExplainQueryPlan2(V,P)     (V = sqlite3VdbeExplain P)
+# else
+#  define ExplainQueryPlan2(V,P)     ExplainQueryPlan(P)
+# endif
 # define ExplainQueryPlanPop(P)     sqlite3VdbeExplainPop(P)
 # define ExplainQueryPlanParent(P)  sqlite3VdbeExplainParent(P)
 #else
 # define ExplainQueryPlan(P)
+# define ExplainQueryPlan2(V,P)
 # define ExplainQueryPlanPop(P)
 # define ExplainQueryPlanParent(P) 0
 # define sqlite3ExplainBreakpoint(A,B) /*no-op*/
@@ -289,6 +296,8 @@ RecordCompare sqlite3VdbeFindCompare(UnpackedRecord*);
 void sqlite3VdbeLinkSubProgram(Vdbe *, SubProgram *);
 int sqlite3VdbeHasSubProgram(Vdbe*);
 
+void sqlite3MemSetArrayInt64(sqlite3_value *aMem, int iIdx, i64 val);
+
 int sqlite3NotPureFunc(sqlite3_context*);
 #ifdef SQLITE_ENABLE_BYTECODE_VTAB
 int sqlite3VdbeBytecodeVtabInit(sqlite3*);
@@ -321,7 +330,7 @@ int sqlite3VdbeBytecodeVtabInit(sqlite3*);
 ** The VdbeCoverage macros are used to set a coverage testing point
 ** for VDBE branch instructions.  The coverage testing points are line
 ** numbers in the sqlite3.c source file.  VDBE branch coverage testing
-** only works with an amalagmation build.  That's ok since a VDBE branch
+** only works with an amalgamation build.  That's ok since a VDBE branch
 ** coverage build designed for testing the test suite only.  No application
 ** should ever ship with VDBE branch coverage measuring turned on.
 **
@@ -339,7 +348,7 @@ int sqlite3VdbeBytecodeVtabInit(sqlite3*);
 **                                     // NULL option is not possible
 **
 **    VdbeCoverageEqNe(v)              // Previous OP_Jump is only interested
-**                                     // in distingishing equal and not-equal.
+**                                     // in distinguishing equal and not-equal.
 **
 ** Every VDBE branch operation must be tagged with one of the macros above.
 ** If not, then when "make test" is run with -DSQLITE_VDBE_COVERAGE and
@@ -349,7 +358,7 @@ int sqlite3VdbeBytecodeVtabInit(sqlite3*);
 ** During testing, the test application will invoke
 ** sqlite3_test_control(SQLITE_TESTCTRL_VDBE_COVERAGE,...) to set a callback
 ** routine that is invoked as each bytecode branch is taken.  The callback
-** contains the sqlite3.c source line number ov the VdbeCoverage macro and
+** contains the sqlite3.c source line number of the VdbeCoverage macro and
 ** flags to indicate whether or not the branch was taken.  The test application
 ** is responsible for keeping track of this and reporting byte-code branches
 ** that are never taken.
@@ -385,12 +394,20 @@ int sqlite3VdbeBytecodeVtabInit(sqlite3*);
 
 #ifdef SQLITE_ENABLE_STMT_SCANSTATUS
 void sqlite3VdbeScanStatus(Vdbe*, int, int, int, LogEst, const char*);
+void sqlite3VdbeScanStatusRange(Vdbe*, int, int, int);
+void sqlite3VdbeScanStatusCounters(Vdbe*, int, int, int);
 #else
-# define sqlite3VdbeScanStatus(a,b,c,d,e)
+# define sqlite3VdbeScanStatus(a,b,c,d,e,f)
+# define sqlite3VdbeScanStatusRange(a,b,c,d)
+# define sqlite3VdbeScanStatusCounters(a,b,c,d)
 #endif
 
 #if defined(SQLITE_DEBUG) || defined(VDBE_PROFILE)
 void sqlite3VdbePrintOp(FILE*, int, VdbeOp*);
+#endif
+
+#if defined(SQLITE_ENABLE_CURSOR_HINTS) && defined(SQLITE_DEBUG)
+int sqlite3CursorRangeHintExprCheck(Walker *pWalker, Expr *pExpr);
 #endif
 
 #endif /* SQLITE_VDBE_H */
