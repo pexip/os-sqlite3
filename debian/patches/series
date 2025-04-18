@@ -8,3 +8,4 @@
 02-use-packaged-lempar.c.patch
 40-amalgamation_configure.patch
 50-CVE-2025-29087.patch
+51-CVE-2025-29088.patch
