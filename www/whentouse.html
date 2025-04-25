@@ -115,10 +115,38 @@ antiRobotGo();
 }
 antiRobotDefense();
 </script>
+<div class=fancy>
+<div class=nosearch>
+<div class="fancy_title">
+Appropriate Uses For SQLite
+</div>
+<div class="fancy_toc">
+<a onclick="toggle_toc()">
+<span class="fancy_toc_mark" id="toc_mk">&#x25ba;</span>
+Table Of Contents
+</a>
+<div id="toc_sub"><div class="fancy-toc1"><a href="#situations_where_sqlite_works_well">1. Situations Where SQLite Works Well</a></div>
+<div class="fancy-toc1"><a href="#situations_where_a_client_server_rdbms_may_work_better">2. Situations Where A Client/Server RDBMS May Work Better</a></div>
+<div class="fancy-toc1"><a href="#checklist_for_choosing_the_right_database_engine">3. Checklist For Choosing The Right Database Engine</a></div>
+</div>
+</div>
+<script>
+function toggle_toc(){
+var sub = document.getElementById("toc_sub")
+var mk = document.getElementById("toc_mk")
+if( sub.style.display!="block" ){
+sub.style.display = "block";
+mk.innerHTML = "&#x25bc;";
+} else {
+sub.style.display = "none";
+mk.innerHTML = "&#x25ba;";
+}
+}
+</script>
+</div>
 
 
 
-<h1 align="center">Appropriate Uses For SQLite</h1>
 
 <p>
 SQLite is not directly comparable to client/server SQL database engines such
@@ -141,7 +169,7 @@ SQLite does not compete with client/server databases.
 SQLite competes with <a href="http://man.he.net/man3/fopen">fopen()</a>.
 </p>
 
-<h2>Situations Where SQLite Works Well</h2>
+<h1 id="situations_where_sqlite_works_well"><span>1. </span>Situations Where SQLite Works Well</h1>
 
 <ul>
 
@@ -164,7 +192,7 @@ SQLite works there too, but SQLite also thrives at the edge of the network,
 fending for itself while providing fast and
 reliable data services to applications that would otherwise
 have dodgy connectivity.
-</li>
+</p></li>
 
 <li><p><b>Application file format</b></p>
 
@@ -188,7 +216,7 @@ improved reliability.  See technical notes
 This use case is closely related to the
 <a href="#wireproto">data transfer format</a> and
 <a href="#container">data container</a> use cases below.
-</li>
+</p></li>
 
 <a name="website"></a>
 
@@ -212,8 +240,8 @@ the database.  Dynamic content uses <a href="np1queryprob.html">about 200 SQL st
 This setup runs on a single VM that shares a physical server with 23 others
 and yet still keeps the load average below 0.1 most of the time.
 
-<p>See also: <a href="https://news.ycombinator.com/item?id=33975635">Hacker New discussion from 2022-12-13</a>.
-</li>
+</p><p>See also: <a href="https://news.ycombinator.com/item?id=33975635">Hacker New discussion from 2022-12-13</a>.
+</p></li>
 
 <li><p><b>Data analysis</b></p>
 
@@ -285,16 +313,16 @@ connections, but each SQLite database is only used by one connection.</p>
 
 <a name="wireproto"></a>
 
-<li><p><b>Data transfer format</b><p>
+<li><p><b>Data transfer format</b></p><p>
 
-<p>Because an SQLite database is a single compact file in a
+</p><p>Because an SQLite database is a single compact file in a
 <a href="fileformat2.html">well-defined cross-platform format</a>, it is often used
 as a container for transferring content from one system to another.
 The sender gathers content into an SQLite database file, transfers
 that one file to the receiver, then the receiver uses SQL to extract
 the content as needed.
 
-<p>An SQLite database facilitates data transfer between systems even
+</p><p>An SQLite database facilitates data transfer between systems even
 when the endpoints have different word sizes and/or byte orders.
 The data can be a complex mix of large binary blobs, text, and small
 numeric or boolean values.  The data format can be easily extended
@@ -305,7 +333,7 @@ received content as needed.  The data format is "transparent" in the
 sense that it is easily decoded for human viewing using 
 a variety of universally available, open-source tools, from multiple
 vendors.
-</li>
+</p></li>
 
 <a name="container"></a>
 
@@ -355,7 +383,7 @@ particularly well as a
 replacement for these <i>ad hoc</i> data files.
 Contrary to intuition, SQLite can be <a href="fasterthanfs.html">faster than the filesystem</a>
 for reading and writing content to disk.
-</li>
+</p></li>
 
 <li><p><b>Internal or temporary databases</b></p>
 
@@ -407,12 +435,12 @@ prototyping new, experimental database language features or ideas.
 
 </ul>
 
-<h2>Situations Where A Client/Server RDBMS May Work Better</h2>
+<h1 id="situations_where_a_client_server_rdbms_may_work_better"><span>2. </span>Situations Where A Client/Server RDBMS May Work Better</h1>
 
 <ul>
-<li><p><b>Client/Server Applications</b><p>
+<li><p><b>Client/Server Applications</b></p><p>
 
-<p>If there are many client programs sending SQL to the same 
+</p><p>If there are many client programs sending SQL to the same 
 database over a network, then use a client/server database
 engine instead of SQLite.  SQLite will work over a network filesystem,
 but because of the latency associated with most network filesystems,
@@ -469,7 +497,7 @@ solution.
 
 <a name="dbcklst"></a>
 
-<h2>Checklist For Choosing The Right Database Engine</h2>
+<h1 id="checklist_for_choosing_the_right_database_engine"><span>3. </span>Checklist For Choosing The Right Database Engine</h1>
 
 <ol>
 <li><p><b>Is the data separated from the application by a network?
@@ -481,14 +509,14 @@ the same physical device so that the high-bandwidth engine-to-disk
 link does not have to traverse the network, only the lower-bandwidth
 application-to-engine link.
 
-<p>But SQLite is built into the application.  So if the data is on a
+</p><p>But SQLite is built into the application.  So if the data is on a
 separate device from the application, it is required that the higher
 bandwidth engine-to-disk link be across the network.  This works, but
 it is suboptimal.  Hence, it is usually better to select a client/server
 database engine when the data is on a separate device from the
 application.
 
-<p><em>Nota Bene:</em>
+</p><p><em>Nota Bene:</em>
 In this rule, "application" means the code that issues SQL statements.
 If the "application" is an <a href="whentouse.html#serversidedb">application server</a> and
 if the content resides on the same physical machine as the application server,
@@ -503,14 +531,14 @@ database at the same instant (and they cannot queue up and take turns)
 then it is best to select a database engine that supports that
 capability, which always means a client/server database engine.
 
-<p>SQLite only supports one writer at a time per database file.
+</p><p>SQLite only supports one writer at a time per database file.
 But in most cases, a write transaction only takes milliseconds and
 so multiple writers can simply take turns.  SQLite will handle
 more write concurrency than many people suspect.  Nevertheless,
 client/server database systems, because they have a long-running
 server process at hand to coordinate access, can usually handle 
 far more write concurrency than SQLite ever will.
-</li>
+</p></li>
 
 <li><p><b>Big data? &rarr; choose client/server</b></p>
 
@@ -521,7 +549,7 @@ a solution other than SQLite.  SQLite supports databases up to
 that will support 281-terabyte files.  Even so, when the size of the
 content looks like it might creep into the terabyte range, it would
 be good to consider a centralized client/server database.
-</li>
+</p></li>
 
 <li><p><b>Otherwise &rarr; choose SQLite!</b></p>
 
@@ -529,7 +557,7 @@ be good to consider a centralized client/server database.
 terabyte of content, SQLite is almost always a better solution.  SQLite
 is fast and reliable and it requires no configuration or maintenance.
 It keeps things simple.  SQLite "just works".
-</li>
+</p></li>
 </ol>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/whentouse.in?m=f79c2c426bc0e625f">2022-12-14 16:04:04</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/whentouse.in?m=3425224a93">2024-04-03 17:48:26</a> UTC </small></i></p>
 

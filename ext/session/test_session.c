@@ -76,9 +76,11 @@ int sql_exec_changeset(
 ){
   sqlite3_session *pSession = 0;
   int rc;
+  int val = 1;
 
   /* Create a new session object */
   rc = sqlite3session_create(db, "main", &pSession);
+  sqlite3session_object_config(pSession, SQLITE_SESSION_OBJCONFIG_ROWID, &val);
 
   /* Configure the session object to record changes to all tables */
   if( rc==SQLITE_OK ) rc = sqlite3session_attach(pSession, NULL);
@@ -102,9 +104,8 @@ int sql_exec_changeset(
 #ifdef SQLITE_DEBUG
 static int sqlite3_test_changeset(int, void *, char **);
 static void assert_changeset_is_ok(int n, void *p){
-  int rc = 0;
   char *z = 0;
-  rc = sqlite3_test_changeset(n, p, &z);
+  (void)sqlite3_test_changeset(n, p, &z);
   assert( z==0 );
 }
 #else
@@ -261,7 +262,7 @@ static int SQLITE_TCLAPI test_session_cmd(
     { "diff",         2, "FROMDB TBL", }, /* 8 */
     { "memory_used",  0, "",           }, /* 9 */
     { "changeset_size", 0, "",         }, /* 10 */
-    { "object_config_size", 1, "INTEGER", }, /* 11 */
+    { "object_config", 2, "OPTION INTEGER", }, /* 11 */
     { 0 }
   };
   int iSub;
@@ -380,15 +381,26 @@ static int SQLITE_TCLAPI test_session_cmd(
       Tcl_SetObjResult(interp, Tcl_NewWideIntObj(nSize));
       break;
     }
-    case 11: {
-      int rc;
+    case 11: {    /* object_config */
+      struct ObjConfOpt {
+        const char *zName;
+        int opt;
+      } aOpt[] = {
+        { "size", SQLITE_SESSION_OBJCONFIG_SIZE },
+        { "rowid", SQLITE_SESSION_OBJCONFIG_ROWID },
+        { 0, 0 }
+      };
+      size_t sz = sizeof(aOpt[0]);
+
       int iArg;
-      if( Tcl_GetIntFromObj(interp, objv[2], &iArg) ){
+      int iOpt;
+      if( Tcl_GetIndexFromObjStruct(interp,objv[2],aOpt,sz,"option",0,&iOpt) ){
         return TCL_ERROR;
       }
-      rc = sqlite3session_object_config(
-          pSession, SQLITE_SESSION_OBJCONFIG_SIZE, &iArg
-      );
+      if( Tcl_GetIntFromObj(interp, objv[3], &iArg) ){
+        return TCL_ERROR;
+      }
+      rc = sqlite3session_object_config(pSession, aOpt[iOpt].opt, &iArg);
       if( rc!=SQLITE_OK ){
         extern const char *sqlite3ErrName(int);
         Tcl_SetObjResult(interp, Tcl_NewStringObj(sqlite3ErrName(rc), -1));
@@ -794,32 +806,34 @@ static int SQLITE_TCLAPI testSqlite3changesetApply(
   memset(&sStr, 0, sizeof(sStr));
   sStr.nStream = test_tcl_integer(interp, SESSION_STREAM_TCL_VAR);
 
-  /* Check for the -nosavepoint flag */
+  /* Check for the -nosavepoint, -invert or -ignorenoop switches */
   if( bV2 ){
-    if( objc>1 ){
+    while( objc>1 ){
       const char *z1 = Tcl_GetString(objv[1]);
       int n = strlen(z1);
-      if( n>1 && n<=12 && 0==sqlite3_strnicmp("-nosavepoint", z1, n) ){
+      if( n>3 && n<=12 && 0==sqlite3_strnicmp("-nosavepoint", z1, n) ){
         flags |= SQLITE_CHANGESETAPPLY_NOSAVEPOINT;
-        objc--;
-        objv++;
       }
-    }
-    if( objc>1 ){
-      const char *z1 = Tcl_GetString(objv[1]);
-      int n = strlen(z1);
-      if( n>1 && n<=7 && 0==sqlite3_strnicmp("-invert", z1, n) ){
+      else if( n>3 && n<=9 && 0==sqlite3_strnicmp("-noaction", z1, n) ){
+        flags |= SQLITE_CHANGESETAPPLY_FKNOACTION;
+      }
+      else if( n>2 && n<=7 && 0==sqlite3_strnicmp("-invert", z1, n) ){
         flags |= SQLITE_CHANGESETAPPLY_INVERT;
-        objc--;
-        objv++;
       }
+      else if( n>2 && n<=11 && 0==sqlite3_strnicmp("-ignorenoop", z1, n) ){
+        flags |= SQLITE_CHANGESETAPPLY_IGNORENOOP;
+      }else{
+        break;
+      }
+      objc--;
+      objv++;
     }
   }
 
   if( objc!=4 && objc!=5 ){
     const char *zMsg;
     if( bV2 ){
-      zMsg = "?-nosavepoint? ?-inverse? "
+      zMsg = "?-nosavepoint? ?-inverse? ?-ignorenoop? "
         "DB CHANGESET CONFLICT-SCRIPT ?FILTER-SCRIPT?";
     }else{
       zMsg = "DB CHANGESET CONFLICT-SCRIPT ?FILTER-SCRIPT?";
@@ -1024,6 +1038,64 @@ static int SQLITE_TCLAPI test_sqlite3changeset_concat(
   return rc;
 }
 
+static Tcl_Obj *testIterData(sqlite3_changeset_iter *pIter){
+  Tcl_Obj *pVar = 0;
+  int nCol;                       /* Number of columns in table */
+  int nCol2;                      /* Number of columns in table */
+  int op;                         /* SQLITE_INSERT, UPDATE or DELETE */
+  const char *zTab;               /* Name of table change applies to */
+  Tcl_Obj *pOld;                  /* Vector of old.* values */
+  Tcl_Obj *pNew;                  /* Vector of new.* values */
+  int bIndirect;
+    
+  char *zPK;
+  unsigned char *abPK;
+  int i;
+
+  sqlite3changeset_op(pIter, &zTab, &nCol, &op, &bIndirect);
+  pVar = Tcl_NewObj();
+
+  Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(
+        op==SQLITE_INSERT ? "INSERT" :
+        op==SQLITE_UPDATE ? "UPDATE" : 
+        "DELETE", -1
+  ));
+
+  Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(zTab, -1));
+  Tcl_ListObjAppendElement(0, pVar, Tcl_NewBooleanObj(bIndirect));
+
+  zPK = ckalloc(nCol+1);
+  memset(zPK, 0, nCol+1);
+  sqlite3changeset_pk(pIter, &abPK, &nCol2);
+  assert( nCol==nCol2 );
+  for(i=0; i<nCol; i++){
+    zPK[i] = (abPK[i] ? 'X' : '.');
+  }
+  Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(zPK, -1));
+  ckfree(zPK);
+
+  pOld = Tcl_NewObj();
+  if( op!=SQLITE_INSERT ){
+    for(i=0; i<nCol; i++){
+      sqlite3_value *pVal;
+      sqlite3changeset_old(pIter, i, &pVal);
+      test_append_value(pOld, pVal);
+    }
+  }
+  pNew = Tcl_NewObj();
+  if( op!=SQLITE_DELETE ){
+    for(i=0; i<nCol; i++){
+      sqlite3_value *pVal;
+      sqlite3changeset_new(pIter, i, &pVal);
+      test_append_value(pNew, pVal);
+    }
+  }
+  Tcl_ListObjAppendElement(0, pVar, pOld);
+  Tcl_ListObjAppendElement(0, pVar, pNew);
+
+  return pVar;
+}
+
 /*
 ** sqlite3session_foreach VARNAME CHANGESET SCRIPT
 */
@@ -1097,67 +1169,8 @@ static int SQLITE_TCLAPI test_sqlite3session_foreach(
   }
 
   while( SQLITE_ROW==sqlite3changeset_next(pIter) ){
-    int nCol;                     /* Number of columns in table */
-    int nCol2;                    /* Number of columns in table */
-    int op;                       /* SQLITE_INSERT, UPDATE or DELETE */
-    const char *zTab;             /* Name of table change applies to */
-    Tcl_Obj *pVar;                /* Tcl value to set $VARNAME to */
-    Tcl_Obj *pOld;                /* Vector of old.* values */
-    Tcl_Obj *pNew;                /* Vector of new.* values */
-    int bIndirect;
-
-    char *zPK;
-    unsigned char *abPK;
-    int i;
-
-    /* Test that _fk_conflicts() returns SQLITE_MISUSE if called on this
-    ** iterator. */
-    int nDummy;
-    if( SQLITE_MISUSE!=sqlite3changeset_fk_conflicts(pIter, &nDummy) ){
-      sqlite3changeset_finalize(pIter);
-      return TCL_ERROR;
-    }
-
-    sqlite3changeset_op(pIter, &zTab, &nCol, &op, &bIndirect);
-    pVar = Tcl_NewObj();
-    Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(
-          op==SQLITE_INSERT ? "INSERT" :
-          op==SQLITE_UPDATE ? "UPDATE" : 
-          "DELETE", -1
-    ));
-
-    Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(zTab, -1));
-    Tcl_ListObjAppendElement(0, pVar, Tcl_NewBooleanObj(bIndirect));
-
-    zPK = ckalloc(nCol+1);
-    memset(zPK, 0, nCol+1);
-    sqlite3changeset_pk(pIter, &abPK, &nCol2);
-    assert( nCol==nCol2 );
-    for(i=0; i<nCol; i++){
-      zPK[i] = (abPK[i] ? 'X' : '.');
-    }
-    Tcl_ListObjAppendElement(0, pVar, Tcl_NewStringObj(zPK, -1));
-    ckfree(zPK);
-
-    pOld = Tcl_NewObj();
-    if( op!=SQLITE_INSERT ){
-      for(i=0; i<nCol; i++){
-        sqlite3_value *pVal;
-        sqlite3changeset_old(pIter, i, &pVal);
-        test_append_value(pOld, pVal);
-      }
-    }
-    pNew = Tcl_NewObj();
-    if( op!=SQLITE_DELETE ){
-      for(i=0; i<nCol; i++){
-        sqlite3_value *pVal;
-        sqlite3changeset_new(pIter, i, &pVal);
-        test_append_value(pNew, pVal);
-      }
-    }
-    Tcl_ListObjAppendElement(0, pVar, pOld);
-    Tcl_ListObjAppendElement(0, pVar, pNew);
-
+    Tcl_Obj *pVar = 0;            /* Tcl value to set $VARNAME to */
+    pVar = testIterData(pIter);
     Tcl_ObjSetVar2(interp, pVarname, 0, pVar, 0);
     rc = Tcl_EvalObjEx(interp, pScript, 0);
     if( rc!=TCL_OK && rc!=TCL_CONTINUE ){
@@ -1301,7 +1314,15 @@ static int SQLITE_TCLAPI test_sqlite3rebaser_create(
 }
 
 /*
+** Run some sanity checks on the changeset in nChangeset byte buffer
+** pChangeset. If any fail, return a non-zero value and, optionally,
+** set output variable (*pzErr) to point to a buffer containing an
+** English language error message describing the problem. In this
+** case it is the responsibility of the caller to free the buffer
+** using sqlite3_free().
 **
+** Or, if the changeset appears to be well-formed, this function
+** returns SQLITE_OK and sets (*pzErr) to NULL.
 */
 static int sqlite3_test_changeset(
   int nChangeset,
@@ -1432,12 +1453,279 @@ static int SQLITE_TCLAPI test_sqlite3session_config(
   return TCL_OK;
 }
 
+typedef struct TestChangegroup TestChangegroup;
+struct TestChangegroup {
+  sqlite3_changegroup *pGrp;
+};
+
+typedef struct TestChangeIter TestChangeIter;
+struct TestChangeIter {
+  sqlite3_changeset_iter *pIter;
+};
+
+
+/*
+** Destructor for Tcl changegroup command object.
+*/
+static void test_changegroup_del(void *clientData){
+  TestChangegroup *pGrp = (TestChangegroup*)clientData;
+  sqlite3changegroup_delete(pGrp->pGrp);
+  ckfree(pGrp);
+}
+
+/*
+** Tclcmd:  $changegroup schema DB DBNAME
+** Tclcmd:  $changegroup add CHANGESET
+** Tclcmd:  $changegroup output
+** Tclcmd:  $changegroup delete
+*/
+static int SQLITE_TCLAPI test_changegroup_cmd(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  TestChangegroup *p = (TestChangegroup*)clientData;
+  static struct ChangegroupCmd {
+    const char *zSub;
+    int nArg;
+    const char *zMsg;
+    int iSub;
+  } aSub[] = {
+    { "schema",       2, "DB DBNAME",  }, /* 0 */
+    { "add",          1, "CHANGESET",  }, /* 1 */
+    { "output",       0, "",           }, /* 2 */
+    { "delete",       0, "",           }, /* 3 */
+    { "add_change",   1, "ITERATOR",   }, /* 4 */
+    { 0 }
+  };
+  int rc = TCL_OK;
+  int iSub = 0;
+
+  if( objc<2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "SUBCOMMAND ...");
+    return TCL_ERROR;
+  }
+  rc = Tcl_GetIndexFromObjStruct(interp, 
+      objv[1], aSub, sizeof(aSub[0]), "sub-command", 0, &iSub
+  );
+  if( rc!=TCL_OK ) return rc;
+  if( objc!=2+aSub[iSub].nArg ){
+    Tcl_WrongNumArgs(interp, 2, objv, aSub[iSub].zMsg);
+    return TCL_ERROR;
+  }
+
+  switch( iSub ){
+    case 0: {      /* schema */
+      sqlite3 *db = 0;
+      const char *zDb = Tcl_GetString(objv[3]);
+      if( dbHandleFromObj(interp, objv[2], &db) ){
+        return TCL_ERROR;
+      }
+      rc = sqlite3changegroup_schema(p->pGrp, db, zDb);
+      if( rc!=SQLITE_OK ) rc = test_session_error(interp, rc, 0);
+      break;
+    };
+
+    case 1: {      /* add */
+      int nByte = 0;
+      const u8 *aByte = Tcl_GetByteArrayFromObj(objv[2], &nByte);
+      rc = sqlite3changegroup_add(p->pGrp, nByte, (void*)aByte);
+      if( rc!=SQLITE_OK ) rc = test_session_error(interp, rc, 0);
+      break;
+    };
+
+    case 2: {      /* output */
+      int nByte = 0;
+      u8 *aByte = 0;
+      rc = sqlite3changegroup_output(p->pGrp, &nByte, (void**)&aByte);
+      if( rc!=SQLITE_OK ){
+        rc = test_session_error(interp, rc, 0);
+      }else{
+        Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(aByte, nByte));
+      }
+      sqlite3_free(aByte);
+      break;
+    };
+
+    case 4: {      /* add_change */
+      Tcl_CmdInfo cmdInfo;            /* Database Tcl command (objv[2]) info */
+      TestChangeIter *pIter = 0;
+      const char *zIter = Tcl_GetString(objv[2]);
+      if( 0==Tcl_GetCommandInfo(interp, zIter, &cmdInfo) ){
+        Tcl_AppendResult(interp, "no such iter: ", Tcl_GetString(objv[2]), 0);
+        return TCL_ERROR;
+      }
+
+      pIter = (struct TestChangeIter*)cmdInfo.objClientData;
+
+      rc = sqlite3changegroup_add_change(p->pGrp, pIter->pIter);
+      if( rc!=SQLITE_OK ){
+        rc = test_session_error(interp, rc, 0);
+      }
+      break;
+    };
+
+    default: {     /* delete */
+      assert( iSub==3 );
+      Tcl_DeleteCommand(interp, Tcl_GetString(objv[0]));
+      break;
+    }
+  }
+
+  return rc;
+}
+
+/*
+** Tclcmd:  sqlite3changegroup CMD
+*/
+static int SQLITE_TCLAPI test_sqlite3changegroup(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  int rc;                         /* sqlite3changegroup_new() return code */
+  TestChangegroup *p;             /* New wrapper object */
+
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "CMD");
+    return TCL_ERROR;
+  }
+
+  p = (TestChangegroup*)ckalloc(sizeof(TestChangegroup));
+  memset(p, 0, sizeof(TestChangegroup));
+  rc = sqlite3changegroup_new(&p->pGrp);
+  if( rc!=SQLITE_OK ){
+    ckfree((char*)p);
+    return test_session_error(interp, rc, 0);
+  }
+
+  Tcl_CreateObjCommand(
+      interp, Tcl_GetString(objv[1]), test_changegroup_cmd, (ClientData)p,
+      test_changegroup_del
+  );
+  Tcl_SetObjResult(interp, objv[1]);
+  return TCL_OK;
+}
+
+extern const char *sqlite3ErrName(int);
+
+/*
+** Destructor for Tcl iterator command object.
+*/
+static void test_iter_del(void *clientData){
+  TestChangeIter *p = (TestChangeIter*)clientData;
+  sqlite3changeset_finalize(p->pIter);
+  ckfree(p);
+}
+
+static int SQLITE_TCLAPI test_iter_cmd(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  static const char *aSub[] = {
+    "next",        /* 0 */
+    "data",        /* 1 */
+    "finalize",    /* 2 */
+    0
+  };
+  int iSub = 0;
+
+  TestChangeIter *p = (TestChangeIter*)clientData;
+  int rc = SQLITE_OK;
+
+  if( objc<2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "CMD");
+    return TCL_ERROR;
+  }
+
+  if( Tcl_GetIndexFromObj(interp, objv[1], aSub, "sub-command", 0, &iSub) ){
+    return TCL_ERROR;
+  }
+  switch( iSub ){
+    case 0:
+      rc = sqlite3changeset_next(p->pIter);
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(sqlite3ErrName(rc), -1));
+      break;
+    case 1:
+      Tcl_SetObjResult(interp, testIterData(p->pIter));
+      break;
+    case 2:
+      rc = sqlite3changeset_finalize(p->pIter);
+      p->pIter = 0;
+      Tcl_DeleteCommand(interp, Tcl_GetString(objv[0]));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(sqlite3ErrName(rc), -1));
+      break;
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return TCL_OK;
+}
+
+/*
+** Tclcmd:  sqlite3changeset_start ?-invert? CHANGESET
+*/
+static int SQLITE_TCLAPI test_sqlite3changeset_start(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  int isInvert = 0;
+  void *pChangeset = 0;           /* Buffer containing changeset */
+  int nChangeset = 0;             /* Size of buffer aChangeset in bytes */
+  TestChangeIter *pNew = 0;
+  sqlite3_changeset_iter *pIter = 0;
+  int flags = 0;
+  int rc = SQLITE_OK;
+
+  static int iCmd = 1;
+  char zCmd[64];
+
+  if( objc==3 ){
+    int n = 0;
+    const char *z = Tcl_GetStringFromObj(objv[1], &n);
+    isInvert = (n>=2 && sqlite3_strnicmp(z, "-invert", n)==0);
+  }
+
+  if( objc!=2 && (objc!=3 || !isInvert) ){
+    Tcl_WrongNumArgs(interp, 1, objv, "?-invert? CHANGESET");
+    return TCL_ERROR;
+  }
+
+  flags = isInvert ? SQLITE_CHANGESETSTART_INVERT : 0;
+  pChangeset = (void *)Tcl_GetByteArrayFromObj(objv[objc-1], &nChangeset);
+  rc = sqlite3changeset_start_v2(&pIter, nChangeset, pChangeset, flags);
+  if( rc!=SQLITE_OK ){
+    char *zErr = sqlite3_mprintf(
+        "error in sqlite3changeset_start_v2() - %d", rc
+    );
+    Tcl_AppendResult(interp, zErr, (char*)0);
+    return TCL_ERROR;
+  }
+
+  pNew = (TestChangeIter*)ckalloc(sizeof(TestChangeIter));
+  pNew->pIter = pIter;
+
+  sprintf(zCmd, "csiter%d", iCmd++);
+  Tcl_CreateObjCommand(interp, zCmd, test_iter_cmd, (void*)pNew, test_iter_del);
+  Tcl_SetObjResult(interp, Tcl_NewStringObj(zCmd, -1));
+  return TCL_OK;
+}
+
 int TestSession_Init(Tcl_Interp *interp){
   struct Cmd {
     const char *zCmd;
     Tcl_ObjCmdProc *xProc;
   } aCmd[] = {
     { "sqlite3session", test_sqlite3session },
+    { "sqlite3changegroup", test_sqlite3changegroup },
+    { "sqlite3changeset_start", test_sqlite3changeset_start },
     { "sqlite3session_foreach", test_sqlite3session_foreach },
     { "sqlite3changeset_invert", test_sqlite3changeset_invert },
     { "sqlite3changeset_concat", test_sqlite3changeset_concat },

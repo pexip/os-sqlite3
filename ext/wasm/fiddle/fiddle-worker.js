@@ -46,7 +46,7 @@
     about module loading status so that, e.g., the main thread can
     update a progress widget and DTRT when the module is finished
     loading and available for work. Status messages come in the form
-    
+
     {type:'module', data:{
         type:'status',
         data: {text:string|null, step:1-based-integer}
@@ -166,11 +166,10 @@
       stdout("SQLite version", capi.sqlite3_libversion(),
              capi.sqlite3_sourceid().substr(0,19));
       stdout('Welcome to the "fiddle" shell.');
-      if(sqlite3.opfs){
+      if(capi.sqlite3_vfs_find("opfs")){
         stdout("\nOPFS is available. To open a persistent db, use:\n\n",
                "  .open file:name?vfs=opfs\n\nbut note that some",
                "features (e.g. upload) do not yet work with OPFS.");
-        sqlite3.opfs.registerVfs();
       }
       stdout('\nEnter ".help" for usage hints.');
       this.exec([ // initialization commands...
@@ -221,7 +220,7 @@
       f._();
     }
   };
-  
+
   self.onmessage = function f(ev){
     ev = ev.data;
     if(!f.cache){
@@ -317,7 +316,7 @@
     };
     console.warn("Unknown fiddle-worker message type:",ev);
   };
-  
+
   /**
      emscripten module for use with build mode -sMODULARIZE.
   */
@@ -370,10 +369,13 @@
   */
   sqlite3InitModule(fiddleModule).then((_sqlite3)=>{
     sqlite3 = _sqlite3;
+    console.warn("Installing sqlite3 module globally (in Worker)",
+                 "for use in the dev console.", sqlite3);
+    globalThis.sqlite3 = sqlite3;
     const dbVfs = sqlite3.wasm.xWrap('fiddle_db_vfs', "*", ['string']);
-    fiddleModule.fsUnlink = (fn)=>{
-      return sqlite3.wasm.sqlite3_wasm_vfs_unlink(dbVfs(0), fn);
-    };
+    fiddleModule.fsUnlink = (fn)=>fiddleModule.FS.unlink(fn);
     wMsg('fiddle-ready');
-  })/*then()*/;
+  }).catch(e=>{
+    console.error("Fiddle worker init failed:",e);
+  });
 })();

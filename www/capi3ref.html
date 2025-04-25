@@ -129,8 +129,8 @@ For a tutorial introductions, see instead:
 <li><a href="quickstart.html">SQLite In 3 Minutes Or Less</a> and/or
 <li>the <a href="cintro.html">Introduction To The SQLite C/C++ Interface</a>.
 </ul>
-This same content is also available split out into 
-<a href="c3ref/intro.html">lots of small pages</a>.</p>
+This same content is also available split out into
+<a href="../c3ref/intro.html">some smaller pages</a>.</p>
 
 <hr>
 
@@ -151,7 +151,7 @@ compatible way.  An application that uses only stable interfaces
 should always be able to relink against a newer version of SQLite
 without any changes.</p>
 
-<p>Experimental interfaces are subject to change.  
+<p>Experimental interfaces are subject to change.
 Applications that use experimental interfaces
 may need to be modified when upgrading to a newer SQLite release, though
 this is rare.
@@ -170,7 +170,7 @@ that deprecated interfaces may be removed.</p>
 <p>Key points:</p>
 
 <ul>
-<li>Experimental interfaces are subject to change and/or removal 
+<li>Experimental interfaces are subject to change and/or removal
 at any time.</li>
 
 <li>Deprecated interfaces should not be used in new code and might
@@ -264,6 +264,7 @@ be removed in some future release.</li>
 <li><a href='#sqliteconfigpcache2'>SQLITE_CONFIG_PCACHE2</a></li>
 <li><a href='#sqliteconfigpcachehdrsz'>SQLITE_CONFIG_PCACHE_HDRSZ</a></li>
 <li><a href='#sqliteconfigpmasz'>SQLITE_CONFIG_PMASZ</a></li>
+<li><a href='#sqliteconfigrowidinview'>SQLITE_CONFIG_ROWID_IN_VIEW</a></li>
 <li><a href='#sqliteconfigscratch'>SQLITE_CONFIG_SCRATCH</a></li>
 <li><a href='#sqliteconfigserialized'>SQLITE_CONFIG_SERIALIZED</a></li>
 <li><a href='#sqliteconfigsinglethread'>SQLITE_CONFIG_SINGLETHREAD</a></li>
@@ -316,6 +317,8 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_DBCONFIG_DEFENSIVE'>SQLITE_DBCONFIG_MAX</a></li>
 <li><a href='#sqlitedbconfignockptonclose'>SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE</a></li>
 <li><a href='#sqlitedbconfigresetdatabase'>SQLITE_DBCONFIG_RESET_DATABASE</a></li>
+<li><a href='#sqlitedbconfigreversescanorder'>SQLITE_DBCONFIG_REVERSE_SCANORDER</a></li>
+<li><a href='#sqlitedbconfigstmtscanstatus'>SQLITE_DBCONFIG_STMT_SCANSTATUS</a></li>
 <li><a href='#sqlitedbconfigtriggereqp'>SQLITE_DBCONFIG_TRIGGER_EQP</a></li>
 <li><a href='#sqlitedbconfigtrustedschema'>SQLITE_DBCONFIG_TRUSTED_SCHEMA</a></li>
 <li><a href='#sqlitedbconfigwritableschema'>SQLITE_DBCONFIG_WRITABLE_SCHEMA</a></li>
@@ -459,6 +462,7 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_FSTAT</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_FSYNC</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_GETTEMPPATH</a></li>
+<li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_IN_PAGE</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_LOCK</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_MMAP</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_IOERR_NOMEM</a></li>
@@ -518,6 +522,7 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_ABORT'>SQLITE_NOTADB</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_NOTFOUND</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_NOTICE</a></li>
+<li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_NOTICE_RBU</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_NOTICE_RECOVER_ROLLBACK</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_NOTICE_RECOVER_WAL</a></li>
 <li><a href='#SQLITE_BLOB'>SQLITE_NULL</a></li>
@@ -564,14 +569,18 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_ALTER_TABLE'>SQLITE_RECURSIVE</a></li>
 <li><a href='#SQLITE_ALTER_TABLE'>SQLITE_REINDEX</a></li>
 <li><a href='#SQLITE_FAIL'>SQLITE_REPLACE</a></li>
+<li><a href='#sqliteresultsubtype'>SQLITE_RESULT_SUBTYPE</a></li>
 <li><a href='#SQLITE_FAIL'>SQLITE_ROLLBACK</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_ROW</a></li>
 <li><a href='#SQLITE_ALTER_TABLE'>SQLITE_SAVEPOINT</a></li>
+<li><a href='#SQLITE_SCANSTAT_COMPLEX'>SQLITE_SCANSTAT_COMPLEX</a></li>
 <li><a href='#sqlitescanstatest'>SQLITE_SCANSTAT_EST</a></li>
 <li><a href='#sqlitescanstatexplain'>SQLITE_SCANSTAT_EXPLAIN</a></li>
 <li><a href='#sqlitescanstatname'>SQLITE_SCANSTAT_NAME</a></li>
+<li><a href='#sqlitescanstatncycle'>SQLITE_SCANSTAT_NCYCLE</a></li>
 <li><a href='#sqlitescanstatnloop'>SQLITE_SCANSTAT_NLOOP</a></li>
 <li><a href='#sqlitescanstatnvisit'>SQLITE_SCANSTAT_NVISIT</a></li>
+<li><a href='#sqlitescanstatparentid'>SQLITE_SCANSTAT_PARENTID</a></li>
 <li><a href='#sqlitescanstatselectid'>SQLITE_SCANSTAT_SELECTID</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_SCHEMA</a></li>
 <li><a href='#SQLITE_ALTER_TABLE'>SQLITE_SELECT</a></li>
@@ -615,10 +624,12 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_EXTRA_SCHEMA_CHECKS</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_FAULT_INSTALL</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_FIRST</a></li>
+<li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_FK_NO_ACTION</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_IMPOSTER</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_INTERNAL_FUNCTIONS</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_ISINIT</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_ISKEYWORD</a></li>
+<li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_JSON_SELFCHECK</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_LAST</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_LOCALTIME_FAULT</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_LOGEST</a></li>
@@ -638,6 +649,7 @@ be removed in some future release.</li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_SORTER_MMAP</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_TRACEFLAGS</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_TUNE</a></li>
+<li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_USELONGDOUBLE</a></li>
 <li><a href='#SQLITE_TESTCTRL_ALWAYS'>SQLITE_TESTCTRL_VDBE_COVERAGE</a></li>
 <li><a href='#SQLITE_BLOB'>SQLITE_TEXT</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_TOOBIG</a></li>
@@ -662,6 +674,7 @@ be removed in some future release.</li>
 <li><a href='#sqlitevtabconstraintsupport'>SQLITE_VTAB_CONSTRAINT_SUPPORT</a></li>
 <li><a href='#sqlitevtabdirectonly'>SQLITE_VTAB_DIRECTONLY</a></li>
 <li><a href='#sqlitevtabinnocuous'>SQLITE_VTAB_INNOCUOUS</a></li>
+<li><a href='#sqlitevtabusesallschemas'>SQLITE_VTAB_USES_ALL_SCHEMAS</a></li>
 <li><a href='#SQLITE_ABORT'>SQLITE_WARNING</a></li>
 <li><a href='#SQLITE_ABORT_ROLLBACK'>SQLITE_WARNING_AUTOINDEX</a></li>
 <li><a href='#SQLITE_WIN32_DATA_DIRECTORY_TYPE'>SQLITE_WIN32_DATA_DIRECTORY_TYPE</a></li>
@@ -674,8 +687,8 @@ be removed in some future release.</li>
 <p>Note: Functions marked with "<small><i>(exp)</i></small>"
 are <a href="capi3ref.html">experimental</a> and functions whose names are
 <s>struck through</s> are <a href="capi3ref.html">deprecated</a>.</p>
-<!-- number of functions: 285 -->
-<!-- number of deprecated functions: 7 -->
+<!-- number of functions: 288 -->
+<!-- number of deprecated functions: 9 -->
 <!-- number of experimental functions: 0 -->
 <div class='columns' style='columns: 15em auto;'>
 <ul style='padding-top:0;'>
@@ -794,11 +807,13 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_free_table'>sqlite3_free_table</a></li>
 <li><a href='#sqlite3_get_autocommit'>sqlite3_get_autocommit</a></li>
 <li><a href='#sqlite3_get_auxdata'>sqlite3_get_auxdata</a></li>
+<li><a href='#sqlite3_get_clientdata'>sqlite3_get_clientdata</a></li>
 <li><a href='#sqlite3_free_table'>sqlite3_get_table</a></li>
 <li><s>sqlite3_global_recover</s></li>
 <li><a href='#sqlite3_hard_heap_limit64'>sqlite3_hard_heap_limit64</a></li>
 <li><a href='#sqlite3_initialize'>sqlite3_initialize</a></li>
 <li><a href='#sqlite3_interrupt'>sqlite3_interrupt</a></li>
+<li><a href='#sqlite3_interrupt'>sqlite3_is_interrupted</a></li>
 <li><a href='#sqlite3_keyword_check'>sqlite3_keyword_check</a></li>
 <li><a href='#sqlite3_keyword_check'>sqlite3_keyword_count</a></li>
 <li><a href='#sqlite3_keyword_check'>sqlite3_keyword_name</a></li>
@@ -842,7 +857,7 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_hook</a></li>
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_new</a></li>
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_old</a></li>
-<li><a href='#sqlite3_profile'>sqlite3_profile</a></li>
+<li><s>sqlite3_profile</s></li>
 <li><a href='#sqlite3_progress_handler'>sqlite3_progress_handler</a></li>
 <li><a href='#sqlite3_randomness'>sqlite3_randomness</a></li>
 <li><a href='#sqlite3_free'>sqlite3_realloc</a></li>
@@ -875,6 +890,7 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_serialize'>sqlite3_serialize</a></li>
 <li><a href='#sqlite3_set_authorizer'>sqlite3_set_authorizer</a></li>
 <li><a href='#sqlite3_get_auxdata'>sqlite3_set_auxdata</a></li>
+<li><a href='#sqlite3_get_clientdata'>sqlite3_set_clientdata</a></li>
 <li><a href='#sqlite3_set_last_insert_rowid'>sqlite3_set_last_insert_rowid</a></li>
 <li><a href='#sqlite3_initialize'>sqlite3_shutdown</a></li>
 <li><a href='#sqlite3_sleep'>sqlite3_sleep</a></li>
@@ -892,10 +908,12 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_status'>sqlite3_status64</a></li>
 <li><a href='#sqlite3_step'>sqlite3_step</a></li>
 <li><a href='#sqlite3_stmt_busy'>sqlite3_stmt_busy</a></li>
+<li><a href='#sqlite3_stmt_explain'>sqlite3_stmt_explain</a></li>
 <li><a href='#sqlite3_stmt_isexplain'>sqlite3_stmt_isexplain</a></li>
 <li><a href='#sqlite3_stmt_readonly'>sqlite3_stmt_readonly</a></li>
 <li><a href='#sqlite3_stmt_scanstatus'>sqlite3_stmt_scanstatus</a></li>
 <li><a href='#sqlite3_stmt_scanstatus_reset'>sqlite3_stmt_scanstatus_reset</a></li>
+<li><a href='#sqlite3_stmt_scanstatus'>sqlite3_stmt_scanstatus_v2</a></li>
 <li><a href='#sqlite3_stmt_status'>sqlite3_stmt_status</a></li>
 <li><a href='#sqlite3_str_append'>sqlite3_str_append</a></li>
 <li><a href='#sqlite3_str_append'>sqlite3_str_appendall</a></li>
@@ -919,7 +937,7 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_threadsafe'>sqlite3_threadsafe</a></li>
 <li><a href='#sqlite3_total_changes'>sqlite3_total_changes</a></li>
 <li><a href='#sqlite3_total_changes'>sqlite3_total_changes64</a></li>
-<li><a href='#sqlite3_profile'>sqlite3_trace</a></li>
+<li><s>sqlite3_trace</s></li>
 <li><a href='#sqlite3_trace_v2'>sqlite3_trace_v2</a></li>
 <li><s>sqlite3_transfer_bindings</s></li>
 <li><a href='#sqlite3_txn_state'>sqlite3_txn_state</a></li>
@@ -935,7 +953,7 @@ are <a href="capi3ref.html">experimental</a> and functions whose names are
 <li><a href='#sqlite3_value_blob'>sqlite3_value_bytes16</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_double</a></li>
 <li><a href='#sqlite3_value_dup'>sqlite3_value_dup</a></li>
-<li><a href='#sqlite3_value_blob'>sqlite3_value_encoding</a></li>
+<li><a href='#sqlite3_value_encoding'>sqlite3_value_encoding</a></li>
 <li><a href='#sqlite3_value_dup'>sqlite3_value_free</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_frombind</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_int</a></li>
@@ -1051,7 +1069,7 @@ pointer through into calls to <a href="#sqlite3_result_blob">sqlite3_result()</a
 <a href="#sqlite3_aggregate_context">sqlite3_aggregate_context()</a>, <a href="#sqlite3_user_data">sqlite3_user_data()</a>,
 <a href="#sqlite3_context_db_handle">sqlite3_context_db_handle()</a>, <a href="#sqlite3_get_auxdata">sqlite3_get_auxdata()</a>,
 and/or <a href="#sqlite3_get_auxdata">sqlite3_set_auxdata()</a>.
-</p><p>26 Methods:
+</p><p>26 Methods using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_aggregate_context'>sqlite3_aggregate_context</a></li>
@@ -1248,10 +1266,10 @@ the constraint may or may not be checked in byte code.  In other words,
 when the omit flag is true there is no guarantee that the constraint will
 not be checked again using byte code.</p>
 
-<p>The idxNum and idxPtr values are recorded and passed into the
+<p>The idxNum and idxStr values are recorded and passed into the
 <a href="vtab.html#xfilter">xFilter</a> method.
-<a href="#sqlite3_free">sqlite3_free()</a> is used to free idxPtr if and only if
-needToFreeIdxPtr is true.</p>
+<a href="#sqlite3_free">sqlite3_free()</a> is used to free idxStr if and only if
+needToFreeIdxStr is true.</p>
 
 <p>The orderByConsumed means that output from <a href="vtab.html#xfilter">xFilter</a>/<a href="vtab.html#xnext">xNext</a> will occur in
 the correct order to satisfy the ORDER BY clause so that no separate
@@ -1293,7 +1311,7 @@ was added for <a href="releaselog/3_9_0.html">version 3.9.0</a> (2015-10-14).
 It may therefore only be used if
 sqlite3_libversion_number() returns a value greater than or equal to
 3009000.
-</p><p>3 Methods:
+</p><p>3 Methods using this object:
  <a href="#sqlite3_vtab_collation">sqlite3_vtab_collation()</a>,
 <a href="#sqlite3_vtab_distinct">sqlite3_vtab_distinct()</a>,
 <a href="#sqlite3_vtab_rhs_value">sqlite3_vtab_rhs_value()</a></p>
@@ -1358,10 +1376,11 @@ and not its inode needs to be synced.</p>
 </ul>
 xLock() upgrades the database file lock.  In other words, xLock() moves the
 database file lock in the direction NONE toward EXCLUSIVE. The argument to
-xLock() is always on of SHARED, RESERVED, PENDING, or EXCLUSIVE, never
+xLock() is always one of SHARED, RESERVED, PENDING, or EXCLUSIVE, never
 SQLITE_LOCK_NONE.  If the database file lock is already at or above the
 requested lock, then the call to xLock() is a no-op.
 xUnlock() downgrades the database file lock to either SHARED or NONE.
+If the lock is already at or below the requested lock state, then the call
 to xUnlock() is a no-op.
 The xCheckReservedLock() method checks whether any database connection,
 either in this process or in some other process, is holding a RESERVED,
@@ -2047,7 +2066,7 @@ is overwritten by another invocation of sqlite3_autovacuum_pages().</p>
 Each call to the sqlite3_autovacuum_pages() interface overrides all
 previous invocations for that database connection.  If the callback
 argument (C) to sqlite3_autovacuum_pages(D,C,P,X) is a NULL pointer,
-then the autovacuum steps callback is cancelled.  The return value
+then the autovacuum steps callback is canceled.  The return value
 from sqlite3_autovacuum_pages() is normally SQLITE_OK, but might
 be some other error code if something goes wrong.  The current
 implementation will only return SQLITE_OK or SQLITE_MISUSE, but other
@@ -2171,7 +2190,7 @@ committed. If an error occurs while committing the transaction, an error
 code is returned and the transaction rolled back.</p>
 
 <p>Calling this function with an argument that is not a NULL pointer or an
-open blob handle results in undefined behaviour. Calling this routine
+open blob handle results in undefined behavior. Calling this routine
 with a null pointer (such as would be returned by a failed call to
 <a href="#sqlite3_blob_open">sqlite3_blob_open()</a>) is a harmless no-op. Otherwise, if this function
 is passed a valid open blob handle, the values returned by the
@@ -2443,19 +2462,22 @@ provided to support rare applications with unusual needs.</p>
 must ensure that no other SQLite interfaces are invoked by other
 threads while sqlite3_config() is running.</b></p>
 
-<p>The sqlite3_config() interface
-may only be invoked prior to library initialization using
-<a href="#sqlite3_initialize">sqlite3_initialize()</a> or after shutdown by <a href="#sqlite3_initialize">sqlite3_shutdown()</a>.
-If sqlite3_config() is called after <a href="#sqlite3_initialize">sqlite3_initialize()</a> and before
-<a href="#sqlite3_initialize">sqlite3_shutdown()</a> then it will return SQLITE_MISUSE.
-Note, however, that sqlite3_config() can be called as part of the
-implementation of an application-defined <a href="#sqlite3_initialize">sqlite3_os_init()</a>.</p>
-
 <p>The first argument to sqlite3_config() is an integer
 <a href="#SQLITE_CONFIG_COVERING_INDEX_SCAN">configuration option</a> that determines
 what property of SQLite is to be configured.  Subsequent arguments
 vary depending on the <a href="#SQLITE_CONFIG_COVERING_INDEX_SCAN">configuration option</a>
 in the first argument.</p>
+
+<p>For most configuration options, the sqlite3_config() interface
+may only be invoked prior to library initialization using
+<a href="#sqlite3_initialize">sqlite3_initialize()</a> or after shutdown by <a href="#sqlite3_initialize">sqlite3_shutdown()</a>.
+The exceptional configuration options that may be invoked at any time
+are called "anytime configuration options".
+If sqlite3_config() is called after <a href="#sqlite3_initialize">sqlite3_initialize()</a> and before
+<a href="#sqlite3_initialize">sqlite3_shutdown()</a> with a first argument that is not an anytime
+configuration option, then the sqlite3_config() call will return SQLITE_MISUSE.
+Note, however, that sqlite3_config() can be called as part of the
+implementation of an application-defined <a href="#sqlite3_initialize">sqlite3_os_init()</a>.</p>
 
 <p>When a configuration option is set, sqlite3_config() returns <a href="#SQLITE_ABORT">SQLITE_OK</a>.
 If the option is unknown or SQLite is unable to set the option
@@ -2733,6 +2755,9 @@ connection closes.  If the SQLITE_DESERIALIZE_RESIZEABLE bit is set, then
 SQLite will try to increase the buffer size using sqlite3_realloc64()
 if writes on the database cause it to grow larger than M bytes.</p>
 
+<p>Applications must not modify the buffer P or invalidate it before
+the database connection D is closed.</p>
+
 <p>The sqlite3_deserialize() interface will fail with SQLITE_BUSY if the
 database is currently in a read transaction or is involved in a backup
 operation.</p>
@@ -2740,6 +2765,13 @@ operation.</p>
 <p>It is not possible to deserialized into the TEMP database.  If the
 S argument to sqlite3_deserialize(D,S,P,N,M,F) is "temp" then the
 function returns SQLITE_ERROR.</p>
+
+<p>The deserialized database should not be in <a href="wal.html">WAL mode</a>.  If the database
+is in WAL mode, then any attempt to use the database file will result
+in an <a href="#SQLITE_ABORT">SQLITE_CANTOPEN</a> error.  The application can set the
+<a href="fileformat2.html#vnums">file format version numbers</a> (bytes 18 and 19) of the input database P
+to 0x01 prior to invoking sqlite3_deserialize(D,S,P,N,M,F) to force the
+database file into rollback mode and work around this limitation.</p>
 
 <p>If sqlite3_deserialize(D,S,P,N,M,F) fails for any reason and if the
 SQLITE_DESERIALIZE_FREEONCLOSE bit is set in argument F, then
@@ -2907,6 +2939,8 @@ is a valid and open <a href="#sqlite3">database connection</a>.
 the 1st parameter to sqlite3_exec() while sqlite3_exec() is running.
 <li> The application must not modify the SQL statement text passed into
 the 2nd parameter of sqlite3_exec() while sqlite3_exec() is running.
+<li> The application must not dereference the arrays or string pointers
+passed as the 3rd and 4th callback parameters after it returns.
 </ul>
 </p><hr><a name="sqlite3_extended_result_codes"></a>
 <h2>Enable Or Disable Extended Result Codes</h2>
@@ -2946,43 +2980,6 @@ resource leaks.  It is a grievous error for the application to try to use
 a prepared statement after it has been finalized.  Any use of a prepared
 statement after it has been finalized can result in undefined and
 undesirable behavior such as segfaults and heap corruption.
-</p><hr><a name="sqlite3_interrupt"></a>
-<h2>Interrupt A Long-Running Query</h2>
-</div>
-<blockquote><pre>
-void sqlite3_interrupt(sqlite3*);
-</pre></blockquote>
-<p>
-This function causes any pending database operation to abort and
-return at its earliest opportunity. This routine is typically
-called in response to a user action such as pressing "Cancel"
-or Ctrl-C where the user wants a long query operation to halt
-immediately.</p>
-
-<p>It is safe to call this routine from a thread different from the
-thread that is currently running the database operation.  But it
-is not safe to call this routine with a <a href="#sqlite3">database connection</a> that
-is closed or might close before sqlite3_interrupt() returns.</p>
-
-<p>If an SQL operation is very nearly finished at the time when
-sqlite3_interrupt() is called, then it might not have an opportunity
-to be interrupted and might continue to completion.</p>
-
-<p>An SQL operation that is interrupted will return <a href="#SQLITE_ABORT">SQLITE_INTERRUPT</a>.
-If the interrupted SQL operation is an INSERT, UPDATE, or DELETE
-that is inside an explicit transaction, then the entire transaction
-will be rolled back automatically.</p>
-
-<p>The sqlite3_interrupt(D) call is in effect until all currently running
-SQL statements on <a href="#sqlite3">database connection</a> D complete.  Any new SQL statements
-that are started after the sqlite3_interrupt() call and before the
-running statement count reaches zero are interrupted as if they had been
-running prior to the sqlite3_interrupt() call.  New SQL statements
-that are started after the running statement count reaches zero are
-not effected by the sqlite3_interrupt().
-A call to sqlite3_interrupt(D) that occurs when there are no running
-SQL statements is a no-op and has no effect on SQL statements
-that are started after the sqlite3_interrupt() call returns.
 </p><hr><a name="sqlite3_last_insert_rowid"></a>
 <h2>Last Insert Rowid</h2>
 </div>
@@ -3206,7 +3203,7 @@ void sqlite3_progress_handler(sqlite3*, int, int(*)(void*), void*);
 <p>
 The sqlite3_progress_handler(D,N,X,P) interface causes the callback
 function X to be invoked periodically during long running calls to
-<a href="#sqlite3_exec">sqlite3_exec()</a>, <a href="#sqlite3_step">sqlite3_step()</a> and <a href="#sqlite3_free_table">sqlite3_get_table()</a> for
+<a href="#sqlite3_step">sqlite3_step()</a> and <a href="#sqlite3_prepare">sqlite3_prepare()</a> and similar for
 database connection D.  An example use for this
 interface is to keep a GUI updated during a large query.</p>
 
@@ -3231,7 +3228,14 @@ the database connection that invoked the progress handler.
 Note that <a href="#sqlite3_prepare">sqlite3_prepare_v2()</a> and <a href="#sqlite3_step">sqlite3_step()</a> both modify their
 database connections for the meaning of "modify" in this paragraph.</p>
 
-<p></p><hr><a name="sqlite3_randomness"></a>
+<p>The progress handler callback would originally only be invoked from the
+bytecode engine.  It still might be invoked during <a href="#sqlite3_prepare">sqlite3_prepare()</a>
+and similar because those routines might force a reparse of the schema
+which involves running the bytecode engine.  However, beginning with
+SQLite version 3.41.0, the progress handler callback might also be
+invoked directly from <a href="#sqlite3_prepare">sqlite3_prepare()</a> while analyzing and generating
+code for complex queries.
+</p><hr><a name="sqlite3_randomness"></a>
 <h2>Pseudo-Random Number Generator</h2>
 </div>
 <blockquote><pre>
@@ -3288,14 +3292,26 @@ Use <a href="#sqlite3_clear_bindings">sqlite3_clear_bindings()</a> to reset the 
 <p>The <a href="#sqlite3_reset">sqlite3_reset(S)</a> interface resets the <a href="#sqlite3_stmt">prepared statement</a> S
 back to the beginning of its program.</p>
 
-<p>If the most recent call to <a href="#sqlite3_step">sqlite3_step(S)</a> for the
-<a href="#sqlite3_stmt">prepared statement</a> S returned <a href="#SQLITE_ABORT">SQLITE_ROW</a> or <a href="#SQLITE_ABORT">SQLITE_DONE</a>,
-or if <a href="#sqlite3_step">sqlite3_step(S)</a> has never before been called on S,
-then <a href="#sqlite3_reset">sqlite3_reset(S)</a> returns <a href="#SQLITE_ABORT">SQLITE_OK</a>.</p>
+<p>The return code from <a href="#sqlite3_reset">sqlite3_reset(S)</a> indicates whether or not
+the previous evaluation of prepared statement S completed successfully.
+If <a href="#sqlite3_step">sqlite3_step(S)</a> has never before been called on S or if
+<a href="#sqlite3_step">sqlite3_step(S)</a> has not been called since the previous call
+to <a href="#sqlite3_reset">sqlite3_reset(S)</a>, then <a href="#sqlite3_reset">sqlite3_reset(S)</a> will return
+<a href="#SQLITE_ABORT">SQLITE_OK</a>.</p>
 
 <p>If the most recent call to <a href="#sqlite3_step">sqlite3_step(S)</a> for the
 <a href="#sqlite3_stmt">prepared statement</a> S indicated an error, then
-<a href="#sqlite3_reset">sqlite3_reset(S)</a> returns an appropriate <a href="rescode.html">error code</a>.</p>
+<a href="#sqlite3_reset">sqlite3_reset(S)</a> returns an appropriate <a href="rescode.html">error code</a>.
+The <a href="#sqlite3_reset">sqlite3_reset(S)</a> interface might also return an <a href="rescode.html">error code</a>
+if there were no prior errors but the process of resetting
+the prepared statement caused a new error. For example, if an
+<a href="lang_insert.html">INSERT</a> statement with a <a href="lang_returning.html">RETURNING</a> clause is only stepped one time,
+that one call to <a href="#sqlite3_step">sqlite3_step(S)</a> might return SQLITE_ROW but
+the overall statement might still fail and the <a href="#sqlite3_reset">sqlite3_reset(S)</a> call
+might return SQLITE_BUSY if locking constraints prevent the
+database change from committing.  Therefore, it is important that
+applications check the return code from <a href="#sqlite3_reset">sqlite3_reset(S)</a> even if
+no prior call to <a href="#sqlite3_step">sqlite3_step(S)</a> indicated a problem.</p>
 
 <p>The <a href="#sqlite3_reset">sqlite3_reset(S)</a> interface does not change the values
 of any <a href="#sqlite3_bind_blob">bindings</a> on the <a href="#sqlite3_stmt">prepared statement</a> S.
@@ -3321,7 +3337,21 @@ the result from the <a href="appfunc.html">application-defined SQL function</a> 
 of the subtype T are preserved in current versions of SQLite;
 higher order bits are discarded.
 The number of subtype bytes preserved by SQLite might increase
-in future releases of SQLite.
+in future releases of SQLite.</p>
+
+<p>Every <a href="appfunc.html">application-defined SQL function</a> that invokes this interface
+should include the <a href="#sqliteresultsubtype">SQLITE_RESULT_SUBTYPE</a> property in its
+text encoding argument when the SQL function is
+<a href="#sqlite3_create_function">registered</a>.  If the <a href="#sqliteresultsubtype">SQLITE_RESULT_SUBTYPE</a>
+property is omitted from the function that invokes sqlite3_result_subtype(),
+then in some cases the sqlite3_result_subtype() might fail to set
+the result subtype.</p>
+
+<p>If SQLite is compiled with -DSQLITE_STRICT_SUBTYPE=1, then any
+SQL function that invokes the sqlite3_result_subtype() interface
+and that does not have the SQLITE_RESULT_SUBTYPE property will raise
+an error.  Future versions of SQLite might enable -DSQLITE_STRICT_SUBTYPE=1
+by default.
 </p><hr><a name="sqlite3_serialize"></a>
 <h2>Serialize a database</h2>
 </div>
@@ -3360,6 +3390,13 @@ The size of the database is written into *P even if the
 SQLITE_SERIALIZE_NOCOPY bit is set but no contiguous copy
 of the database exists.</p>
 
+<p>After the call, if the SQLITE_SERIALIZE_NOCOPY bit had been set,
+the returned buffer content will remain accessible and unchanged
+until either the next write operation on the connection or when
+the connection is closed, and applications must not modify the
+buffer. If the bit had been clear, the returned buffer will not
+be accessed by SQLite after the call.</p>
+
 <p>A call to sqlite3_serialize(D,S,P,F) might return NULL even if the
 SQLITE_SERIALIZE_NOCOPY bit is omitted from argument F if a memory
 allocation error occurs.</p>
@@ -3395,7 +3432,14 @@ requested from the operating system is returned.</p>
 method of the default <a href="#sqlite3_vfs">sqlite3_vfs</a> object.  If the xSleep() method
 of the default VFS is not implemented correctly, or not implemented at
 all, then the behavior of sqlite3_sleep() may deviate from the description
-in the previous paragraphs.
+in the previous paragraphs.</p>
+
+<p>If a negative argument is passed to sqlite3_sleep() the results vary by
+VFS and operating system.  Some system treat a negative argument as an
+instruction to sleep forever.  Others understand it to mean do not sleep
+at all. In SQLite version 3.42.0 and later, a negative
+argument passed into sqlite3_sleep() is changed to zero before it is relayed
+down into the xSleep method of the VFS.
 </p><hr><a name="sqlite3_snapshot_cmp"></a>
 <h2>Compare the ages of two snapshot handles.</h2>
 </div>
@@ -3678,6 +3722,41 @@ to locate all prepared statements associated with a database
 connection that are in need of being reset.  This can be used,
 for example, in diagnostic routines to search for prepared
 statements that are holding a transaction open.
+</p><hr><a name="sqlite3_stmt_explain"></a>
+<h2>Change The EXPLAIN Setting For A Prepared Statement</h2>
+</div>
+<blockquote><pre>
+int sqlite3_stmt_explain(sqlite3_stmt *pStmt, int eMode);
+</pre></blockquote>
+<p>
+The sqlite3_stmt_explain(S,E) interface changes the EXPLAIN
+setting for <a href="#sqlite3_stmt">prepared statement</a> S.  If E is zero, then S becomes
+a normal prepared statement.  If E is 1, then S behaves as if
+its SQL text began with "<a href="lang_explain.html">EXPLAIN</a>".  If E is 2, then S behaves as if
+its SQL text began with "<a href="eqp.html">EXPLAIN QUERY PLAN</a>".</p>
+
+<p>Calling sqlite3_stmt_explain(S,E) might cause S to be reprepared.
+SQLite tries to avoid a reprepare, but a reprepare might be necessary
+on the first transition into EXPLAIN or EXPLAIN QUERY PLAN mode.</p>
+
+<p>Because of the potential need to reprepare, a call to
+sqlite3_stmt_explain(S,E) will fail with SQLITE_ERROR if S cannot be
+reprepared because it was created using <a href="#sqlite3_prepare">sqlite3_prepare()</a> instead of
+the newer <a href="#sqlite3_prepare">sqlite3_prepare_v2()</a> or <a href="#sqlite3_prepare">sqlite3_prepare_v3()</a> interfaces and
+hence has no saved SQL text with which to reprepare.</p>
+
+<p>Changing the explain setting for a prepared statement does not change
+the original SQL text for the statement.  Hence, if the SQL text originally
+began with EXPLAIN or EXPLAIN QUERY PLAN, but sqlite3_stmt_explain(S,0)
+is called to convert the statement into an ordinary statement, the EXPLAIN
+or EXPLAIN QUERY PLAN keywords will still appear in the sqlite3_sql(S)
+output, even though the statement now acts like a normal SQL statement.</p>
+
+<p>This routine returns SQLITE_OK if the explain mode is successfully
+changed, or an error code if the explain mode could not be changed.
+The explain mode cannot be changed while a statement is active.
+Hence, it is good practice to call <a href="#sqlite3_reset">sqlite3_reset(S)</a>
+immediately prior to calling sqlite3_stmt_explain(S,E).
 </p><hr><a name="sqlite3_stmt_isexplain"></a>
 <h2>Query The EXPLAIN Setting For A Prepared Statement</h2>
 </div>
@@ -3739,44 +3818,6 @@ sqlite3_stmt_readonly() still returns false for such a statement.</p>
 <p>If prepared statement X is an <a href="lang_explain.html">EXPLAIN</a> or <a href="eqp.html">EXPLAIN QUERY PLAN</a>
 statement, then sqlite3_stmt_readonly(X) returns the same value as
 if the EXPLAIN or EXPLAIN QUERY PLAN prefix were omitted.
-</p><hr><a name="sqlite3_stmt_scanstatus"></a>
-<h2>Prepared Statement Scan Status</h2>
-</div>
-<blockquote><pre>
-int sqlite3_stmt_scanstatus(
-  sqlite3_stmt *pStmt,      /* Prepared statement for which info desired */
-  int idx,                  /* Index of loop to report on */
-  int iScanStatusOp,        /* Information desired.  SQLITE_SCANSTAT_* */
-  void *pOut                /* Result written here */
-);
-</pre></blockquote>
-<p>
-This interface returns information about the predicted and measured
-performance for pStmt.  Advanced applications can use this
-interface to compare the predicted and the measured performance and
-issue warnings and/or rerun <a href="lang_analyze.html">ANALYZE</a> if discrepancies are found.</p>
-
-<p>Since this interface is expected to be rarely used, it is only
-available if SQLite is compiled using the <a href="compile.html#enable_stmt_scanstatus">SQLITE_ENABLE_STMT_SCANSTATUS</a>
-compile-time option.</p>
-
-<p>The "iScanStatusOp" parameter determines which status information to return.
-The "iScanStatusOp" must be one of the <a href="#SQLITE_SCANSTAT_EST">scanstatus options</a> or the behavior
-of this interface is undefined.
-The requested measurement is written into a variable pointed to by
-the "pOut" parameter.
-Parameter "idx" identifies the specific loop to retrieve statistics for.
-Loops are numbered starting from zero. If idx is out of range - less than
-zero or greater than or equal to the total number of loops used to implement
-the statement - a non-zero value is returned and the variable that pOut
-points to is unchanged.</p>
-
-<p>Statistics might not be available for all loops in all statements. In cases
-where there exist loops with no available statistics, this function behaves
-as if the loop did not exist - it returns non-zero and leave the variable
-that pOut points to unchanged.</p>
-
-<p>See also: <a href="#sqlite3_stmt_scanstatus_reset">sqlite3_stmt_scanstatus_reset()</a>
 </p><hr><a name="sqlite3_stmt_scanstatus_reset"></a>
 <h2>Zero Scan-Status Counters</h2>
 </div>
@@ -4068,8 +4109,10 @@ NULL or if the M mask is zero, then tracing is disabled.  The
 M argument should be the bitwise OR-ed combination of
 zero or more <a href="#SQLITE_TRACE">SQLITE_TRACE</a> constants.</p>
 
-<p>Each call to either sqlite3_trace() or sqlite3_trace_v2() overrides
-(cancels) any prior calls to sqlite3_trace() or sqlite3_trace_v2().</p>
+<p>Each call to either sqlite3_trace(D,X,P) or sqlite3_trace_v2(D,M,X,P)
+overrides (cancels) all prior calls to sqlite3_trace(D,X,P) or
+sqlite3_trace_v2(D,M,X,P) for the <a href="#sqlite3">database connection</a> D.  Each
+database connection may have at most one trace callback.</p>
 
 <p>The X callback is invoked whenever any of the events identified by
 mask M occur.  The integer return value from the callback is currently
@@ -4265,6 +4308,12 @@ invoked when rows are deleted using the <a href="lang_delete.html#truncateopt">t
 The exceptions defined in this paragraph might change in a future
 release of SQLite.</p>
 
+<p>Whether the update hook is invoked before or after the
+corresponding change is currently unspecified and may differ
+depending on the type of change. Do not rely on the order of the
+hook call with regards to the final result of the operation which
+triggers the hook.</p>
+
 <p>The update hook implementation must not do anything that will modify
 the database connection that invoked the update hook.  Any actions
 to modify the database connection must be deferred until after the
@@ -4294,6 +4343,28 @@ registered the application defined function.</p>
 
 <p>This routine must be called from the same thread in which
 the application-defined function is running.
+</p><hr><a name="sqlite3_value_encoding"></a>
+<h2>Report the internal text encoding state of an sqlite3_value object</h2>
+</div>
+<blockquote><pre>
+int sqlite3_value_encoding(sqlite3_value*);
+</pre></blockquote>
+<p>
+The sqlite3_value_encoding(X) interface returns one of <a href="#SQLITE_ANY">SQLITE_UTF8</a>,
+<a href="#SQLITE_ANY">SQLITE_UTF16BE</a>, or <a href="#SQLITE_ANY">SQLITE_UTF16LE</a> according to the current text encoding
+of the value X, assuming that X has type TEXT.  If sqlite3_value_type(X)
+returns something other than SQLITE_TEXT, then the return value from
+sqlite3_value_encoding(X) is meaningless.  Calls to
+<a href="#sqlite3_value_blob">sqlite3_value_text(X)</a>, <a href="#sqlite3_value_blob">sqlite3_value_text16(X)</a>, <a href="#sqlite3_value_blob">sqlite3_value_text16be(X)</a>,
+<a href="#sqlite3_value_blob">sqlite3_value_text16le(X)</a>, <a href="#sqlite3_value_blob">sqlite3_value_bytes(X)</a>, or
+<a href="#sqlite3_value_blob">sqlite3_value_bytes16(X)</a> might change the encoding of the value X and
+thus change the return from subsequent calls to sqlite3_value_encoding(X).</p>
+
+<p>This routine is intended for used by applications that test and validate
+the SQLite implementation.  This routine is inquiring about the opaque
+internal state of an <a href="#sqlite3_value">sqlite3_value</a> object.  Ordinary applications should
+not need to know what the internal state of an sqlite3_value object is and
+hence should not need to use this interface.
 </p><hr><a name="sqlite3_value_subtype"></a>
 <h2>Finding The Subtype Of SQL Values</h2>
 </div>
@@ -4305,7 +4376,13 @@ The sqlite3_value_subtype(V) function returns the subtype for
 an <a href="appfunc.html">application-defined SQL function</a> argument V.  The subtype
 information can be used to pass a limited amount of context from
 one SQL function to another.  Use the <a href="#sqlite3_result_subtype">sqlite3_result_subtype()</a>
-routine to set the subtype for the return value of an SQL function.
+routine to set the subtype for the return value of an SQL function.</p>
+
+<p>Every <a href="appfunc.html">application-defined SQL function</a> that invoke this interface
+should include the <a href="#sqlitesubtype">SQLITE_SUBTYPE</a> property in the text
+encoding argument when the function is <a href="#sqlite3_create_function">registered</a>.
+If the <a href="#sqlitesubtype">SQLITE_SUBTYPE</a> property is omitted, then sqlite3_value_subtype()
+might return zero instead of the upstream subtype in some corner cases.
 </p><hr><a name="sqlite3_vtab_collation"></a>
 <h2>Determine The Collation For a Virtual Table Constraint</h2>
 </div>
@@ -4397,23 +4474,44 @@ is doing a GROUP BY.
 <li value="2"><p>
 If the sqlite3_vtab_distinct() interface returns 2, that means
 that the query planner does not need the rows returned in any particular
-order, as long as rows with the same values in all "aOrderBy" columns
-are adjacent.  Furthermore, only a single row for each particular
-combination of values in the columns identified by the "aOrderBy" field
-needs to be returned.  It is always ok for two or more rows with the same
-values in all "aOrderBy" columns to be returned, as long as all such rows
-are adjacent.  The virtual table may, if it chooses, omit extra rows
-that have the same value for all columns identified by "aOrderBy".
-However omitting the extra rows is optional.
+order, as long as rows with the same values in all columns identified
+by "aOrderBy" are adjacent.  Furthermore, when two or more rows
+contain the same values for all columns identified by "colUsed", all but
+one such row may optionally be omitted from the result.
+The virtual table is not required to omit rows that are duplicates
+over the "colUsed" columns, but if the virtual table can do that without
+too much extra effort, it could potentially help the query to run faster.
 This mode is used for a DISTINCT query.
 <li value="3"><p>
-If the sqlite3_vtab_distinct() interface returns 3, that means
-that the query planner needs only distinct rows but it does need the
-rows to be sorted. The virtual table implementation is free to omit
-rows that are identical in all aOrderBy columns, if it wants to, but
-it is not required to omit any rows.  This mode is used for queries
+If the sqlite3_vtab_distinct() interface returns 3, that means the
+virtual table must return rows in the order defined by "aOrderBy" as
+if the sqlite3_vtab_distinct() interface had returned 0.  However if
+two or more rows in the result have the same values for all columns
+identified by "colUsed", then all but one such row may optionally be
+omitted.  Like when the return value is 2, the virtual table
+is not required to omit rows that are duplicates over the "colUsed"
+columns, but if the virtual table can do that without
+too much extra effort, it could potentially help the query to run faster.
+This mode is used for queries
 that have both DISTINCT and ORDER BY clauses.
 </ol></p>
+
+<p><p>The following table summarizes the conditions under which the
+virtual table is allowed to set the "orderByConsumed" flag based on
+the value returned by sqlite3_vtab_distinct().  This table is a
+restatement of the previous four paragraphs:</p>
+
+<p><table border=1 cellspacing=0 cellpadding=10 width="90%">
+<tr>
+<td valign="top">sqlite3_vtab_distinct() return value
+<td valign="top">Rows are returned in aOrderBy order
+<td valign="top">Rows with the same value in all aOrderBy columns are adjacent
+<td valign="top">Duplicates over all colUsed columns may be omitted
+<tr><td>0<td>yes<td>yes<td>no
+<tr><td>1<td>no<td>yes<td>no
+<tr><td>2<td>no<td>yes<td>yes
+<tr><td>3<td>yes<td>yes<td>yes
+</table></p>
 
 <p>For the purposes of comparing virtual table output values to see if the
 values are same value for sorting purposes, two NULL values are considered
@@ -4452,7 +4550,7 @@ undefined and probably harmful.</p>
 communicated to the xBestIndex method as a
 <a href="#SQLITE_INDEX_CONSTRAINT_EQ">SQLITE_INDEX_CONSTRAINT_EQ</a> constraint.  If xBestIndex wants to use
 this constraint, it must set the corresponding
-aConstraintUsage[].argvIndex to a postive integer.  Then, under
+aConstraintUsage[].argvIndex to a positive integer.  Then, under
 the usual mode of handling IN operators, SQLite generates <a href="opcode.html">bytecode</a>
 that invokes the <a href="vtab.html#xfilter">xFilter() method</a> once for each value
 on the right-hand side of the IN operator.  Thus the virtual table
@@ -4870,6 +4968,7 @@ here in order to indicate success or failure.</p>
 #define SQLITE_IOERR_ROLLBACK_ATOMIC   (SQLITE_IOERR | (31&lt;&lt;8))
 #define SQLITE_IOERR_DATA              (SQLITE_IOERR | (32&lt;&lt;8))
 #define SQLITE_IOERR_CORRUPTFS         (SQLITE_IOERR | (33&lt;&lt;8))
+#define SQLITE_IOERR_IN_PAGE           (SQLITE_IOERR | (34&lt;&lt;8))
 #define SQLITE_LOCKED_SHAREDCACHE      (SQLITE_LOCKED |  (1&lt;&lt;8))
 #define SQLITE_LOCKED_VTAB             (SQLITE_LOCKED |  (2&lt;&lt;8))
 #define SQLITE_BUSY_RECOVERY           (SQLITE_BUSY   |  (1&lt;&lt;8))
@@ -4905,6 +5004,7 @@ here in order to indicate success or failure.</p>
 #define SQLITE_CONSTRAINT_DATATYPE     (SQLITE_CONSTRAINT |(12&lt;&lt;8))
 #define SQLITE_NOTICE_RECOVER_WAL      (SQLITE_NOTICE | (1&lt;&lt;8))
 #define SQLITE_NOTICE_RECOVER_ROLLBACK (SQLITE_NOTICE | (2&lt;&lt;8))
+#define SQLITE_NOTICE_RBU              (SQLITE_NOTICE | (3&lt;&lt;8))
 #define SQLITE_WARNING_AUTOINDEX       (SQLITE_WARNING | (1&lt;&lt;8))
 #define SQLITE_AUTH_USER               (SQLITE_AUTH | (1&lt;&lt;8))
 #define SQLITE_OK_LOAD_PERMANENTLY     (SQLITE_OK | (1&lt;&lt;8))
@@ -5068,28 +5168,28 @@ meaning of each of these checkpoint modes.
 <h2>Configuration Options</h2>
 </div>
 <blockquote><pre>
-#define SQLITE_CONFIG_SINGLETHREAD  1  /* nil */
-#define SQLITE_CONFIG_MULTITHREAD   2  /* nil */
-#define SQLITE_CONFIG_SERIALIZED    3  /* nil */
-#define SQLITE_CONFIG_MALLOC        4  /* sqlite3_mem_methods* */
-#define SQLITE_CONFIG_GETMALLOC     5  /* sqlite3_mem_methods* */
-#define SQLITE_CONFIG_SCRATCH       6  /* No longer used */
-#define SQLITE_CONFIG_PAGECACHE     7  /* void*, int sz, int N */
-#define SQLITE_CONFIG_HEAP          8  /* void*, int nByte, int min */
-#define SQLITE_CONFIG_MEMSTATUS     9  /* boolean */
-#define SQLITE_CONFIG_MUTEX        10  /* sqlite3_mutex_methods* */
-#define SQLITE_CONFIG_GETMUTEX     11  /* sqlite3_mutex_methods* */
-/* previously SQLITE_CONFIG_CHUNKALLOC 12 which is now unused. */
-#define SQLITE_CONFIG_LOOKASIDE    13  /* int int */
-#define SQLITE_CONFIG_PCACHE       14  /* no-op */
-#define SQLITE_CONFIG_GETPCACHE    15  /* no-op */
-#define SQLITE_CONFIG_LOG          16  /* xFunc, void* */
-#define SQLITE_CONFIG_URI          17  /* int */
-#define SQLITE_CONFIG_PCACHE2      18  /* sqlite3_pcache_methods2* */
-#define SQLITE_CONFIG_GETPCACHE2   19  /* sqlite3_pcache_methods2* */
+#define SQLITE_CONFIG_SINGLETHREAD         1  /* nil */
+#define SQLITE_CONFIG_MULTITHREAD          2  /* nil */
+#define SQLITE_CONFIG_SERIALIZED           3  /* nil */
+#define SQLITE_CONFIG_MALLOC               4  /* sqlite3_mem_methods* */
+#define SQLITE_CONFIG_GETMALLOC            5  /* sqlite3_mem_methods* */
+#define SQLITE_CONFIG_SCRATCH              6  /* No longer used */
+#define SQLITE_CONFIG_PAGECACHE            7  /* void*, int sz, int N */
+#define SQLITE_CONFIG_HEAP                 8  /* void*, int nByte, int min */
+#define SQLITE_CONFIG_MEMSTATUS            9  /* boolean */
+#define SQLITE_CONFIG_MUTEX               10  /* sqlite3_mutex_methods* */
+#define SQLITE_CONFIG_GETMUTEX            11  /* sqlite3_mutex_methods* */
+/* previously SQLITE_CONFIG_CHUNKALLOC    12 which is now unused. */
+#define SQLITE_CONFIG_LOOKASIDE           13  /* int int */
+#define SQLITE_CONFIG_PCACHE              14  /* no-op */
+#define SQLITE_CONFIG_GETPCACHE           15  /* no-op */
+#define SQLITE_CONFIG_LOG                 16  /* xFunc, void* */
+#define SQLITE_CONFIG_URI                 17  /* int */
+#define SQLITE_CONFIG_PCACHE2             18  /* sqlite3_pcache_methods2* */
+#define SQLITE_CONFIG_GETPCACHE2          19  /* sqlite3_pcache_methods2* */
 #define SQLITE_CONFIG_COVERING_INDEX_SCAN 20  /* int */
-#define SQLITE_CONFIG_SQLLOG       21  /* xSqllog, void* */
-#define SQLITE_CONFIG_MMAP_SIZE    22  /* sqlite3_int64, sqlite3_int64 */
+#define SQLITE_CONFIG_SQLLOG              21  /* xSqllog, void* */
+#define SQLITE_CONFIG_MMAP_SIZE           22  /* sqlite3_int64, sqlite3_int64 */
 #define SQLITE_CONFIG_WIN32_HEAPSIZE      23  /* int nByte */
 #define SQLITE_CONFIG_PCACHE_HDRSZ        24  /* int *psz */
 #define SQLITE_CONFIG_PMASZ               25  /* unsigned int szPma */
@@ -5097,10 +5197,28 @@ meaning of each of these checkpoint modes.
 #define SQLITE_CONFIG_SMALL_MALLOC        27  /* boolean */
 #define SQLITE_CONFIG_SORTERREF_SIZE      28  /* int nByte */
 #define SQLITE_CONFIG_MEMDB_MAXSIZE       29  /* sqlite3_int64 */
+#define SQLITE_CONFIG_ROWID_IN_VIEW       30  /* int* */
 </pre></blockquote>
 <p>
 These constants are the available integer configuration options that
 can be passed as the first argument to the <a href="#sqlite3_config">sqlite3_config()</a> interface.</p>
+
+<p>Most of the configuration options for sqlite3_config()
+will only work if invoked prior to <a href="#sqlite3_initialize">sqlite3_initialize()</a> or after
+<a href="#sqlite3_initialize">sqlite3_shutdown()</a>.  The few exceptions to this rule are called
+"anytime configuration options".
+Calling <a href="#sqlite3_config">sqlite3_config()</a> with a first argument that is not an
+anytime configuration option in between calls to <a href="#sqlite3_initialize">sqlite3_initialize()</a> and
+<a href="#sqlite3_initialize">sqlite3_shutdown()</a> is a no-op that returns SQLITE_MISUSE.</p>
+
+<p>The set of anytime configuration options can change (by insertions
+and/or deletions) from one release of SQLite to the next.
+As of SQLite version 3.42.0, the complete set of anytime configuration
+options is:
+<ul>
+<li> SQLITE_CONFIG_LOG
+<li> SQLITE_CONFIG_PCACHE_HDRSZ
+</ul></p>
 
 <p>New configuration options may be added in future releases of SQLite.
 Existing configuration options might be discontinued.  Applications
@@ -5459,7 +5577,7 @@ than the configured sorter-reference size threshold - then a reference
 is stored in each sorted record and the required column values loaded
 from the database as records are returned in sorted order. The default
 value for this option is to never use this optimization. Specifying a
-negative value for this option restores the default behaviour.
+negative value for this option restores the default behavior.
 This option is only available if SQLite is compiled with the
 <a href="compile.html#enable_sorter_references">SQLITE_ENABLE_SORTER_REFERENCES</a> compile-time option.</p>
 
@@ -5473,7 +5591,24 @@ size can be adjusted up or down for individual databases using the
 <a href="#sqlitefcntlsizelimit">SQLITE_FCNTL_SIZE_LIMIT</a> <a href="#sqlite3_file_control">file-control</a>.  If this
 configuration setting is never used, then the default maximum is determined
 by the <a href="compile.html#memdb_default_maxsize">SQLITE_MEMDB_DEFAULT_MAXSIZE</a> compile-time option.  If that
-compile-time option is not set, then the default maximum is 1073741824.
+compile-time option is not set, then the default maximum is 1073741824.</p>
+
+<p><a name="sqliteconfigrowidinview"></a>
+
+<dt>SQLITE_CONFIG_ROWID_IN_VIEW
+<dd>The SQLITE_CONFIG_ROWID_IN_VIEW option enables or disables the ability
+for VIEWs to have a ROWID.  The capability can only be enabled if SQLite is
+compiled with -DSQLITE_ALLOW_ROWID_IN_VIEW, in which case the capability
+defaults to on.  This configuration option queries the current setting or
+changes the setting to off or on.  The argument is a pointer to an integer.
+If that integer initially holds a value of 1, then the ability for VIEWs to
+have ROWIDs is activated.  If the integer initially holds zero, then the
+ability is deactivated.  Any other initial value for the integer leaves the
+setting unchanged.  After changes, if any, the integer is written with
+a 1 or 0, if the ability for VIEWs to have ROWIDs is on or off.  If SQLite
+is compiled without -DSQLITE_ALLOW_ROWID_IN_VIEW (which is the usual and
+recommended case) then the integer is always filled with zero, regardless
+if its initial value.
 </dl>
 </p><hr><a name="SQLITE_DBCONFIG_DEFENSIVE"></a>
 <h2>Database Connection Configuration Options</h2>
@@ -5497,7 +5632,9 @@ compile-time option is not set, then the default maximum is 1073741824.
 #define SQLITE_DBCONFIG_ENABLE_VIEW           1015 /* int int* */
 #define SQLITE_DBCONFIG_LEGACY_FILE_FORMAT    1016 /* int int* */
 #define SQLITE_DBCONFIG_TRUSTED_SCHEMA        1017 /* int int* */
-#define SQLITE_DBCONFIG_MAX                   1017 /* Largest DBCONFIG */
+#define SQLITE_DBCONFIG_STMT_SCANSTATUS       1018 /* int int* */
+#define SQLITE_DBCONFIG_REVERSE_SCANORDER     1019 /* int int* */
+#define SQLITE_DBCONFIG_MAX                   1019 /* Largest DBCONFIG */
 </pre></blockquote>
 <p>
 These constants are the available integer configuration options that
@@ -5530,7 +5667,7 @@ rounded down to the next smaller multiple of 8.  The lookaside memory
 configuration for a database connection can only be changed when that
 connection is not currently using lookaside memory, or in other words
 when the "current value" returned by
-<a href="#sqlite3_db_status">sqlite3_db_status</a>(D,<a href="#sqliteconfiglookaside">SQLITE_CONFIG_LOOKASIDE</a>,...) is zero.
+<a href="#sqlite3_db_status">sqlite3_db_status</a>(D,<a href="#sqlitedbstatuslookasideused">SQLITE_DBSTATUS_LOOKASIDE_USED</a>,...) is zero.
 Any attempt to change the lookaside memory configuration when lookaside
 memory is in use leaves the configuration unchanged and returns
 <a href="#SQLITE_ABORT">SQLITE_BUSY</a>.</dd></p>
@@ -5634,7 +5771,7 @@ until after the database connection closes.
 database handle, SQLite checks if this will mean that there are now no
 connections at all to the database. If so, it performs a checkpoint
 operation before closing the connection. This option may be used to
-override this behaviour. The first parameter passed to this operation
+override this behavior. The first parameter passed to this operation
 is an integer - positive to disable checkpoints-on-close, or zero (the
 default) to enable them, and negative to leave the setting unchanged.
 The second parameter is a pointer to an integer
@@ -5690,8 +5827,12 @@ the reset.
 <li> sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 0, 0);
 </ol>
 Because resetting a database is destructive and irreversible, the
-process requires the use of this obscure API and multiple steps to help
-ensure that it does not happen by accident.</p>
+process requires the use of this obscure API and multiple steps to
+help ensure that it does not happen by accident. Because this
+feature must be capable of resetting corrupt databases, and
+shutting down virtual tables may require access to that corrupt
+storage, the library must abandon any installed virtual tables
+without calling their xDestroy() methods.</p>
 
 <p><a name="sqlitedbconfigdefensive"></a>
  <dt>SQLITE_DBCONFIG_DEFENSIVE</dt>
@@ -5734,7 +5875,7 @@ using the <a href="pragma.html#pragma_legacy_alter_table">PRAGMA legacy_alter_ta
 
 <p><a name="sqlitedbconfigdqsdml"></a>
 
-<dt>SQLITE_DBCONFIG_DQS_DML</td>
+<dt>SQLITE_DBCONFIG_DQS_DML</dt>
 <dd>The SQLITE_DBCONFIG_DQS_DML option activates or deactivates
 the legacy <a href="quirks.html#dblquote">double-quoted string literal</a> misfeature for DML statements
 only, that is DELETE, INSERT, SELECT, and UPDATE statements. The
@@ -5744,7 +5885,7 @@ compile-time option.
 
 <p><a name="sqlitedbconfigdqsddl"></a>
 
-<dt>SQLITE_DBCONFIG_DQS_DDL</td>
+<dt>SQLITE_DBCONFIG_DQS_DDL</dt>
 <dd>The SQLITE_DBCONFIG_DQS option activates or deactivates
 the legacy <a href="quirks.html#dblquote">double-quoted string literal</a> misfeature for DDL statements,
 such as CREATE TABLE and CREATE INDEX. The
@@ -5754,7 +5895,7 @@ compile-time option.
 
 <p><a name="sqlitedbconfigtrustedschema"></a>
 
-<dt>SQLITE_DBCONFIG_TRUSTED_SCHEMA</td>
+<dt>SQLITE_DBCONFIG_TRUSTED_SCHEMA</dt>
 <dd>The SQLITE_DBCONFIG_TRUSTED_SCHEMA option tells SQLite to
 assume that database schemas are untainted by malicious content.
 When the SQLITE_DBCONFIG_TRUSTED_SCHEMA option is disabled, SQLite
@@ -5775,7 +5916,7 @@ can also be controlled using the <a href="pragma.html#pragma_trusted_schema">PRA
 
 <p><a name="sqlitedbconfiglegacyfileformat"></a>
 
-<dt>SQLITE_DBCONFIG_LEGACY_FILE_FORMAT</td>
+<dt>SQLITE_DBCONFIG_LEGACY_FILE_FORMAT</dt>
 <dd>The SQLITE_DBCONFIG_LEGACY_FILE_FORMAT option activates or deactivates
 the legacy file format flag.  When activated, this flag causes all newly
 created database file to have a schema format version number (the 4-byte
@@ -5784,7 +5925,7 @@ means that the resulting database file will be readable and writable by
 any SQLite version back to 3.0.0 (2004-06-18).  Without this setting,
 newly created databases are generally not understandable by SQLite versions
 prior to 3.3.0 (2006-01-11).  As these words are written, there
-is now scarcely any need to generated database files that are compatible
+is now scarcely any need to generate database files that are compatible
 all the way back to version 3.0.0, and so this setting is of little
 practical use, but is provided so that SQLite can continue to claim the
 ability to generate new database files that are compatible with  version
@@ -5793,9 +5934,43 @@ ability to generate new database files that are compatible with  version
 the <a href="lang_vacuum.html">VACUUM</a> command will fail with an obscure error when attempting to
 process a table with generated columns and a descending index.  This is
 not considered a bug since SQLite versions 3.3.0 and earlier do not support
-either generated columns or decending indexes.
-</dd>
-</dl>
+either generated columns or descending indexes.
+</dd></p>
+
+<p><a name="sqlitedbconfigstmtscanstatus"></a>
+
+<dt>SQLITE_DBCONFIG_STMT_SCANSTATUS</dt>
+<dd>The SQLITE_DBCONFIG_STMT_SCANSTATUS option is only useful in
+SQLITE_ENABLE_STMT_SCANSTATUS builds. In this case, it sets or clears
+a flag that enables collection of the sqlite3_stmt_scanstatus_v2()
+statistics. For statistics to be collected, the flag must be set on
+the database handle both when the SQL statement is prepared and when it
+is stepped. The flag is set (collection of statistics is enabled)
+by default.  This option takes two arguments: an integer and a pointer to
+an integer..  The first argument is 1, 0, or -1 to enable, disable, or
+leave unchanged the statement scanstatus option.  If the second argument
+is not NULL, then the value of the statement scanstatus setting after
+processing the first argument is written into the integer that the second
+argument points to.
+</dd></p>
+
+<p><a name="sqlitedbconfigreversescanorder"></a>
+
+<dt>SQLITE_DBCONFIG_REVERSE_SCANORDER</dt>
+<dd>The SQLITE_DBCONFIG_REVERSE_SCANORDER option changes the default order
+in which tables and indexes are scanned so that the scans start at the end
+and work toward the beginning rather than starting at the beginning and
+working toward the end. Setting SQLITE_DBCONFIG_REVERSE_SCANORDER is the
+same as setting <a href="pragma.html#pragma_reverse_unordered_selects">PRAGMA reverse_unordered_selects</a>.  This option takes
+two arguments which are an integer and a pointer to an integer.  The first
+argument is 1, 0, or -1 to enable, disable, or leave unchanged the
+reverse scan order flag, respectively.  If the second argument is not NULL,
+then 0 or 1 is written into the integer that the second argument points to
+depending on if the reverse scan order flag is set after processing the
+first argument.
+</dd></p>
+
+<p></dl>
 </p><hr><a name="SQLITE_DENY"></a>
 <h2>Authorizer Return Codes</h2>
 </div>
@@ -5846,6 +6021,7 @@ should be treated as read-only.
 #define SQLITE_DIRECTONLY       0x000080000
 #define SQLITE_SUBTYPE          0x000100000
 #define SQLITE_INNOCUOUS        0x000200000
+#define SQLITE_RESULT_SUBTYPE   0x001000000
 </pre></blockquote>
 <p>
 These constants may be ORed together with the
@@ -5872,10 +6048,21 @@ The SQLITE_DIRECTONLY flag means that the function may only be invoked
 from top-level SQL, and cannot be used in VIEWs or TRIGGERs nor in
 schema structures such as <a href="lang_createtable.html#ckconst">CHECK constraints</a>, <a href="lang_createtable.html#dfltval">DEFAULT clauses</a>,
 <a href="expridx.html">expression indexes</a>, <a href="partialindex.html">partial indexes</a>, or <a href="gencol.html">generated columns</a>.
-The SQLITE_DIRECTONLY flags is a security feature which is recommended
-for all <a href="appfunc.html">application-defined SQL functions</a>, and especially for functions
-that have side-effects or that could potentially leak sensitive
-information.
+<p>
+The SQLITE_DIRECTONLY flag is recommended for any
+<a href="appfunc.html">application-defined SQL function</a>
+that has side-effects or that could potentially leak sensitive information.
+This will prevent attacks in which an application is tricked
+into using a database file that has had its schema surreptitiously
+modified to invoke the application-defined function in ways that are
+harmful.
+<p>
+Some people say it is good practice to set SQLITE_DIRECTONLY on all
+<a href="appfunc.html">application-defined SQL functions</a>, regardless of whether or not they
+are security sensitive, as doing so prevents those functions from being used
+inside of the database schema, and thus ensures that the database
+can be inspected and modified using generic tools (such as the <a href="cli.html">CLI</a>)
+that do not have access to the application-defined functions.
 </dd></p>
 
 <p><a name="sqliteinnocuous"></a>
@@ -5904,13 +6091,28 @@ security-adverse side-effects and information-leaks.
 
 <p><a name="sqlitesubtype"></a>
  <dt>SQLITE_SUBTYPE</dt><dd>
-The SQLITE_SUBTYPE flag indicates to SQLite that a function may call
+The SQLITE_SUBTYPE flag indicates to SQLite that a function might call
 <a href="#sqlite3_value_subtype">sqlite3_value_subtype()</a> to inspect the sub-types of its arguments.
-Specifying this flag makes no difference for scalar or aggregate user
-functions. However, if it is not specified for a user-defined window
-function, then any sub-types belonging to arguments passed to the window
-function may be discarded before the window function is called (i.e.
-sqlite3_value_subtype() will always return 0).
+This flag instructs SQLite to omit some corner-case optimizations that
+might disrupt the operation of the <a href="#sqlite3_value_subtype">sqlite3_value_subtype()</a> function,
+causing it to return zero rather than the correct subtype().
+SQL functions that invokes <a href="#sqlite3_value_subtype">sqlite3_value_subtype()</a> should have this
+property.  If the SQLITE_SUBTYPE property is omitted, then the return
+value from <a href="#sqlite3_value_subtype">sqlite3_value_subtype()</a> might sometimes be zero even though
+a non-zero subtype was specified by the function argument expression.</p>
+
+<p><a name="sqliteresultsubtype"></a>
+ <dt>SQLITE_RESULT_SUBTYPE</dt><dd>
+The SQLITE_RESULT_SUBTYPE flag indicates to SQLite that a function might call
+<a href="#sqlite3_result_subtype">sqlite3_result_subtype()</a> to cause a sub-type to be associated with its
+result.
+Every function that invokes <a href="#sqlite3_result_subtype">sqlite3_result_subtype()</a> should have this
+property.  If it does not, then the call to <a href="#sqlite3_result_subtype">sqlite3_result_subtype()</a>
+might become a no-op if the function is used as term in an
+<a href="expridx.html">expression index</a>.  On the other hand, SQL functions that never invoke
+<a href="#sqlite3_result_subtype">sqlite3_result_subtype()</a> should avoid setting this property, as the
+purpose of this property is to disable certain optimizations that are
+incompatible with subtypes.
 </dd>
 </dl>
 </p><hr><a name="SQLITE_FAIL"></a>
@@ -6325,8 +6527,7 @@ file to the database file.</p>
 The <a href="#sqlitefcntlckptdone">SQLITE_FCNTL_CKPT_DONE</a> opcode is invoked from within a checkpoint
 in wal mode after the client has finished copying pages from the wal
 file to the database file, but before the *-shm file is updated to
-record the fact that the pages have been checkpointed.
-</ul></p>
+record the fact that the pages have been checkpointed.</p>
 
 <p><li><a name="sqlitefcntlexternalreader"></a>
 
@@ -6339,19 +6540,19 @@ mode database and there exists at least one client in another process that
 currently has an SQL transaction open on the database. It is set to 0 if
 the database is not a wal-mode db, or if there is no such connection in any
 other process. This opcode cannot be used to detect transactions opened
-by clients within the current process, only within other processes.
-</ul></p>
+by clients within the current process, only within other processes.</p>
 
 <p><li><a name="sqlitefcntlcksmfile"></a>
 
-Used by the cksmvfs VFS module only.</p>
+The <a href="#sqlitefcntlcksmfile">SQLITE_FCNTL_CKSM_FILE</a> opcode is for use internally by the
+<a href="cksumvfs.html">checksum VFS shim</a> only.</p>
 
 <p><li><a name="sqlitefcntlresetcache"></a>
 
 If there is currently no transaction open on the database, and the
-database is not a temp db, then this file-control purges the contents
-of the in-memory page cache. If there is an open transaction, or if
-the db is a temp-db, it is a no-op, not an error.
+database is not a temp db, then the <a href="#sqlitefcntlresetcache">SQLITE_FCNTL_RESET_CACHE</a> file-control
+purges the contents of the in-memory page cache. If there is an open
+transaction, or if the db is a temp-db, this opcode is a no-op, not an error.
 </ul>
 </p><hr><a name="SQLITE_INDEX_CONSTRAINT_EQ"></a>
 <h2>Virtual Table Constraint Operator Codes</h2>
@@ -6409,7 +6610,7 @@ always return SQLITE_NOTFOUND.</p>
 the <a href="#sqlite3_vtab_collation">sqlite3_vtab_collation()</a> interface.  For most real-world virtual
 tables, the collating sequence of constraints does not matter (for example
 because the constraints are numeric) and so the sqlite3_vtab_collation()
-interface is no commonly needed.
+interface is not commonly needed.
 </p><hr><a name="SQLITE_IOCAP_ATOMIC"></a>
 <h2>Device Characteristics</h2>
 </div>
@@ -6593,7 +6794,13 @@ flag.</p>
 to return an error (error code SQLITE_ERROR) if the statement uses
 any virtual tables.
 </dl>
-</p><hr><a name="SQLITE_SCANSTAT_EST"></a>
+</p><hr><a name="SQLITE_SCANSTAT_COMPLEX"></a>
+<h2>Prepared Statement Scan Status</h2>
+</div>
+<blockquote><pre>
+#define SQLITE_SCANSTAT_COMPLEX 0x0001
+</pre></blockquote>
+<p></p><hr><a name="SQLITE_SCANSTAT_EST"></a>
 <h2>Prepared Statement Scan Status Opcodes</h2>
 </div>
 <blockquote><pre>
@@ -6603,6 +6810,8 @@ any virtual tables.
 #define SQLITE_SCANSTAT_NAME     3
 #define SQLITE_SCANSTAT_EXPLAIN  4
 #define SQLITE_SCANSTAT_SELECTID 5
+#define SQLITE_SCANSTAT_PARENTID 6
+#define SQLITE_SCANSTAT_NCYCLE   7
 </pre></blockquote>
 <p>
 The following constants can be used for the T parameter to the
@@ -6612,6 +6821,10 @@ different metric for sqlite3_stmt_scanstatus() to return.</p>
 <p>When the value returned to V is a string, space to hold that string is
 managed by the prepared statement S and will be automatically freed when
 S is finalized.</p>
+
+<p>Not all values are available for all query elements. When a value is
+not available, the output variable is set to -1 if the value is numeric,
+or to NULL if it is a string (SQLITE_SCANSTAT_NAME).</p>
 
 <p><dl>
 <a name="sqlitescanstatnloop"></a>
@@ -6646,12 +6859,26 @@ to a zero-terminated UTF-8 string containing the <a href="eqp.html">EXPLAIN QUER
 description for the X-th loop.</p>
 
 <p><a name="sqlitescanstatselectid"></a>
- <dt>SQLITE_SCANSTAT_SELECT</dt>
+ <dt>SQLITE_SCANSTAT_SELECTID</dt>
 <dd>The "int" variable pointed to by the V parameter will be set to the
-"select-id" for the X-th loop.  The select-id identifies which query or
-subquery the loop is part of.  The main query has a select-id of zero.
-The select-id is the same value as is output in the first column
-of an <a href="eqp.html">EXPLAIN QUERY PLAN</a> query.
+id for the X-th query plan element. The id value is unique within the
+statement. The select-id is the same value as is output in the first
+column of an <a href="eqp.html">EXPLAIN QUERY PLAN</a> query.</p>
+
+<p><a name="sqlitescanstatparentid"></a>
+ <dt>SQLITE_SCANSTAT_PARENTID</dt>
+<dd>The "int" variable pointed to by the V parameter will be set to the
+the id of the parent of the current query element, if applicable, or
+to zero if the query element has no parent. This is the same value as
+returned in the second column of an <a href="eqp.html">EXPLAIN QUERY PLAN</a> query.</p>
+
+<p><a name="sqlitescanstatncycle"></a>
+ <dt>SQLITE_SCANSTAT_NCYCLE</dt>
+<dd>The sqlite3_int64 output value is set to the number of cycles,
+according to the processor time-stamp counter, that elapsed while the
+query element was being processed. This value is not available for
+all query elements - if it is unavailable the output variable is
+set to -1.
 </dl>
 </p><hr><a name="SQLITE_SHM_EXCLUSIVE"></a>
 <h2>Flags for the xShmLock VFS method</h2>
@@ -6685,9 +6912,9 @@ and EXCLUSIVE.
 <h2>Compile-Time Library Version Numbers</h2>
 </div>
 <blockquote><pre>
-#define SQLITE_VERSION        "3.40.1"
-#define SQLITE_VERSION_NUMBER 3040001
-#define SQLITE_SOURCE_ID      "2022-12-28 14:03:47 df5c253c0b3dd24916e4ec7cf77d3db5294cc9fd45ae7b9c5e82ad8197f38a24"
+#define SQLITE_VERSION        "3.46.1"
+#define SQLITE_VERSION_NUMBER 3046001
+#define SQLITE_SOURCE_ID      "2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69a1e33"
 </pre></blockquote>
 <p>
 The <a href="#SQLITE_SOURCE_ID">SQLITE_VERSION</a> C preprocessor macro in the sqlite3.h header
@@ -6862,6 +7089,7 @@ cares about the difference.)
 #define SQLITE_TESTCTRL_PRNG_SAVE                5
 #define SQLITE_TESTCTRL_PRNG_RESTORE             6
 #define SQLITE_TESTCTRL_PRNG_RESET               7  /* NOT USED */
+#define SQLITE_TESTCTRL_FK_NO_ACTION             7
 #define SQLITE_TESTCTRL_BITVEC_TEST              8
 #define SQLITE_TESTCTRL_FAULT_INSTALL            9
 #define SQLITE_TESTCTRL_BENIGN_MALLOC_HOOKS     10
@@ -6869,6 +7097,7 @@ cares about the difference.)
 #define SQLITE_TESTCTRL_ASSERT                  12
 #define SQLITE_TESTCTRL_ALWAYS                  13
 #define SQLITE_TESTCTRL_RESERVE                 14  /* NOT USED */
+#define SQLITE_TESTCTRL_JSON_SELFCHECK          14
 #define SQLITE_TESTCTRL_OPTIMIZATIONS           15
 #define SQLITE_TESTCTRL_ISKEYWORD               16  /* NOT USED */
 #define SQLITE_TESTCTRL_SCRATCHMALLOC           17  /* NOT USED */
@@ -6890,7 +7119,8 @@ cares about the difference.)
 #define SQLITE_TESTCTRL_TRACEFLAGS              31
 #define SQLITE_TESTCTRL_TUNE                    32
 #define SQLITE_TESTCTRL_LOGEST                  33
-#define SQLITE_TESTCTRL_LAST                    33  /* Largest TESTCTRL */
+#define SQLITE_TESTCTRL_USELONGDOUBLE           34
+#define SQLITE_TESTCTRL_LAST                    34  /* Largest TESTCTRL */
 </pre></blockquote>
 <p>
 These constants are the valid operation code parameters used
@@ -6943,8 +7173,8 @@ interface by using the X argument when X begins with "--" and invoking
 <dd>An SQLITE_TRACE_PROFILE callback provides approximately the same
 information as is provided by the <a href="#sqlite3_profile">sqlite3_profile()</a> callback.
 The P argument is a pointer to the <a href="#sqlite3_stmt">prepared statement</a> and the
-X argument points to a 64-bit integer which is the estimated of
-the number of nanosecond that the prepared statement took to run.
+X argument points to a 64-bit integer which is approximately
+the number of nanoseconds that the prepared statement took to run.
 The SQLITE_TRACE_PROFILE callback is invoked when the statement finishes.</p>
 
 <p><a name="sqlitetracerow"></a>
@@ -6962,7 +7192,7 @@ The P argument is a pointer to the <a href="#sqlite3">database connection</a> ob
 and the X argument is unused.
 </dl>
 </p><hr><a name="SQLITE_TXN_NONE"></a>
-<h2>Allowed return values from [sqlite3_txn_state()]</h2>
+<h2>Allowed return values from sqlite3_txn_state()</h2>
 </div>
 <blockquote><pre>
 #define SQLITE_TXN_NONE  0
@@ -7004,6 +7234,7 @@ to SQLITE_TXN_NONE at the next <a href="lang_transaction.html">ROLLBACK</a> or <
 #define SQLITE_VTAB_CONSTRAINT_SUPPORT 1
 #define SQLITE_VTAB_INNOCUOUS          2
 #define SQLITE_VTAB_DIRECTONLY         3
+#define SQLITE_VTAB_USES_ALL_SCHEMAS   4
 </pre></blockquote>
 <p>
 These macros define the various options to the
@@ -7048,7 +7279,7 @@ constraint handling.
 <dt>SQLITE_VTAB_DIRECTONLY</dt>
 <dd>Calls of the form
 <a href="#sqlite3_vtab_config">sqlite3_vtab_config</a>(db,SQLITE_VTAB_DIRECTONLY) from within the
-the <a href="vtab.html#xconnect">xConnect</a> or <a href="vtab.html#xcreate">xCreate</a> methods of a <a href="vtab.html">virtual table</a> implmentation
+the <a href="vtab.html#xconnect">xConnect</a> or <a href="vtab.html#xcreate">xCreate</a> methods of a <a href="vtab.html">virtual table</a> implementation
 prohibits that virtual table from being used from within triggers and
 views.
 </dd></p>
@@ -7057,12 +7288,22 @@ views.
 <dt>SQLITE_VTAB_INNOCUOUS</dt>
 <dd>Calls of the form
 <a href="#sqlite3_vtab_config">sqlite3_vtab_config</a>(db,SQLITE_VTAB_INNOCUOUS) from within the
-the <a href="vtab.html#xconnect">xConnect</a> or <a href="vtab.html#xcreate">xCreate</a> methods of a <a href="vtab.html">virtual table</a> implmentation
+the <a href="vtab.html#xconnect">xConnect</a> or <a href="vtab.html#xcreate">xCreate</a> methods of a <a href="vtab.html">virtual table</a> implementation
 identify that virtual table as being safe to use from within triggers
 and views.  Conceptually, the SQLITE_VTAB_INNOCUOUS tag means that the
 virtual table can do no serious harm even if it is controlled by a
 malicious hacker.  Developers should avoid setting the SQLITE_VTAB_INNOCUOUS
 flag unless absolutely necessary.
+</dd></p>
+
+<p><a name="sqlitevtabusesallschemas"></a>
+<dt>SQLITE_VTAB_USES_ALL_SCHEMAS</dt>
+<dd>Calls of the form
+<a href="#sqlite3_vtab_config">sqlite3_vtab_config</a>(db,SQLITE_VTAB_USES_ALL_SCHEMA) from within the
+the <a href="vtab.html#xconnect">xConnect</a> or <a href="vtab.html#xcreate">xCreate</a> methods of a <a href="vtab.html">virtual table</a> implementation
+instruct the query planner to begin at least a read transaction on
+all schemas ("main", "temp", and any ATTACH-ed databases) whenever the
+virtual table is used.
 </dd>
 </dl>
 </p><hr><a name="SQLITE_WIN32_DATA_DIRECTORY_TYPE"></a>
@@ -7403,9 +7644,9 @@ by the reader until a new read transaction is started.</p>
 version of the database file so that it is possible to later open a new read
 transaction that sees that historical version of the database rather than
 the most recent version.
-</p><p>1 Constructor: <a href="#sqlite3_snapshot_get">sqlite3_snapshot_get()</a></p>
-<p>1 Destructor: <a href="#sqlite3_snapshot_free">sqlite3_snapshot_free()</a></p>
-<p>3 Methods:
+</p><p>1 Constructor using this object: <a href="#sqlite3_snapshot_get">sqlite3_snapshot_get()</a></p>
+<p>1 Destructor using this object: <a href="#sqlite3_snapshot_free">sqlite3_snapshot_free()</a></p>
+<p>3 Methods using this object:
  <a href="#sqlite3_snapshot_cmp">sqlite3_snapshot_cmp()</a>,
 <a href="#sqlite3_snapshot_open">sqlite3_snapshot_open()</a>,
 <a href="#sqlite3_snapshot_recover">sqlite3_snapshot_recover()</a></p>
@@ -7482,6 +7723,10 @@ struct sqlite3_module {
   /* The methods above are in versions 1 and 2 of the sqlite_module object.
   ** Those below are for version 3 and greater. */
   int (*xShadowName)(const char*);
+  /* The methods above are in versions 1 through 3 of the sqlite_module object.
+  ** Those below are for version 4 and greater. */
+  int (*xIntegrity)(sqlite3_vtab *pVTab, const char *zSchema,
+                    const char *zTabName, int mFlags, char **pzErr);
 };
 </pre></blockquote>
 <p>
@@ -7532,9 +7777,9 @@ and destroyed by <a href="#sqlite3_blob_close">sqlite3_blob_close()</a>.
 The <a href="#sqlite3_blob_read">sqlite3_blob_read()</a> and <a href="#sqlite3_blob_write">sqlite3_blob_write()</a> interfaces
 can be used to read or write small subsections of the BLOB.
 The <a href="#sqlite3_blob_bytes">sqlite3_blob_bytes()</a> interface returns the size of the BLOB in bytes.
-</p><p>1 Constructor: <a href="#sqlite3_blob_open">sqlite3_blob_open()</a></p>
-<p>1 Destructor: <a href="#sqlite3_blob_close">sqlite3_blob_close()</a></p>
-<p>4 Methods:
+</p><p>1 Constructor using this object: <a href="#sqlite3_blob_open">sqlite3_blob_open()</a></p>
+<p>1 Destructor using this object: <a href="#sqlite3_blob_close">sqlite3_blob_close()</a></p>
+<p>4 Methods using this object:
  <a href="#sqlite3_blob_bytes">sqlite3_blob_bytes()</a>,
 <a href="#sqlite3_blob_read">sqlite3_blob_read()</a>,
 <a href="#sqlite3_blob_reopen">sqlite3_blob_reopen()</a>,
@@ -7555,14 +7800,14 @@ interfaces (such as
 <a href="#sqlite3_prepare">sqlite3_prepare_v2()</a>, <a href="#sqlite3_create_function">sqlite3_create_function()</a>, and
 <a href="#sqlite3_busy_timeout">sqlite3_busy_timeout()</a> to name but three) that are methods on an
 sqlite3 object.
-</p><p>3 Constructors:
+</p><p>3 Constructors using this object:
  <a href="#sqlite3_open">sqlite3_open()</a>,
 <a href="#sqlite3_open">sqlite3_open16()</a>,
 <a href="#sqlite3_open">sqlite3_open_v2()</a></p>
-<p>2 Destructors:
+<p>2 Destructors using this object:
  <a href="#sqlite3_close">sqlite3_close()</a>,
 <a href="#sqlite3_close">sqlite3_close_v2()</a></p>
-<p>76 Methods:
+<p>77 Methods using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_autovacuum_pages'>sqlite3_autovacuum_pages</a></li>
@@ -7604,8 +7849,10 @@ sqlite3 object.
 <li><a href='#sqlite3_file_control'>sqlite3_file_control</a></li>
 <li><a href='#sqlite3_free_table'>sqlite3_free_table</a></li>
 <li><a href='#sqlite3_get_autocommit'>sqlite3_get_autocommit</a></li>
+<li><a href='#sqlite3_get_clientdata'>sqlite3_get_clientdata</a></li>
 <li><a href='#sqlite3_free_table'>sqlite3_get_table</a></li>
 <li><a href='#sqlite3_interrupt'>sqlite3_interrupt</a></li>
+<li><a href='#sqlite3_interrupt'>sqlite3_is_interrupted</a></li>
 <li><a href='#sqlite3_last_insert_rowid'>sqlite3_last_insert_rowid</a></li>
 <li><a href='#sqlite3_limit'>sqlite3_limit</a></li>
 <li><a href='#sqlite3_load_extension'>sqlite3_load_extension</a></li>
@@ -7623,16 +7870,15 @@ sqlite3 object.
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_hook</a></li>
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_new</a></li>
 <li><a href='#sqlite3_preupdate_blobwrite'>sqlite3_preupdate_old</a></li>
-<li><a href='#sqlite3_profile'>sqlite3_profile</a></li>
 <li><a href='#sqlite3_progress_handler'>sqlite3_progress_handler</a></li>
 <li><a href='#sqlite3_commit_hook'>sqlite3_rollback_hook</a></li>
 <li><a href='#sqlite3_set_authorizer'>sqlite3_set_authorizer</a></li>
+<li><a href='#sqlite3_get_clientdata'>sqlite3_set_clientdata</a></li>
 <li><a href='#sqlite3_set_last_insert_rowid'>sqlite3_set_last_insert_rowid</a></li>
 <li><a href='#sqlite3_system_errno'>sqlite3_system_errno</a></li>
 <li><a href='#sqlite3_table_column_metadata'>sqlite3_table_column_metadata</a></li>
 <li><a href='#sqlite3_total_changes'>sqlite3_total_changes</a></li>
 <li><a href='#sqlite3_total_changes'>sqlite3_total_changes64</a></li>
-<li><a href='#sqlite3_profile'>sqlite3_trace</a></li>
 <li><a href='#sqlite3_trace_v2'>sqlite3_trace_v2</a></li>
 <li><a href='#sqlite3_txn_state'>sqlite3_txn_state</a></li>
 <li><a href='#sqlite3_unlock_notify'>sqlite3_unlock_notify</a></li>
@@ -7662,9 +7908,9 @@ methods, such as <a href="#sqlite3_str_append">sqlite3_str_appendf()</a>.
 <li> The sqlite3_str object is destroyed and the string it created
 is returned using the <a href="#sqlite3_str_finish">sqlite3_str_finish()</a> interface.
 </ol>
-</p><p>1 Constructor: <a href="#sqlite3_str_new">sqlite3_str_new()</a></p>
-<p>1 Destructor: <a href="#sqlite3_str_finish">sqlite3_str_finish()</a></p>
-<p>9 Methods:
+</p><p>1 Constructor using this object: <a href="#sqlite3_str_new">sqlite3_str_new()</a></p>
+<p>1 Destructor using this object: <a href="#sqlite3_str_finish">sqlite3_str_finish()</a></p>
+<p>9 Methods using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_str_append'>sqlite3_str_append</a></li>
@@ -7892,7 +8138,7 @@ interfaces.
 to step 2.  Do this zero or more times.
 <li> Destroy the object using <a href="#sqlite3_finalize">sqlite3_finalize()</a>.
 </ol>
-</p><p>6 Constructors:
+</p><p>6 Constructors using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_prepare'>sqlite3_prepare</a></li>
@@ -7904,8 +8150,8 @@ to step 2.  Do this zero or more times.
 </ul>
 </div>
 </p>
-<p>1 Destructor: <a href="#sqlite3_finalize">sqlite3_finalize()</a></p>
-<p>51 Methods:
+<p>1 Destructor using this object: <a href="#sqlite3_finalize">sqlite3_finalize()</a></p>
+<p>53 Methods using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_bind_blob'>sqlite3_bind_blob</a></li>
@@ -7954,10 +8200,12 @@ to step 2.  Do this zero or more times.
 <li><a href='#sqlite3_expanded_sql'>sqlite3_sql</a></li>
 <li><a href='#sqlite3_step'>sqlite3_step</a></li>
 <li><a href='#sqlite3_stmt_busy'>sqlite3_stmt_busy</a></li>
+<li><a href='#sqlite3_stmt_explain'>sqlite3_stmt_explain</a></li>
 <li><a href='#sqlite3_stmt_isexplain'>sqlite3_stmt_isexplain</a></li>
 <li><a href='#sqlite3_stmt_readonly'>sqlite3_stmt_readonly</a></li>
 <li><a href='#sqlite3_stmt_scanstatus'>sqlite3_stmt_scanstatus</a></li>
 <li><a href='#sqlite3_stmt_scanstatus_reset'>sqlite3_stmt_scanstatus_reset</a></li>
+<li><a href='#sqlite3_stmt_scanstatus'>sqlite3_stmt_scanstatus_v2</a></li>
 <li><a href='#sqlite3_stmt_status'>sqlite3_stmt_status</a></li>
 </ul>
 </div>
@@ -8006,7 +8254,7 @@ to <a href="#sqlite3_result_blob">sqlite3_result_value()</a>, <a href="#sqlite3_
 <a href="#sqlite3_value_dup">sqlite3_value_dup()</a>.
 The <a href="#sqlite3_value_blob">sqlite3_value_type()</a> family of
 interfaces require protected sqlite3_value objects.
-</p><p>19 Methods:
+</p><p>19 Methods using this object:
 <div class='columns' style='columns: 17em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_blob</a></li>
@@ -8014,7 +8262,7 @@ interfaces require protected sqlite3_value objects.
 <li><a href='#sqlite3_value_blob'>sqlite3_value_bytes16</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_double</a></li>
 <li><a href='#sqlite3_value_dup'>sqlite3_value_dup</a></li>
-<li><a href='#sqlite3_value_blob'>sqlite3_value_encoding</a></li>
+<li><a href='#sqlite3_value_encoding'>sqlite3_value_encoding</a></li>
 <li><a href='#sqlite3_value_dup'>sqlite3_value_free</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_frombind</a></li>
 <li><a href='#sqlite3_value_blob'>sqlite3_value_int</a></li>
@@ -8743,7 +8991,7 @@ sqlite3_filename sqlite3_create_filename(
 void sqlite3_free_filename(sqlite3_filename);
 </pre></blockquote>
 <p>
-These interfces are provided for use by <a href="vfs.html#shim">VFS shim</a> implementations and
+These interfaces are provided for use by <a href="vfs.html#shim">VFS shim</a> implementations and
 are not useful outside of that context.</p>
 
 <p>The sqlite3_create_filename(D,J,W,N,P) allocates memory to hold a version of
@@ -8866,14 +9114,17 @@ interfaces include the following:</p>
 </ul></p>
 
 <p>The sqlite3_errmsg() and sqlite3_errmsg16() return English-language
-text that describes the error, as either UTF-8 or UTF-16 respectively.
+text that describes the error, as either UTF-8 or UTF-16 respectively,
+or NULL if no error message is available.
+(See how SQLite handles <a href="invalidutf.html">invalid UTF</a> for exceptions to this rule.)
 Memory to hold the error message string is managed internally.
 The application does not need to worry about freeing the result.
 However, the error string might be overwritten or deallocated by
 subsequent calls to other SQLite interface functions.</p>
 
-<p>The sqlite3_errstr() interface returns the English-language text
-that describes the <a href="rescode.html">result code</a>, as UTF-8.
+<p>The sqlite3_errstr(E) interface returns the English-language text
+that describes the <a href="rescode.html">result code</a> E, as UTF-8, or NULL if E is not an
+result code for which a text error message is available.
 Memory to hold the error message string is managed internally
 and must not be freed by the application.</p>
 
@@ -9151,48 +9402,56 @@ void sqlite3_set_auxdata(sqlite3_context*, int N, void*, void (*)(void*));
 </pre></blockquote>
 <p>
 These functions may be used by (non-aggregate) SQL functions to
-associate metadata with argument values. If the same value is passed to
-multiple invocations of the same SQL function during query execution, under
-some circumstances the associated metadata may be preserved.  An example
-of where this might be useful is in a regular-expression matching
-function. The compiled version of the regular expression can be stored as
-metadata associated with the pattern string.
+associate auxiliary data with argument values. If the same argument
+value is passed to multiple invocations of the same SQL function during
+query execution, under some circumstances the associated auxiliary data
+might be preserved.  An example of where this might be useful is in a
+regular-expression matching function. The compiled version of the regular
+expression can be stored as auxiliary data associated with the pattern string.
 Then as long as the pattern string remains the same,
 the compiled regular expression can be reused on multiple
 invocations of the same function.</p>
 
-<p>The sqlite3_get_auxdata(C,N) interface returns a pointer to the metadata
+<p>The sqlite3_get_auxdata(C,N) interface returns a pointer to the auxiliary data
 associated by the sqlite3_set_auxdata(C,N,P,X) function with the Nth argument
 value to the application-defined function.  N is zero for the left-most
-function argument.  If there is no metadata
+function argument.  If there is no auxiliary data
 associated with the function argument, the sqlite3_get_auxdata(C,N) interface
 returns a NULL pointer.</p>
 
-<p>The sqlite3_set_auxdata(C,N,P,X) interface saves P as metadata for the N-th
-argument of the application-defined function.  Subsequent
+<p>The sqlite3_set_auxdata(C,N,P,X) interface saves P as auxiliary data for the
+N-th argument of the application-defined function.  Subsequent
 calls to sqlite3_get_auxdata(C,N) return P from the most recent
-sqlite3_set_auxdata(C,N,P,X) call if the metadata is still valid or
-NULL if the metadata has been discarded.
+sqlite3_set_auxdata(C,N,P,X) call if the auxiliary data is still valid or
+NULL if the auxiliary data has been discarded.
 After each call to sqlite3_set_auxdata(C,N,P,X) where X is not NULL,
 SQLite will invoke the destructor function X with parameter P exactly
-once, when the metadata is discarded.
-SQLite is free to discard the metadata at any time, including: <ul>
+once, when the auxiliary data is discarded.
+SQLite is free to discard the auxiliary data at any time, including: <ul>
 <li> when the corresponding function parameter changes, or
 <li> when <a href="#sqlite3_reset">sqlite3_reset()</a> or <a href="#sqlite3_finalize">sqlite3_finalize()</a> is called for the
 SQL statement, or
 <li> when sqlite3_set_auxdata() is invoked again on the same
 parameter, or
 <li> during the original sqlite3_set_auxdata() call when a memory
-allocation error occurs. </ul></p>
+allocation error occurs.
+<li> during the original sqlite3_set_auxdata() call if the function
+is evaluated during query planning instead of during query execution,
+as sometimes happens with <a href="compile.html#enable_stat4">SQLITE_ENABLE_STAT4</a>. </ul></p>
 
-<p>Note the last bullet in particular.  The destructor X in
+<p>Note the last two bullets in particular.  The destructor X in
 sqlite3_set_auxdata(C,N,P,X) might be called immediately, before the
 sqlite3_set_auxdata() interface even returns.  Hence sqlite3_set_auxdata()
 should be called near the end of the function implementation and the
 function implementation should not make any use of P after
-sqlite3_set_auxdata() has been called.</p>
+sqlite3_set_auxdata() has been called.  Furthermore, a call to
+sqlite3_get_auxdata() that occurs immediately after a corresponding call
+to sqlite3_set_auxdata() might still return NULL if an out-of-memory
+condition occurred during the sqlite3_set_auxdata() call or if the
+function is being evaluated during query planning rather than during
+query execution.</p>
 
-<p>In practice, metadata is preserved between function calls for
+<p>In practice, auxiliary data is preserved between function calls for
 function parameters that are compile-time constants, including literal
 values and <a href="lang_expr.html#varparam">parameters</a> and expressions composed from the same.</p>
 
@@ -9201,7 +9460,65 @@ Future enhancements may make use of negative N values to define new
 kinds of function caching behavior.</p>
 
 <p>These routines must be called from the same thread in which
-the SQL function is running.
+the SQL function is running.</p>
+
+<p>See also: <a href="#sqlite3_get_clientdata">sqlite3_get_clientdata()</a> and <a href="#sqlite3_get_clientdata">sqlite3_set_clientdata()</a>.
+</p><hr><a name="sqlite3_get_clientdata"></a>
+<h2>Database Connection Client Data</h2>
+</div>
+<blockquote><pre>
+void *sqlite3_get_clientdata(sqlite3*,const char*);
+int sqlite3_set_clientdata(sqlite3*, const char*, void*, void(*)(void*));
+</pre></blockquote>
+<p>
+These functions are used to associate one or more named pointers
+with a <a href="#sqlite3">database connection</a>.
+A call to sqlite3_set_clientdata(D,N,P,X) causes the pointer P
+to be attached to <a href="#sqlite3">database connection</a> D using name N.  Subsequent
+calls to sqlite3_get_clientdata(D,N) will return a copy of pointer P
+or a NULL pointer if there were no prior calls to
+sqlite3_set_clientdata() with the same values of D and N.
+Names are compared using strcmp() and are thus case sensitive.</p>
+
+<p>If P and X are both non-NULL, then the destructor X is invoked with
+argument P on the first of the following occurrences:
+<ul>
+<li> An out-of-memory error occurs during the call to
+sqlite3_set_clientdata() which attempts to register pointer P.
+<li> A subsequent call to sqlite3_set_clientdata(D,N,P,X) is made
+with the same D and N parameters.
+<li> The database connection closes.  SQLite does not make any guarantees
+about the order in which destructors are called, only that all
+destructors will be called exactly once at some point during the
+database connection closing process.
+</ul></p>
+
+<p>SQLite does not do anything with client data other than invoke
+destructors on the client data at the appropriate time.  The intended
+use for client data is to provide a mechanism for wrapper libraries
+to store additional information about an SQLite database connection.</p>
+
+<p>There is no limit (other than available memory) on the number of different
+client data pointers (with different names) that can be attached to a
+single database connection.  However, the implementation is optimized
+for the case of having only one or two different client data names.
+Applications and wrapper libraries are discouraged from using more than
+one client data name each.</p>
+
+<p>There is no way to enumerate the client data pointers
+associated with a database connection.  The N parameter can be thought
+of as a secret key such that only code that knows the secret key is able
+to access the associated data.</p>
+
+<p>Security Warning:  These interfaces should not be exposed in scripting
+languages or in other circumstances where it might be possible for an
+an attacker to invoke them.  Any agent that can invoke these interfaces
+can probably also take control of the process.</p>
+
+<p>Database connection client data is only available for SQLite
+version 3.44.0 (2023-11-01) and later.</p>
+
+<p>See also: <a href="#sqlite3_get_auxdata">sqlite3_set_auxdata()</a> and <a href="#sqlite3_get_auxdata">sqlite3_get_auxdata()</a>.
 </p><hr><a name="sqlite3_hard_heap_limit64"></a>
 <h2>Impose A Limit On Heap Size</h2>
 </div>
@@ -9351,6 +9668,48 @@ sqlite3_os_init() and sqlite3_os_end().  An application-supplied
 implementation of sqlite3_os_init() or sqlite3_os_end()
 must return <a href="#SQLITE_ABORT">SQLITE_OK</a> on success and some other <a href="rescode.html">error code</a> upon
 failure.
+</p><hr><a name="sqlite3_interrupt"></a>
+<h2>Interrupt A Long-Running Query</h2>
+</div>
+<blockquote><pre>
+void sqlite3_interrupt(sqlite3*);
+int sqlite3_is_interrupted(sqlite3*);
+</pre></blockquote>
+<p>
+This function causes any pending database operation to abort and
+return at its earliest opportunity. This routine is typically
+called in response to a user action such as pressing "Cancel"
+or Ctrl-C where the user wants a long query operation to halt
+immediately.</p>
+
+<p>It is safe to call this routine from a thread different from the
+thread that is currently running the database operation.  But it
+is not safe to call this routine with a <a href="#sqlite3">database connection</a> that
+is closed or might close before sqlite3_interrupt() returns.</p>
+
+<p>If an SQL operation is very nearly finished at the time when
+sqlite3_interrupt() is called, then it might not have an opportunity
+to be interrupted and might continue to completion.</p>
+
+<p>An SQL operation that is interrupted will return <a href="#SQLITE_ABORT">SQLITE_INTERRUPT</a>.
+If the interrupted SQL operation is an INSERT, UPDATE, or DELETE
+that is inside an explicit transaction, then the entire transaction
+will be rolled back automatically.</p>
+
+<p>The sqlite3_interrupt(D) call is in effect until all currently running
+SQL statements on <a href="#sqlite3">database connection</a> D complete.  Any new SQL statements
+that are started after the sqlite3_interrupt() call and before the
+running statement count reaches zero are interrupted as if they had been
+running prior to the sqlite3_interrupt() call.  New SQL statements
+that are started after the running statement count reaches zero are
+not effected by the sqlite3_interrupt().
+A call to sqlite3_interrupt(D) that occurs when there are no running
+SQL statements is a no-op and has no effect on SQL statements
+that are started after the sqlite3_interrupt() call returns.</p>
+
+<p>The <a href="#sqlite3_interrupt">sqlite3_is_interrupted(D)</a> interface can be used to determine whether
+or not an interrupt is currently in effect for <a href="#sqlite3">database connection</a> D.
+It returns 1 if an interrupt is currently in effect, or 0 otherwise.
 </p><hr><a name="sqlite3_keyword_check"></a>
 <h2>SQL Keyword Checking</h2>
 </div>
@@ -9368,7 +9727,7 @@ by enclosing in double-quotes) so as not to confuse the parser.</p>
 <p>The sqlite3_keyword_count() interface returns the number of distinct
 keywords understood by SQLite.</p>
 
-<p>The sqlite3_keyword_name(N,Z,L) interface finds the N-th keyword and
+<p>The sqlite3_keyword_name(N,Z,L) interface finds the 0-based N-th keyword and
 makes *Z point to that keyword expressed as UTF8 and writes the number
 of bytes in the keyword into *L.  The string that *Z points to is not
 zero-terminated.  The sqlite3_keyword_name(N,Z,L) routine returns
@@ -9620,18 +9979,20 @@ than an SQLITE_MUTEX_RECURSIVE more than once, the behavior is undefined.</p>
 
 <p>Some systems (for example, Windows 95) do not support the operation
 implemented by sqlite3_mutex_try().  On those systems, sqlite3_mutex_try()
-will always return SQLITE_BUSY. The SQLite core only ever uses
-sqlite3_mutex_try() as an optimization so this is acceptable
-behavior.</p>
+will always return SQLITE_BUSY. In most cases the SQLite core only uses
+sqlite3_mutex_try() as an optimization, so this is acceptable
+behavior. The exceptions are unix builds that set the
+SQLITE_ENABLE_SETLK_TIMEOUT build option. In that case a working
+sqlite3_mutex_try() is required.</p>
 
 <p>The sqlite3_mutex_leave() routine exits a mutex that was
 previously entered by the same thread.   The behavior
 is undefined if the mutex is not currently entered by the
 calling thread or is not currently allocated.</p>
 
-<p>If the argument to sqlite3_mutex_enter(), sqlite3_mutex_try(), or
-sqlite3_mutex_leave() is a NULL pointer, then all three routines
-behave as no-ops.</p>
+<p>If the argument to sqlite3_mutex_enter(), sqlite3_mutex_try(),
+sqlite3_mutex_leave(), or sqlite3_mutex_free() is a NULL pointer,
+then any of the four routines behaves as a no-op.</p>
 
 <p>See also: <a href="#sqlite3_mutex_held">sqlite3_mutex_held()</a> and <a href="#sqlite3_mutex_held">sqlite3_mutex_notheld()</a>.
 </p><hr><a name="sqlite3_mutex_held"></a>
@@ -9718,13 +10079,18 @@ three flag combinations:</p>
 
 <p><dl>
 <dt><a href="#SQLITE_OPEN_AUTOPROXY">SQLITE_OPEN_READONLY</a></dt>
-<dd>The database is opened in read-only mode.  If the database does not
-already exist, an error is returned.</dd></p>
+<dd>The database is opened in read-only mode.  If the database does
+not already exist, an error is returned.</dd></p>
 
 <p><dt><a href="#SQLITE_OPEN_AUTOPROXY">SQLITE_OPEN_READWRITE</a></dt>
-<dd>The database is opened for reading and writing if possible, or reading
-only if the file is write protected by the operating system.  In either
-case the database must already exist, otherwise an error is returned.</dd></p>
+<dd>The database is opened for reading and writing if possible, or
+reading only if the file is write protected by the operating
+system.  In either case the database must already exist, otherwise
+an error is returned.  For historical reasons, if opening in
+read-write mode fails due to OS-level permissions, an attempt is
+made to open it in read-only mode. <a href="#sqlite3_db_readonly">sqlite3_db_readonly()</a> can be
+used to determine whether the database is actually
+read-write.</dd></p>
 
 <p><dt><a href="#SQLITE_OPEN_AUTOPROXY">SQLITE_OPEN_READWRITE</a> | <a href="#SQLITE_OPEN_AUTOPROXY">SQLITE_OPEN_CREATE</a></dt>
 <dd>The database is opened for reading and writing, and is created if
@@ -10029,6 +10395,10 @@ or updated. The value of the seventh parameter passed to the callback
 function is not defined for operations on WITHOUT ROWID tables, or for
 DELETE operations on rowid tables.</p>
 
+<p>The sqlite3_preupdate_hook(D,C,P) function returns the P argument from
+the previous call on the same <a href="#sqlite3">database connection</a> D, or NULL for
+the first call on D.</p>
+
 <p>The <a href="#sqlite3_preupdate_blobwrite">sqlite3_preupdate_old()</a>, <a href="#sqlite3_preupdate_blobwrite">sqlite3_preupdate_new()</a>,
 <a href="#sqlite3_preupdate_blobwrite">sqlite3_preupdate_count()</a>, and <a href="#sqlite3_preupdate_blobwrite">sqlite3_preupdate_depth()</a> interfaces
 provide additional information about a preupdate event. These routines
@@ -10068,7 +10438,7 @@ triggers; and so forth.</p>
 <p>When the <a href="#sqlite3_blob_write">sqlite3_blob_write()</a> API is used to update a blob column,
 the pre-update hook is invoked with SQLITE_DELETE. This is because the
 in this case the new values are not available. In this case, when a
-callback made with op==SQLITE_DELETE is actuall a write using the
+callback made with op==SQLITE_DELETE is actually a write using the
 sqlite3_blob_write() API, the <a href="#sqlite3_preupdate_blobwrite">sqlite3_preupdate_blobwrite()</a> returns
 the index of the column being written. In other cases, where the
 pre-update hook is being invoked for some other reason, including a
@@ -10076,7 +10446,7 @@ regular DELETE, sqlite3_preupdate_blobwrite() returns -1.</p>
 
 <p>See also:  <a href="#sqlite3_update_hook">sqlite3_update_hook()</a>
 </p><hr><a name="sqlite3_profile"></a>
-<h2>Tracing And Profiling Functions</h2>
+<h2>Deprecated Tracing And Profiling Functions</h2>
 </div>
 <blockquote><pre>
 void *sqlite3_trace(sqlite3*,
@@ -10317,6 +10687,57 @@ be represented by a 32-bit integer, then the values returned by
 sqlite3_status() are undefined.</p>
 
 <p>See also: <a href="#sqlite3_db_status">sqlite3_db_status()</a>
+</p><hr><a name="sqlite3_stmt_scanstatus"></a>
+<h2>Prepared Statement Scan Status</h2>
+</div>
+<blockquote><pre>
+int sqlite3_stmt_scanstatus(
+  sqlite3_stmt *pStmt,      /* Prepared statement for which info desired */
+  int idx,                  /* Index of loop to report on */
+  int iScanStatusOp,        /* Information desired.  SQLITE_SCANSTAT_* */
+  void *pOut                /* Result written here */
+);
+int sqlite3_stmt_scanstatus_v2(
+  sqlite3_stmt *pStmt,      /* Prepared statement for which info desired */
+  int idx,                  /* Index of loop to report on */
+  int iScanStatusOp,        /* Information desired.  SQLITE_SCANSTAT_* */
+  int flags,                /* Mask of flags defined below */
+  void *pOut                /* Result written here */
+);
+</pre></blockquote>
+<p>
+These interfaces return information about the predicted and measured
+performance for pStmt.  Advanced applications can use this
+interface to compare the predicted and the measured performance and
+issue warnings and/or rerun <a href="lang_analyze.html">ANALYZE</a> if discrepancies are found.</p>
+
+<p>Since this interface is expected to be rarely used, it is only
+available if SQLite is compiled using the <a href="compile.html#enable_stmt_scanstatus">SQLITE_ENABLE_STMT_SCANSTATUS</a>
+compile-time option.</p>
+
+<p>The "iScanStatusOp" parameter determines which status information to return.
+The "iScanStatusOp" must be one of the <a href="#SQLITE_SCANSTAT_EST">scanstatus options</a> or the behavior
+of this interface is undefined. The requested measurement is written into
+a variable pointed to by the "pOut" parameter.</p>
+
+<p>The "flags" parameter must be passed a mask of flags. At present only
+one flag is defined - SQLITE_SCANSTAT_COMPLEX. If SQLITE_SCANSTAT_COMPLEX
+is specified, then status information is available for all elements
+of a query plan that are reported by "EXPLAIN QUERY PLAN" output. If
+SQLITE_SCANSTAT_COMPLEX is not specified, then only query plan elements
+that correspond to query loops (the "SCAN..." and "SEARCH..." elements of
+the EXPLAIN QUERY PLAN output) are available. Invoking API
+sqlite3_stmt_scanstatus() is equivalent to calling
+sqlite3_stmt_scanstatus_v2() with a zeroed flags parameter.</p>
+
+<p>Parameter "idx" identifies the specific query element to retrieve statistics
+for. Query elements are numbered starting from zero. A value of -1 may be
+to query for statistics regarding the entire query. If idx is out of range
+- less than -1 or greater than or equal to the total number of query
+elements used to implement the statement - a non-zero value is returned and
+the variable that pOut points to is unchanged.</p>
+
+<p>See also: <a href="#sqlite3_stmt_scanstatus_reset">sqlite3_stmt_scanstatus_reset()</a>
 </p><hr><a name="sqlite3_str_append"></a>
 <h2>Add Content To A Dynamic String</h2>
 </div>
@@ -10461,7 +10882,7 @@ parameter, and if so obtains the value of that query parameter.</p>
 as F) must be one of:
 <ul>
 <li> A database filename pointer created by the SQLite core and
-passed into the xOpen() method of a VFS implemention, or
+passed into the xOpen() method of a VFS implementation, or
 <li> A filename obtained from <a href="#sqlite3_db_filename">sqlite3_db_filename()</a>, or
 <li> A new filename constructed using <a href="#sqlite3_create_filename">sqlite3_create_filename()</a>.
 </ul>
@@ -10534,7 +10955,6 @@ int sqlite3_value_type(sqlite3_value*);
 int sqlite3_value_numeric_type(sqlite3_value*);
 int sqlite3_value_nochange(sqlite3_value*);
 int sqlite3_value_frombind(sqlite3_value*);
-int sqlite3_value_encoding(sqlite3_value*);
 </pre></blockquote>
 <p>
 <b>Summary:</b>
@@ -10611,16 +11031,6 @@ such a conversion is possible without loss of information (in other
 words, if the value is a string that looks like a number)
 then the conversion is performed.  Otherwise no conversion occurs.
 The <a href="#SQLITE_BLOB">datatype</a> after conversion is returned.</p>
-
-<p>The sqlite3_value_encoding(X) interface returns one of <a href="#SQLITE_ANY">SQLITE_UTF8</a>,
-<a href="#SQLITE_ANY">SQLITE_UTF16BE</a>, or <a href="#SQLITE_ANY">SQLITE_UTF16LE</a> according to the current encoding
-of the value X, assuming that X has type TEXT.  If sqlite3_value_type(X)
-returns something other than SQLITE_TEXT, then the return value from
-sqlite3_value_encoding(X) is meaningless.  Calls to
-sqlite3_value_text(X), sqlite3_value_text16(X), sqlite3_value_text16be(X),
-sqlite3_value_text16le(X), sqlite3_value_bytes(X), or
-sqlite3_value_bytes16(X) might change the encoding of the value X and
-thus change the return from subsequent calls to sqlite3_value_encoding(X).</p>
 
 <p>Within the <a href="vtab.html#xupdate">xUpdate</a> method of a <a href="vtab.html">virtual table</a>, the
 sqlite3_value_nochange(X) interface returns true if and only if
@@ -10736,21 +11146,20 @@ The result of invoking these interfaces from any other context
 is undefined and probably harmful.</p>
 
 <p>The X parameter in a call to sqlite3_vtab_in_first(X,P) or
-sqlite3_vtab_in_next(X,P) must be one of the parameters to the
+sqlite3_vtab_in_next(X,P) should be one of the parameters to the
 xFilter method which invokes these routines, and specifically
 a parameter that was previously selected for all-at-once IN constraint
 processing use the <a href="#sqlite3_vtab_in">sqlite3_vtab_in()</a> interface in the
 <a href="vtab.html#xbestindex">xBestIndex method</a>.  If the X parameter is not
 an xFilter argument that was selected for all-at-once IN constraint
-processing, then these routines return <a href="#SQLITE_ABORT">SQLITE_MISUSE</a> or perhaps
-exhibit some other undefined or harmful behavior.</p>
+processing, then these routines return <a href="#SQLITE_ABORT">SQLITE_ERROR</a>.</p>
 
 <p>Use these routines to access all values on the right-hand side
 of the IN constraint using code like the following:</p>
 
 <p><blockquote><pre>
 &nbsp;  for(rc=sqlite3_vtab_in_first(pList, &pVal);
-&nbsp;      rc==SQLITE_OK && pVal
+&nbsp;      rc==SQLITE_OK && pVal;
 &nbsp;      rc=sqlite3_vtab_in_next(pList, &pVal)
 &nbsp;  ){
 &nbsp;    // do something with pVal
@@ -10899,7 +11308,7 @@ These three options exist:
 with it may be passed. It is called to dispose of the BLOB or string even
 if the call to the bind API fails, except the destructor is not called if
 the third parameter is a NULL pointer or the fourth parameter is negative.
- (2) The special constant, <a href="#SQLITE_STATIC">SQLITE_STATIC</a>, may be passsed to indicate that
+ (2) The special constant, <a href="#SQLITE_STATIC">SQLITE_STATIC</a>, may be passed to indicate that
 the application remains responsible for disposing of the object. In this
 case, the object and the provided pointer to it must remain valid until
 either the prepared statement is finalized or the same SQL parameter is

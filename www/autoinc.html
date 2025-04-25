@@ -230,9 +230,13 @@ are ignored and can be reused.
 <p>
 SQLite keeps track of the largest ROWID
 using an <a href="fileformat2.html#intschema">internal table</a> named "<a href="fileformat2.html#seqtab">sqlite_sequence</a>".
-The sqlite_sequence table is created
-and initialized automatically whenever a normal table that contains an
-AUTOINCREMENT column is created.  The content of the sqlite_sequence table
+The sqlite_sequence table is created automatically, if it does not
+already exist, whenever a normal table that contains an
+AUTOINCREMENT column is created.  A row in the sqlite_sequence table
+corresponding to the table with the AUTOINCREMENT column is created the
+first time the AUTOINCREMENT table is written and updated on any
+subsequent writes that increase the maximum rowid.
+The content of the sqlite_sequence table
 can be modified using ordinary UPDATE, INSERT, and DELETE statements.
 But making modifications to this table will likely perturb the AUTOINCREMENT
 key generation algorithm.  Make sure you know what you are doing before
@@ -266,5 +270,5 @@ algorithm, AUTOINCREMENT is not allowed on <a href="withoutrowid.html">WITHOUT R
 table column other than INTEGER PRIMARY KEY.  Any attempt to use 
 AUTOINCREMENT on a <a href="withoutrowid.html">WITHOUT ROWID</a> table or on a column other than the
 INTEGER PRIMARY KEY column results in an error.</p>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/autoinc.in?m=bd2decf99d7aab9c9">2017-02-02 23:55:23</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/autoinc.in?m=018a064bb6">2024-02-22 16:13:38</a> UTC </small></i></p>
 

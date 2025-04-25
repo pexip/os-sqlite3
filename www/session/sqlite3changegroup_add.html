@@ -115,7 +115,7 @@ antiRobotGo();
 }
 antiRobotDefense();
 </script>
-<a href="intro.html"><h2>Session Module C Interface</h2></a><h2>Add A Changeset To A Changegroup</h2><blockquote><pre>int sqlite3changegroup_add(sqlite3_changegroup*, int nData, void *pData);
+<a href="../session/intro.html"><h2>Session Module C Interface</h2></a><h2>Add A Changeset To A Changegroup</h2><blockquote><pre>int sqlite3changegroup_add(sqlite3_changegroup*, int nData, void *pData);
 </pre></blockquote><p>
 Add all changes within the changeset (or patchset) in buffer pData (size
 nData bytes) to the changegroup. </p>
@@ -181,15 +181,20 @@ changegroup depends on the type of each change, as follows:</p>
 <p>If the new changeset contains changes to a table that is already present
 in the changegroup, then the number of columns and the position of the
 primary key columns for the table must be consistent. If this is not the
-case, this function fails with SQLITE_SCHEMA. If the input changeset
-appears to be corrupt and the corruption is detected, SQLITE_CORRUPT is
-returned. Or, if an out-of-memory condition occurs during processing, this
-function returns SQLITE_NOMEM. In all cases, if an error occurs the state
-of the final contents of the changegroup is undefined.</p>
+case, this function fails with SQLITE_SCHEMA. Except, if the changegroup
+object has been configured with a database schema using the
+sqlite3changegroup_schema() API, then it is possible to combine changesets
+with different numbers of columns for a single table, provided that
+they are otherwise compatible.</p>
 
-<p>If no error occurs, SQLITE_OK is returned.
+<p>If the input changeset appears to be corrupt and the corruption is
+detected, SQLITE_CORRUPT is returned. Or, if an out-of-memory condition
+occurs during processing, this function returns SQLITE_NOMEM. </p>
+
+<p>In all cases, if an error occurs the state of the final contents of the
+changegroup is undefined. If no error occurs, SQLITE_OK is returned.
 </p><p>See also lists of
-  <a href="objlist.html">Objects</a>,
-  <a href="constlist.html">Constants</a>, and
-  <a href="funclist.html">Functions</a>.</p>
+  <a href="../session/objlist.html">Objects</a>,
+  <a href="../session/constlist.html">Constants</a>, and
+  <a href="../session/funclist.html">Functions</a>.</p>
 

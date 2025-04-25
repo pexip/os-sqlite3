@@ -379,7 +379,7 @@ static int vt02Filter(
       sqlite3_int64 v;
       pVal = 0;
       if( sqlite3_vtab_in_first(0, &pVal)!=SQLITE_MISUSE
-       || sqlite3_vtab_in_first(argv[iArg], &pVal)!=SQLITE_MISUSE
+       || sqlite3_vtab_in_first(argv[iArg], &pVal)!=SQLITE_ERROR
       ){
         vt02ErrMsg(pCursor->pVtab, 
                 "unexpected success from sqlite3_vtab_in_first()");
@@ -418,7 +418,7 @@ static int vt02Filter(
   }
   if( bUseOffset ){
     int nSkip = sqlite3_value_int(argv[iArg]);
-    while( nSkip-- > 0 ) vt02Next(pCursor);
+    while( nSkip-- > 0 && pCur->i<pCur->iEof ) vt02Next(pCursor);
   }
   return SQLITE_OK;
 
@@ -580,8 +580,11 @@ static void sqlite3BestIndexLog(
     sqlite3_finalize(pStmt);
   }
   sqlite3RunSql(db,pVTab,
-    "INSERT INTO temp.\"%w\"(bi,vn,ix) VALUES(%d,'nConstraint',%d)",
-    zLogTab, iBI, pInfo->nConstraint
+    "INSERT INTO temp.\"%w\"(bi,vn,ix) VALUES(%d,'nConstraint',%d)"
+      "RETURNING iif(bi=%d,'ok',RAISE(ABORT,'wrong trigger'))",
+    /* The RETURNING clause checks to see that the returning trigger fired
+    ** for the correct INSERT in the case of nested INSERT RETURNINGs. */
+    zLogTab, iBI, pInfo->nConstraint, iBI
   );
   for(i=0; i<pInfo->nConstraint; i++){
     sqlite3_value *pVal;
@@ -983,7 +986,9 @@ const sqlite3_module vt02Module = {
   /* xRename       */  0,
   /* xSavepoint    */  0,
   /* xRelease      */  0,
-  /* xRollbackTo   */  0
+  /* xRollbackTo   */  0,
+  /* xShadowName   */  0,
+  /* xIntegrity    */  0
 };
 
 static void vt02CoreInit(sqlite3 *db){

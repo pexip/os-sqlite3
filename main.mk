@@ -193,24 +193,6 @@ SRC = \
 # Source code for extensions
 #
 SRC += \
-  $(TOP)/ext/fts1/fts1.c \
-  $(TOP)/ext/fts1/fts1.h \
-  $(TOP)/ext/fts1/fts1_hash.c \
-  $(TOP)/ext/fts1/fts1_hash.h \
-  $(TOP)/ext/fts1/fts1_porter.c \
-  $(TOP)/ext/fts1/fts1_tokenizer.h \
-  $(TOP)/ext/fts1/fts1_tokenizer1.c
-SRC += \
-  $(TOP)/ext/fts2/fts2.c \
-  $(TOP)/ext/fts2/fts2.h \
-  $(TOP)/ext/fts2/fts2_hash.c \
-  $(TOP)/ext/fts2/fts2_hash.h \
-  $(TOP)/ext/fts2/fts2_icu.c \
-  $(TOP)/ext/fts2/fts2_porter.c \
-  $(TOP)/ext/fts2/fts2_tokenizer.h \
-  $(TOP)/ext/fts2/fts2_tokenizer.c \
-  $(TOP)/ext/fts2/fts2_tokenizer1.c
-SRC += \
   $(TOP)/ext/fts3/fts3.c \
   $(TOP)/ext/fts3/fts3.h \
   $(TOP)/ext/fts3/fts3Int.h \
@@ -247,7 +229,6 @@ SRC += \
   $(TOP)/ext/rbu/sqlite3rbu.h
 SRC += \
   $(TOP)/ext/misc/stmt.c
-
 
 # FTS5 things
 #
@@ -316,7 +297,6 @@ TESTSRC = \
   $(TOP)/src/test4.c \
   $(TOP)/src/test5.c \
   $(TOP)/src/test6.c \
-  $(TOP)/src/test7.c \
   $(TOP)/src/test8.c \
   $(TOP)/src/test9.c \
   $(TOP)/src/test_autoext.c \
@@ -345,7 +325,6 @@ TESTSRC = \
   $(TOP)/src/test_quota.c \
   $(TOP)/src/test_rtree.c \
   $(TOP)/src/test_schema.c \
-  $(TOP)/src/test_server.c \
   $(TOP)/src/test_sqllog.c \
   $(TOP)/src/test_superlock.c \
   $(TOP)/src/test_syscall.c \
@@ -363,6 +342,7 @@ TESTSRC = \
 TESTSRC += \
   $(TOP)/ext/misc/amatch.c \
   $(TOP)/ext/misc/appendvfs.c \
+  $(TOP)/ext/misc/basexx.c \
   $(TOP)/ext/misc/carray.c \
   $(TOP)/ext/misc/cksumvfs.c \
   $(TOP)/ext/misc/closure.c \
@@ -379,6 +359,7 @@ TESTSRC += \
   $(TOP)/ext/misc/percentile.c \
   $(TOP)/ext/misc/prefixes.c \
   $(TOP)/ext/misc/qpvtab.c \
+  $(TOP)/ext/misc/randomjson.c \
   $(TOP)/ext/misc/regexp.c \
   $(TOP)/ext/misc/remember.c \
   $(TOP)/ext/misc/series.c \
@@ -393,10 +374,11 @@ TESTSRC += \
   $(TOP)/ext/rtree/test_rtreedoc.c \
   $(TOP)/ext/recover/sqlite3recover.c \
   $(TOP)/ext/recover/dbdata.c \
-  $(TOP)/ext/recover/test_recover.c
+  $(TOP)/ext/recover/test_recover.c \
+  $(TOP)/ext/intck/test_intck.c  \
+  $(TOP)/ext/intck/sqlite3intck.c 
 
 
-#TESTSRC += $(TOP)/ext/fts2/fts2_tokenizer.c
 #TESTSRC += $(TOP)/ext/fts3/fts3_tokenizer.c
 
 TESTSRC2 = \
@@ -482,14 +464,6 @@ HDR = \
 # Header files used by extensions
 #
 EXTHDR += \
-  $(TOP)/ext/fts1/fts1.h \
-  $(TOP)/ext/fts1/fts1_hash.h \
-  $(TOP)/ext/fts1/fts1_tokenizer.h
-EXTHDR += \
-  $(TOP)/ext/fts2/fts2.h \
-  $(TOP)/ext/fts2/fts2_hash.h \
-  $(TOP)/ext/fts2/fts2_tokenizer.h
-EXTHDR += \
   $(TOP)/ext/fts3/fts3.h \
   $(TOP)/ext/fts3/fts3Int.h \
   $(TOP)/ext/fts3/fts3_hash.h \
@@ -554,12 +528,15 @@ FUZZCHECK_OPT += -DSQLITE_ENABLE_RTREE
 FUZZCHECK_OPT += -DSQLITE_ENABLE_GEOPOLY
 FUZZCHECK_OPT += -DSQLITE_ENABLE_DBSTAT_VTAB
 FUZZCHECK_OPT += -DSQLITE_ENABLE_BYTECODE_VTAB
+FUZZCHECK_OPT += -DSQLITE_STRICT_SUBTYPE=1
+FUZZCHECK_OPT += -DSQLITE_STATIC_RANDOMJSON
 FUZZSRC += $(TOP)/test/fuzzcheck.c
 FUZZSRC += $(TOP)/test/ossfuzz.c
 FUZZSRC += $(TOP)/test/vt02.c
 FUZZSRC += $(TOP)/test/fuzzinvariants.c
 FUZZSRC += $(TOP)/ext/recover/dbdata.c
 FUZZSRC += $(TOP)/ext/recover/sqlite3recover.c
+FUZZSRC += $(TOP)/ext/misc/randomjson.c
 DBFUZZ_OPT =
 KV_OPT = -DSQLITE_THREADSAFE=0 -DSQLITE_DIRECT_OVERFLOW_READ
 ST_OPT = -DSQLITE_THREADSAFE=0
@@ -594,6 +571,12 @@ srcck1$(EXE):	$(TOP)/tool/srcck1.c
 sourcetest:	srcck1$(EXE) sqlite3.c
 	./srcck1 sqlite3.c
 
+src-verify:	$(TOP)/tool/src-verify.c
+	$(BCC) -o src-verify$(EXE) $(TOP)/tool/src-verify.c
+
+verify-source:	./src-verify
+	./src-verify $(TOP)
+
 fuzzershell$(EXE):	$(TOP)/tool/fuzzershell.c sqlite3.c sqlite3.h
 	$(TCCX) -o fuzzershell$(EXE) -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION \
 	  $(FUZZERSHELL_OPT) $(TOP)/tool/fuzzershell.c sqlite3.c \
@@ -619,7 +602,17 @@ dbfuzz2$(EXE):	$(TOP)/test/dbfuzz2.c sqlite3.c sqlite3.h
 	  $(DBFUZZ2_OPTS) $(TOP)/test/dbfuzz2.c sqlite3.c  $(TLIBS) $(THREADLIB)
 
 fuzzcheck$(EXE):	$(FUZZSRC) sqlite3.c sqlite3.h $(FUZZDEP)
-	$(TCCX) -o fuzzcheck$(EXE) -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION \
+	$(TCCX) -o $@ -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION \
+		-DSQLITE_ENABLE_MEMSYS5 $(FUZZCHECK_OPT) -DSQLITE_OSS_FUZZ \
+		$(FUZZSRC) sqlite3.c $(TLIBS) $(THREADLIB)
+
+fuzzcheck-asan$(EXE):	$(FUZZSRC) sqlite3.c sqlite3.h $(FUZZDEP)
+	$(TCCX) -fsanitize=address -o $W -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION \
+		-DSQLITE_ENABLE_MEMSYS5 $(FUZZCHECK_OPT) -DSQLITE_OSS_FUZZ \
+		$(FUZZSRC) sqlite3.c $(TLIBS) $(THREADLIB)
+
+fuzzcheck-ubsan$(EXE):	$(FUZZSRC) sqlite3.c sqlite3.h $(FUZZDEP)
+	$(TCCX) -fsanitize=undefined -o $@ -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION \
 		-DSQLITE_ENABLE_MEMSYS5 $(FUZZCHECK_OPT) -DSQLITE_OSS_FUZZ \
 		$(FUZZSRC) sqlite3.c $(TLIBS) $(THREADLIB)
 
@@ -666,8 +659,8 @@ target_source:	$(SRC) $(TOP)/tool/vdbe-compress.tcl fts5.c
 	cp fts5.c fts5.h tsrc
 	touch target_source
 
-sqlite3.c:	target_source $(TOP)/tool/mksqlite3c.tcl
-	tclsh $(TOP)/tool/mksqlite3c.tcl
+sqlite3.c:	target_source $(TOP)/tool/mksqlite3c.tcl src-verify
+	tclsh $(TOP)/tool/mksqlite3c.tcl $(EXTRA_SRC)
 	cp tsrc/sqlite3ext.h .
 	cp $(TOP)/ext/session/sqlite3session.h .
 	echo '#ifndef USE_SYSTEM_SQLITE' >tclsqlite3.c
@@ -678,8 +671,8 @@ sqlite3.c:	target_source $(TOP)/tool/mksqlite3c.tcl
 sqlite3ext.h:	target_source
 	cp tsrc/sqlite3ext.h .
 
-sqlite3.c-debug:	target_source $(TOP)/tool/mksqlite3c.tcl
-	tclsh $(TOP)/tool/mksqlite3c.tcl --linemacros=1
+sqlite3.c-debug:	target_source $(TOP)/tool/mksqlite3c.tcl src-verify
+	tclsh $(TOP)/tool/mksqlite3c.tcl --linemacros=1 $(EXTRA_SRC)
 	echo '#ifndef USE_SYSTEM_SQLITE' >tclsqlite3.c
 	cat sqlite3.c >>tclsqlite3.c
 	echo '#endif /* USE_SYSTEM_SQLITE */' >>tclsqlite3.c
@@ -688,9 +681,6 @@ sqlite3.c-debug:	target_source $(TOP)/tool/mksqlite3c.tcl
 
 sqlite3-all.c:	sqlite3.c $(TOP)/tool/split-sqlite3c.tcl
 	tclsh $(TOP)/tool/split-sqlite3c.tcl
-
-fts2amal.c:	target_source $(TOP)/ext/fts2/mkfts2amal.tcl
-	tclsh $(TOP)/ext/fts2/mkfts2amal.tcl
 
 # Rules to build the LEMON compiler generator
 #
@@ -728,8 +718,7 @@ opcodes.c:	opcodes.h $(TOP)/tool/mkopcodec.tcl
 	tclsh $(TOP)/tool/mkopcodec.tcl opcodes.h >opcodes.c
 
 opcodes.h:	parse.h $(TOP)/src/vdbe.c $(TOP)/tool/mkopcodeh.tcl
-	cat parse.h $(TOP)/src/vdbe.c | \
-		tclsh $(TOP)/tool/mkopcodeh.tcl >opcodes.h
+	cat parse.h $(TOP)/src/vdbe.c | tclsh $(TOP)/tool/mkopcodeh.tcl >opcodes.h
 
 # Rules to build parse.c and parse.h - the outputs of lemon.
 #
@@ -752,29 +741,37 @@ keywordhash.h:	$(TOP)/tool/mkkeywordhash.c
 	$(BCC) -o mkkeywordhash $(OPTS) $(TOP)/tool/mkkeywordhash.c
 	./mkkeywordhash >keywordhash.h
 
-# Source files that go into making shell.c
-SHELL_SRC = \
-	$(TOP)/src/shell.c.in \
-        $(TOP)/ext/misc/appendvfs.c \
-	$(TOP)/ext/misc/completion.c \
-        $(TOP)/ext/misc/decimal.c \
-	$(TOP)/ext/misc/fileio.c \
-        $(TOP)/ext/misc/ieee754.c \
-        $(TOP)/ext/misc/regexp.c \
-        $(TOP)/ext/misc/series.c \
-	$(TOP)/ext/misc/shathree.c \
-	$(TOP)/ext/misc/sqlar.c \
-        $(TOP)/ext/misc/uint.c \
-	$(TOP)/ext/expert/sqlite3expert.c \
-	$(TOP)/ext/expert/sqlite3expert.h \
-	$(TOP)/ext/misc/zipfile.c \
-	$(TOP)/ext/misc/memtrace.c \
-	$(TOP)/ext/recover/dbdata.c \
-	$(TOP)/ext/recover/sqlite3recover.c \
-	$(TOP)/ext/recover/sqlite3recover.h \
-        $(TOP)/src/test_windirent.c
+# Source and header files that shell.c depends on
+SHELL_DEP = \
+    $(TOP)/src/shell.c.in \
+    $(TOP)/ext/consio/console_io.c \
+    $(TOP)/ext/consio/console_io.h \
+    $(TOP)/ext/expert/sqlite3expert.c \
+    $(TOP)/ext/expert/sqlite3expert.h \
+    $(TOP)/ext/intck/sqlite3intck.c \
+    $(TOP)/ext/intck/sqlite3intck.h \
+    $(TOP)/ext/misc/appendvfs.c \
+    $(TOP)/ext/misc/base64.c \
+    $(TOP)/ext/misc/base85.c \
+    $(TOP)/ext/misc/completion.c \
+    $(TOP)/ext/misc/decimal.c \
+    $(TOP)/ext/misc/fileio.c \
+    $(TOP)/ext/misc/ieee754.c \
+    $(TOP)/ext/misc/memtrace.c \
+    $(TOP)/ext/misc/pcachetrace.c \
+    $(TOP)/ext/misc/regexp.c \
+    $(TOP)/ext/misc/series.c \
+    $(TOP)/ext/misc/shathree.c \
+    $(TOP)/ext/misc/sqlar.c \
+    $(TOP)/ext/misc/uint.c \
+    $(TOP)/ext/misc/zipfile.c \
+    $(TOP)/ext/recover/dbdata.c \
+    $(TOP)/ext/recover/sqlite3recover.c \
+    $(TOP)/ext/recover/sqlite3recover.h \
+    $(TOP)/src/test_windirent.c \
+    $(TOP)/src/test_windirent.h
 
-shell.c:	$(SHELL_SRC) $(TOP)/tool/mkshellc.tcl
+shell.c:	$(SHELL_DEP) $(TOP)/tool/mkshellc.tcl
 	tclsh $(TOP)/tool/mkshellc.tcl >shell.c
 
 
@@ -783,24 +780,6 @@ shell.c:	$(SHELL_SRC) $(TOP)/tool/mkshellc.tcl
 #
 icu.o:	$(TOP)/ext/icu/icu.c $(HDR) $(EXTHDR)
 	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/icu/icu.c
-
-fts2.o:	$(TOP)/ext/fts2/fts2.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2.c
-
-fts2_hash.o:	$(TOP)/ext/fts2/fts2_hash.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_hash.c
-
-fts2_icu.o:	$(TOP)/ext/fts2/fts2_icu.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_icu.c
-
-fts2_porter.o:	$(TOP)/ext/fts2/fts2_porter.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_porter.c
-
-fts2_tokenizer.o:	$(TOP)/ext/fts2/fts2_tokenizer.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_tokenizer.c
-
-fts2_tokenizer1.o:	$(TOP)/ext/fts2/fts2_tokenizer1.c $(HDR) $(EXTHDR)
-	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts2/fts2_tokenizer1.c
 
 fts3.o:	$(TOP)/ext/fts3/fts3.c $(HDR) $(EXTHDR)
 	$(TCCX) -DSQLITE_CORE -c $(TOP)/ext/fts3/fts3.c
@@ -928,6 +907,8 @@ TESTFIXTURE_FLAGS += -DSQLITE_ENABLE_DBPAGE_VTAB
 TESTFIXTURE_FLAGS += -DSQLITE_ENABLE_BYTECODE_VTAB
 TESTFIXTURE_FLAGS += -DTCLSH_INIT_PROC=sqlite3TestInit
 TESTFIXTURE_FLAGS += -DSQLITE_CKSUMVFS_STATIC
+TESTFIXTURE_FLAGS += -DSQLITE_STATIC_RANDOMJSON
+TESTFIXTURE_FLAGS += -DSQLITE_STRICT_SUBTYPE=1
 
 testfixture$(EXE): $(TESTSRC2) libsqlite3.a $(TESTSRC) $(TOP)/src/tclsqlite.c
 	$(TCCX) $(TCL_FLAGS) $(TESTFIXTURE_FLAGS)                            \
@@ -957,11 +938,11 @@ fulltestonly:	$(TESTPROGS) fuzztest
 queryplantest:	testfixture$(EXE) sqlite3$(EXE)
 	./testfixture$(EXE) $(TOP)/test/permutations.test queryplanner $(TESTOPTS)
 
-fuzztest:	fuzzcheck$(EXE) $(FUZZDATA) sessionfuzz$(EXE) $(TOP)/test/sessionfuzz-data1.db
+fuzztest:	fuzzcheck$(EXE) $(FUZZDATA) sessionfuzz$(EXE)
 	./fuzzcheck$(EXE) $(FUZZDATA)
 	./sessionfuzz run $(TOP)/test/sessionfuzz-data1.db
 
-valgrindfuzz:	fuzzcheck$(EXE) $(FUZZDATA) sessionfuzz$(EXE) $(TOP)/test/sessionfuzz-data1.db
+valgrindfuzz:	fuzzcheck$(EXE) $(FUZZDATA) sessionfuzz$(EXE)
 	valgrind ./fuzzcheck$(EXE) --cell-size-check --limit-mem 10M $(FUZZDATA)
 	valgrind ./sessionfuzz run $(TOP)/test/sessionfuzz-data1.db
 
@@ -975,6 +956,13 @@ tcltest:	./testfixture$(EXE)
 # concurrently.
 testrunner:	testfixture$(EXE)
 	./testfixture$(EXE) $(TOP)/test/testrunner.tcl
+
+# Runs both fuzztest and testrunner, consecutively.
+#
+devtest:	testfixture$(EXE) fuzztest testrunner
+
+mdevtest:
+	tclsh $(TOP)/test/testrunner.tcl mdevtest
 
 # A very quick test using only testfixture and omitting all the slower
 # tests.  Designed to run in under 3 minutes on a workstation.
@@ -1160,3 +1148,4 @@ clean:
 	rm -f fts5.* fts5parse.*
 	rm -f lsm.h lsm1.c
 	rm -f threadtest5
+	rm -f src-verify
