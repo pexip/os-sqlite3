@@ -363,8 +363,8 @@ static int recoverError(
   va_start(ap, zFmt);
   if( zFmt ){
     z = sqlite3_vmprintf(zFmt, ap);
-    va_end(ap);
   }
+  va_end(ap);
   sqlite3_free(p->zErrMsg);
   p->zErrMsg = z;
   p->errCode = errCode;
@@ -761,6 +761,7 @@ static void recoverEscapeCrnl(
   sqlite3_value **argv
 ){
   const char *zText = (const char*)sqlite3_value_text(argv[0]);
+  (void)argc;
   if( zText && zText[0]=='\'' ){
     int nText = sqlite3_value_bytes(argv[0]);
     int i;
@@ -913,7 +914,7 @@ static void recoverTransferSettings(sqlite3_recover *p){
       return;
     }
 
-    for(ii=0; ii<sizeof(aPragma)/sizeof(aPragma[0]); ii++){
+    for(ii=0; ii<(int)(sizeof(aPragma)/sizeof(aPragma[0])); ii++){
       const char *zPrag = aPragma[ii];
       sqlite3_stmt *p1 = 0;
       p1 = recoverPreparePrintf(p, p->dbIn, "PRAGMA %Q.%s", p->zDb, zPrag);
@@ -991,7 +992,9 @@ static int recoverOpenOutput(sqlite3_recover *p){
   }
 
   /* Register the custom user-functions with the output handle. */
-  for(ii=0; p->errCode==SQLITE_OK && ii<sizeof(aFunc)/sizeof(aFunc[0]); ii++){
+  for(ii=0;
+      p->errCode==SQLITE_OK && ii<(int)(sizeof(aFunc)/sizeof(aFunc[0]));
+      ii++){
     p->errCode = sqlite3_create_function(db, aFunc[ii].zName, 
         aFunc[ii].nArg, SQLITE_UTF8, (void*)p, aFunc[ii].xFunc, 0, 0
     );
@@ -1103,7 +1106,7 @@ static void recoverAddTable(
       int iField = sqlite3_column_int(pStmt, 0);
       int iCol = sqlite3_column_int(pStmt, 1);
 
-      assert( iField<pNew->nCol && iCol<pNew->nCol );
+      assert( iCol<pNew->nCol );
       pNew->aCol[iCol].iField = iField;
 
       pNew->bIntkey = 0;
@@ -1186,7 +1189,7 @@ static int recoverWriteSchema1(sqlite3_recover *p){
         if( bTable && !bVirtual ){
           if( SQLITE_ROW==sqlite3_step(pTblname) ){
             const char *zTbl = (const char*)sqlite3_column_text(pTblname, 0);
-            recoverAddTable(p, zTbl, iRoot);
+            if( zTbl ) recoverAddTable(p, zTbl, iRoot);
           }
           recoverReset(p, pTblname);
         }
@@ -2100,7 +2103,7 @@ static int recoverIsValidPage(u8 *aTmp, const u8 *a, int n){
     if( iFree>(n-4) ) return 0;
     iNext = recoverGetU16(&a[iFree]);
     nByte = recoverGetU16(&a[iFree+2]);
-    if( iFree+nByte>n ) return 0;
+    if( iFree+nByte>n || nByte<4 ) return 0;
     if( iNext && iNext<iFree+nByte ) return 0;
     memset(&aUsed[iFree], 0xFF, nByte);
     iFree = iNext;
@@ -2388,7 +2391,7 @@ static int recoverVfsRead(sqlite3_file *pFd, void *aBuf, int nByte, i64 iOff){
         if( pgsz==65536 ) pgsz = 1;
         recoverPutU16(&aHdr[16], pgsz);
         aHdr[20] = nReserve;
-        for(ii=0; ii<sizeof(aPreserve)/sizeof(aPreserve[0]); ii++){
+        for(ii=0; ii<(int)(sizeof(aPreserve)/sizeof(aPreserve[0])); ii++){
           memcpy(&aHdr[aPreserve[ii]], &a[aPreserve[ii]], 4);
         }
         memcpy(aBuf, aHdr, sizeof(aHdr));
@@ -2512,10 +2515,16 @@ static int recoverVfsFetch(
   int iAmt, 
   void **pp
 ){
+  (void)pFd;
+  (void)iOff;
+  (void)iAmt;
   *pp = 0;
   return SQLITE_OK;
 }
 static int recoverVfsUnfetch(sqlite3_file *pFd, sqlite3_int64 iOff, void *p){
+  (void)pFd;
+  (void)iOff;
+  (void)p;
   return SQLITE_OK;
 }
 

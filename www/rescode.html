@@ -222,9 +222,9 @@ result codes, might appear in future releases of SQLite.
 
 
 </p><h1 id="primary_result_code_list"><span>4. </span>Primary Result Code List</h1>
-<p>The 31 result codes are 
+<p>The 31 result codes are
    <a href="c3ref/c_abort.html">defined in sqlite3.h</a> and are listed in
-   alphabetical order below: 
+   alphabetical order below:
 <div class='columns' style='columns: 16em auto;'>
 <ul style='padding-top:0;'>
 <li><a href='rescode.html#abort'>SQLITE_ABORT&nbsp;(4)</a></li>
@@ -376,10 +376,11 @@ in numeric order.
   result code.  If application does encounter this result code, it shows
   that there is a bug in the database engine.
   <p>
-  SQLite does not currently generate this result code.
+  This result code might be caused by a bug in SQLite.
   However, <a href="appfunc.html">application-defined SQL functions</a> or
-  <a href="vtab.html">virtual tables</a>, or <a href="vfs.html">VFSes</a>, or other extensions might cause this 
-  result code to be returned.
+  <a href="vtab.html">virtual tables</a>, or <a href="vfs.html">VFSes</a>, or other extensions can also cause this 
+  result code to be returned, so the problem might not be the fault
+  of the core SQLite.
 
 
 <!--------------------------------------------------------------->
@@ -534,7 +535,7 @@ in numeric order.
   SQLITE_NOTFOUND can also be returned by the xSetSystemCall() method of
   an <a href="c3ref/vfs.html">sqlite3_vfs</a> object.
   <li><p>
-  SQLITE_NOTFOUND an be returned by <a href="c3ref/vtab_rhs_value.html">sqlite3_vtab_rhs_value()</a> to indicate
+  SQLITE_NOTFOUND can be returned by <a href="c3ref/vtab_rhs_value.html">sqlite3_vtab_rhs_value()</a> to indicate
   that the right-hand operand of a constraint is not available to the
   <a href="vtab.html#xbestindex">xBestIndex method</a> that made the call.
   </ol>
@@ -773,7 +774,7 @@ in numeric order.
 <a name="ok_load_permanently"></a>
 <h3>(256) SQLITE_OK_LOAD_PERMANENTLY</h3>
 <p>
-  The <a href="c3ref/load_extension.html">sqlite3_load_extension()</a> interface loads an 
+  The <a href="c3ref/load_extension.html">sqlite3_load_extension()</a> interface loads an
   <a href="loadext.html">extension</a> into a single
   database connection.  The default behavior is for that extension to be
   automatically unloaded when the database connection closes.  However,
@@ -783,7 +784,7 @@ in numeric order.
   xDlClose methods of the <a href="c3ref/vfs.html">sqlite3_vfs</a> object is not called for the
   extension when the database connection closes.
   <p>
-  The SQLITE_OK_LOAD_PERMANENTLY return code is useful to 
+  The SQLITE_OK_LOAD_PERMANENTLY return code is useful to
   <a href="loadext.html">loadable extensions</a> that register new <a href="vfs.html">VFSes</a>, for example.
 
 
@@ -1277,7 +1278,7 @@ in numeric order.
 <a name="ioerr_rdlock"></a>
 <h3>(2314) SQLITE_IOERR_RDLOCK</h3>
 <p>
-  The SQLITE_IOERR_UNLOCK error code is an <a href="rescode.html#pve">extended error code</a>
+  The SQLITE_IOERR_RDLOCK error code is an <a href="rescode.html#pve">extended error code</a>
   for <a href="rescode.html#ioerr">SQLITE_IOERR</a> indicating an I/O error
   within xLock method on the <a href="c3ref/io_methods.html">sqlite3_io_methods</a> object while trying
   to obtain a read lock.
@@ -1296,7 +1297,7 @@ in numeric order.
 <a name="ioerr_delete"></a>
 <h3>(2570) SQLITE_IOERR_DELETE</h3>
 <p>
-  The SQLITE_IOERR_UNLOCK error code is an <a href="rescode.html#pve">extended error code</a>
+  The SQLITE_IOERR_DELETE error code is an <a href="rescode.html#pve">extended error code</a>
   for <a href="rescode.html#ioerr">SQLITE_IOERR</a> indicating an I/O error
   within xDelete method on the <a href="c3ref/vfs.html">sqlite3_vfs</a> object.
 
@@ -1373,7 +1374,7 @@ in numeric order.
 <h3>(3850) SQLITE_IOERR_LOCK</h3>
 <p>
   The SQLITE_IOERR_LOCK error code is an <a href="rescode.html#pve">extended error code</a>
-  for <a href="rescode.html#ioerr">SQLITE_IOERR</a> indicating an I/O error in the 
+  for <a href="rescode.html#ioerr">SQLITE_IOERR</a> indicating an I/O error in the
   advisory file locking logic.
   Usually an SQLITE_IOERR_LOCK error indicates a problem obtaining
   a <a href="lockingv3.html#pending_lock">PENDING lock</a>.  However it can also indicate miscellaneous
@@ -1384,7 +1385,7 @@ in numeric order.
 <a name="ioerr_close"></a>
 <h3>(4106) SQLITE_IOERR_CLOSE</h3>
 <p>
-  The SQLITE_IOERR_ACCESS error code is an <a href="rescode.html#pve">extended error code</a>
+  The SQLITE_IOERR_CLOSE error code is an <a href="rescode.html#pve">extended error code</a>
   for <a href="rescode.html#ioerr">SQLITE_IOERR</a> indicating an I/O error
   within the xClose method on the <a href="c3ref/io_methods.html">sqlite3_io_methods</a> object.
 
@@ -1557,5 +1558,5 @@ in numeric order.
 
 
 
-</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/rescode.in?m=13bc05918e65ccd69">2022-02-08 12:34:22</a> UTC </small></i></p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/rescode.in?m=a100f5b2dc">2024-08-10 18:17:30</a> UTC </small></i></p>
 

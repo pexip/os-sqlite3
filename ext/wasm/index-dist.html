@@ -19,6 +19,10 @@
       header {
           font-size: 130%;
           font-weight: bold;
+          background: #044a64;
+          color: white;
+          padding: 0.5em;
+          border-radius: 0.25em;
       }
       .hidden, .initially-hidden {
           position: absolute !important;
@@ -37,13 +41,22 @@
     <div>and the individual pages be started in their own tab.
       Warnings and Caveats:
       <ul class='warning'>
-        <li>Some of these pages require that the web server emit the
-          so-called
-          <a href='https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy'>COOP</a>
-          and
-          <a href='https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy'>COEP</a>
-          headers. <a href='https://sqlite.org/althttpd'>althttpd</a> requires the
-          <code>-enable-sab</code> flag for that.
+        <li>All of these pages must be served via an HTTP
+          server. Browsers do not support loading WASM files via
+          file:// URLs.</li>
+        <li>Any OPFS-related pages or tests require:
+          <ul>
+            <li>An OPFS-capable browser released after February
+              2023. Some tests will work with Chromium-based browsers
+              going back to around v102.</li>
+            <li>That the web server emit the so-called
+              <a href='https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy'>COOP</a>
+              and
+              <a href='https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy'>COEP</a>
+              headers. <a href='https://sqlite.org/althttpd'>althttpd</a> requires the
+              <code>-enable-sab</code> flag for that.
+            </li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -56,6 +69,16 @@
               utility code.</li>
             <li><a href='tester1-worker.html'>tester1-worker</a>: same thing
               but running in a Worker.</li>
+            <li><a href='tester1-esm.html'>tester1-esm</a>: same as
+              <code>tester1</code> but loads sqlite3 in the main thread via
+              an ES6 module.
+            </li>
+            <li><a href='tester1-worker.html?esm'>tester1-worker?esm</a>:
+              same as <code>tester1-esm</code> but loads a Worker Module which
+              then loads the sqlite3 API via an ES6 module. Note that
+              not all browsers permit loading modules in Worker
+              threads.
+            </li>
           </ul>
         </li>
         <li>Higher-level apps and demos...
@@ -74,6 +97,8 @@
               wrapper is significantly easier to use, however.</li>
             <li><a href='demo-worker1-promiser.html'>demo-worker1-promiser</a>:
               a demo of the Promise-based wrapper of the Worker1 API.</li>
+            <li><a href='demo-worker1-promiser-esm.html'>demo-worker1-promiser-esm</a>:
+              same as the previous demo except loads the promiser from an ESM module.</li>
           </ul>
         </li>
       </ul>

@@ -552,8 +552,9 @@ if {[info exists cmdlinearg]==0} {
       }
     }
   }
+  unset -nocomplain a
   set testdir [file normalize $testdir]
-  set cmdlinearg(TESTFIXTURE_HOME) [pwd]
+  set cmdlinearg(TESTFIXTURE_HOME) [file dirname [info nameofexec]]
   set cmdlinearg(INFO_SCRIPT) [file normalize [info script]]
   set argv0 [file normalize $argv0]
   if {$cmdlinearg(testdir)!=""} {
@@ -883,6 +884,15 @@ proc catchcmd {db {cmd ""}} {
   set rc [catch { eval $line } msg]
   list $rc $msg
 }
+proc catchsafecmd {db {cmd ""}} {
+  global CLI
+  set out [open cmds.txt w]
+  puts $out $cmd
+  close $out
+  set line "exec $CLI -safe $db < cmds.txt"
+  set rc [catch { eval $line } msg]
+  list $rc $msg
+}
 
 proc catchcmdex {db {cmd ""}} {
   global CLI
@@ -947,6 +957,29 @@ proc normalize_list {L} {
   foreach l $L {lappend L2 $l}
   set L2
 }
+
+# Run SQL and verify that the number of "vmsteps" required is greater
+# than or less than some constant.
+#
+proc do_vmstep_test {tn sql nstep {res {}}} {
+  uplevel [list do_execsql_test $tn.0 $sql $res]
+
+  set vmstep [db status vmstep]
+  if {[string range $nstep 0 0]=="+"} {
+    set body "if {$vmstep<$nstep} {
+      error \"got $vmstep, expected more than [string range $nstep 1 end]\"
+    }"
+  } else {
+    set body "if {$vmstep>$nstep} {
+      error \"got $vmstep, expected less than $nstep\"
+    }"
+  }
+
+  # set name "$tn.vmstep=$vmstep,expect=$nstep"
+  set name "$tn.1"
+  uplevel [list do_test $name $body {}]
+}
+
 
 # Either:
 #
@@ -1062,7 +1095,16 @@ proc append_graph {prefix dxname cxname level} {
 #
 proc do_eqp_test {name sql res} {
   if {[regexp {^\s+QUERY PLAN\n} $res]} {
-    uplevel do_test $name [list [list query_plan_graph $sql]] [list $res]
+
+    set query_plan [query_plan_graph $sql]
+
+    if {[list {*}$query_plan]==[list {*}$res]} {
+      uplevel [list do_test $name [list set {} ok] ok]
+    } else {
+      uplevel [list \
+        do_test $name [list query_plan_graph $sql] $res
+      ]
+    }
   } else {
     if {[string index $res 0]!="/"} {
       set res "/*$res*/"
@@ -1309,9 +1351,11 @@ proc finalize_testing {} {
   if {$::cmdlinearg(binarylog)} {
     vfslog finalize binarylog
   }
-  if {$sqlite_open_file_count} {
-    output2 "$sqlite_open_file_count files were left open"
-    incr nErr
+  if {[info exists ::run_thread_tests_called]==0} {
+    if {$sqlite_open_file_count} {
+      output2 "$sqlite_open_file_count files were left open"
+      incr nErr
+    }
   }
   if {[lindex [sqlite3_status SQLITE_STATUS_MALLOC_COUNT 0] 1]>0 ||
               [sqlite3_memory_used]>0} {
@@ -2493,8 +2537,10 @@ proc test_restore_config_pagecache {} {
   catch {db3 close}
 
   sqlite3_shutdown
-  eval sqlite3_config_pagecache $::old_pagecache_config
-  unset ::old_pagecache_config 
+  if {[info exists ::old_pagecache_config]} {
+    eval sqlite3_config_pagecache $::old_pagecache_config
+    unset ::old_pagecache_config 
+  }
   sqlite3_initialize
   autoinstall_test_functions
   sqlite3 db test.db

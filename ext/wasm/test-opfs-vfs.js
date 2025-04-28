@@ -22,13 +22,13 @@ const tryOpfsVfs = async function(sqlite3){
   const opfs = sqlite3.opfs;
   log("tryOpfsVfs()");
   if(!sqlite3.opfs){
-    const e = toss("OPFS is not available.");
+    const e = new Error("OPFS is not available.");
     error(e);
     throw e;
   }
   const capi = sqlite3.capi;
   const pVfs = capi.sqlite3_vfs_find("opfs") || toss("Missing 'opfs' VFS.");
-  const oVfs = capi.sqlite3_vfs.instanceForPointer(pVfs) || toss("Unexpected instanceForPointer() result.");;
+  const oVfs = new capi.sqlite3_vfs(pVfs);
   log("OPFS VFS:",pVfs, oVfs);
 
   const wait = async (ms)=>{
@@ -39,7 +39,7 @@ const tryOpfsVfs = async function(sqlite3){
   const dbFile = "my-persistent.db";
   if(urlArgs.has('delete')) sqlite3.opfs.unlink(dbFile);
 
-  const db = new opfs.OpfsDb(dbFile,'ct');
+  const db = new sqlite3.oo1.OpfsDb(dbFile,'ct');
   log("db file:",db.filename);
   try{
     if(opfs.entryExists(dbFile)){

@@ -7,7 +7,5 @@
 32-dynamic_link.patch
 02-use-packaged-lempar.c.patch
 40-amalgamation_configure.patch
-0001-Fix-a-buffer-overread-in-the-sessions-extension-that.patch
-0002-Avoid-a-stack-overflow-that-could-be-caused-by-a-rec.patch
-0003-Fix-a-technically-undefined-signed-integer-overflow-.patch
+50-CVE-2025-29087.patch
 51-fix-robust-open.patch

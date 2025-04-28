@@ -44,12 +44,12 @@ do_catchsql_test 1.2.2 {
 
 do_catchsql_test 1.3.1 { 
   SELECT highlight(t1, 4, '<b>', '</b>') FROM t1('*reads'); 
-} {1 {no such cursor: 1}}
+} {1 {no such cursor: 2}}
 
 do_catchsql_test 1.3.2 {
   SELECT a FROM t1
     WHERE rank = (SELECT highlight(t1, 4, '<b>', '</b>') FROM t1('*reads'));
-} {1 {no such cursor: 1}}
+} {1 {no such cursor: 2}}
 
 db close
 sqlite3 db test.db
@@ -91,7 +91,6 @@ do_execsql_test 2.2.1 {
   INSERT INTO vt0(c0) VALUES ('xyz');
 }
 
-breakpoint
 do_execsql_test 2.2.2 {
   ALTER TABLE t0 RENAME TO t1;
 }
@@ -329,7 +328,7 @@ do_execsql_test 12.3 {
 reset_db
 sqlite3_db_config db DEFENSIVE 1
 
-do_execsql_test 13.0 {
+do_execsql_test 13.1.0 {
   CREATE TABLE a (id INTEGER PRIMARY KEY, name TEXT);
   CREATE VIRTUAL TABLE b USING fts5(name);
   CREATE TRIGGER a_trigger AFTER INSERT ON a BEGIN 
@@ -337,18 +336,44 @@ do_execsql_test 13.0 {
   END;
 }
 
-do_test 13.1 {
+do_test 13.1.1 {
   set ::STMT [
     sqlite3_prepare db "INSERT INTO a VALUES (1, 'foo') RETURNING id;" -1 dummy
   ]
   sqlite3_step $::STMT
 } {SQLITE_ROW}
 
-do_test 13.2 {
+do_test 13.1.2 {
   sqlite3_finalize $::STMT
 } {SQLITE_OK}
 
-do_test 13.3 {
+do_test 13.1.3 {
+  sqlite3_errmsg db
+} {not an error}
+
+reset_db
+sqlite3_db_config db DEFENSIVE 1
+do_execsql_test 13.2.0 {
+  BEGIN;
+  CREATE TABLE a (id INTEGER PRIMARY KEY, name TEXT);
+  CREATE VIRTUAL TABLE b USING fts5(name);
+  CREATE TRIGGER a_trigger AFTER INSERT ON a BEGIN 
+    INSERT INTO b (name) VALUES ('foo');
+  END;
+}
+
+do_test 13.2.1 {
+  set ::STMT [
+    sqlite3_prepare db "INSERT INTO a VALUES (1, 'foo') RETURNING id;" -1 dummy
+  ]
+  sqlite3_step $::STMT
+} {SQLITE_ROW}
+
+do_test 13.2.2 {
+  sqlite3_finalize $::STMT
+} {SQLITE_OK}
+
+do_test 13.2.3 {
   sqlite3_errmsg db
 } {not an error}
 
@@ -398,9 +423,11 @@ do_execsql_test -db db2 15.3 {
   SAVEPOINT one;
 } {}
 do_execsql_test 15.4 END
-do_test 15.4 {
+do_test 15.5 {
   list [catch { db2 eval COMMIT } msg] $msg
 } {0 {}}
+
+db2 close
 
 #-------------------------------------------------------------------------
 reset_db
@@ -442,6 +469,71 @@ do_execsql_test 16.5 {
 do_execsql_test -db db2 16.6 {
   SELECT * FROM x1
 } {abc def}
+
+db2 close
+
+#-------------------------------------------------------------------------
+reset_db
+do_execsql_test 17.1 {
+  CREATE VIRTUAL TABLE ft USING fts5(x, tokenize="unicode61 separators 'X'");
+}
+do_execsql_test 17.2 {
+  SELECT 0 FROM ft WHERE ft MATCH 'X' AND ft MATCH 'X'
+}
+do_execsql_test 17.3 {
+  SELECT 0 FROM ft('X')
+}
+
+do_execsql_test 17.4 {
+  CREATE VIRTUAL TABLE t0 USING fts5(c0, t="trigram");
+  INSERT INTO t0 VALUES('assertionfaultproblem');
+}
+do_execsql_test 17.5 {
+  SELECT 0 FROM t0(0) WHERE c0 GLOB 0;
+} {}
+
+do_execsql_test 17.5 {
+  SELECT c0 FROM t0 WHERE c0 GLOB '*f*';
+} {assertionfaultproblem}
+do_execsql_test 17.5 {
+  SELECT c0 FROM t0 WHERE c0 GLOB '*faul*';
+} {assertionfaultproblem}
+
+#-------------------------------------------------------------------------
+reset_db
+do_execsql_test 18.0 {
+  BEGIN;
+    CREATE VIRTUAL TABLE t1 USING fts5(text);
+    ALTER TABLE t1 RENAME TO t2;
+}
+
+do_execsql_test 18.1 {
+    DROP TABLE t2;
+}
+
+do_execsql_test 18.2 {
+  COMMIT;
+}
+
+#-------------------------------------------------------------------------
+reset_db
+do_execsql_test 19.0 {
+  CREATE VIRTUAL TABLE t1 USING fts5(text);
+  CREATE TABLE t2(text);
+  BEGIN;
+    INSERT INTO t1 VALUES('one');
+    INSERT INTO t1 VALUES('two');
+    INSERT INTO t1 VALUES('three');
+    INSERT INTO t1 VALUES('one');
+    INSERT INTO t1 VALUES('two');
+    INSERT INTO t1 VALUES('three');
+    SAVEPOINT one;
+      INSERT INTO t2 VALUES('one');
+      INSERT INTO t2 VALUES('two');
+      INSERT INTO t2 VALUES('three');
+    ROLLBACK TO one;
+  COMMIT;
+}
 
 finish_test
 
