@@ -1,3 +1,9 @@
+sqlite3 (3.46.1-4+pexip25u1) pexip-trixie; urgency=medium
+
+  * New upstream release
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Fri, 16 May 2025 09:54:01 +0000
+
 sqlite3 (3.46.1-4) unstable; urgency=high
 
   * Backport upstream security fix for CVE-2025-29088: certain argument
