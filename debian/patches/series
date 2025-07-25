@@ -7,5 +7,7 @@
 32-dynamic_link.patch
 02-use-packaged-lempar.c.patch
 40-amalgamation_configure.patch
+41-fix_a_bug_in_the_NOT_NULL-IS_NULL_optimization.patch
 50-CVE-2025-29087.patch
 51-CVE-2025-29088.patch
+52-CVE-2025-6965.patch
