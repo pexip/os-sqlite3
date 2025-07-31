@@ -1,3 +1,26 @@
+sqlite3 (3.46.1-7) unstable; urgency=high
+
+  * Backport upstream security fix for CVE-2025-6965: the number of aggregate
+    terms could exceed the number of columns available (closes: #1109379).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 25 Jul 2025 21:04:34 +0200
+
+sqlite3 (3.46.1-6) unstable; urgency=medium
+
+  * Correct version of sqlite3DbpageRegister@Base library symbol.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 28 May 2025 07:02:56 +0200
+
+sqlite3 (3.46.1-5) unstable; urgency=medium
+
+  * Backport upstream fix for a bug in the NOT NULL/IS NULL optimization that
+    can cause invalid data to be used for a column if that column has a CHECK
+    constraint that includes the NOT NULL or IS NULL operator.
+  * Enable the SQLITE_DBPAGE extension (closes: #1099542).
+  * Update symbols file.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 24 May 2025 15:36:17 +0200
+
 sqlite3 (3.46.1-4+pexip25u1) pexip-trixie; urgency=medium
 
   * New upstream release

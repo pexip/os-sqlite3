@@ -197,6 +197,7 @@ libsqlite3.so.0 libsqlite3-0 #MINVER#
  sqlite3DbSpanDup@Base 3.37.0
  sqlite3DbStrDup@Base 3.37.0
  sqlite3DbStrNDup@Base 3.37.0
+ sqlite3DbpageRegister@Base 3.46.1-5~
  sqlite3DbstatRegister@Base 3.37.0
  sqlite3DecOrHexToI64@Base 3.37.0
  sqlite3DefaultMutex@Base 3.37.0
