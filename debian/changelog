@@ -1,6 +1,7 @@
-sqlite3 (3.46.1-7+pexip25u1) pexip-trixie; urgency=medium
+sqlite3 (3.46.1-7+pexip24u1) pexip-bookworm-nodejs22; urgency=medium
 
   * New upstream release
+  * Backport trixie version to bookworm for nodejs22 backport.
 
  -- Mark Hymers <mark.hymers@pexip.com>  Thu, 31 Jul 2025 15:05:33 +0100
 
