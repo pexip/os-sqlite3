@@ -165,24 +165,6 @@ sqlite3 (3.42.0-1) unstable; urgency=medium
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 24 Jun 2023 16:16:47 +0200
 
-sqlite3 (3.40.1-2+pexip24u5+deb12u2) pexip; urgency=medium
-
-  * New upstream release with security fix
-
- -- Steve McIntyre <steve.mcintyre@pexip.com>  Wed, 10 Sep 2025 15:33:52 +0100
-
-sqlite3 (3.40.1-2+deb12u2) bookworm; urgency=medium
-
-  [ Shani Yosef <shani.yosef@echohq.com> ]
-  * Backport upstream security fix for CVE-2025-6965: the number of aggregate
-    terms could exceed the number of columns available (closes: #1109379).
-
-  [ Laszlo Boszormenyi (GCS) ]
-  * Fix a bug in the NOT NULL/IS NULL optimization that can cause invalid
-    data.
-
- -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 26 Aug 2025 18:18:10 +0200
-
 sqlite3 (3.40.1-2+pexip24u4+deb12u1) pexip; urgency=medium
 
   * New upstream release with security fixes
