@@ -135,12 +135,14 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#primary_keys_can_sometimes_contain_nulls">5. PRIMARY KEYs Can Sometimes Contain NULLs</a></div>
 <div class="fancy-toc1"><a href="#aggregate_queries_can_contain_non_aggregate_result_columns_that_are_not_in_the_group_by_clause">6. Aggregate Queries Can Contain Non-Aggregate Result Columns
 That Are Not In The GROUP BY Clause</a></div>
-<div class="fancy-toc1"><a href="#does_not_do_full_unicode_case_folding_by_default">7. Does Not Do Full Unicode Case Folding By Default</a></div>
+<div class="fancy-toc1"><a href="#sqlite_does_not_do_full_unicode_case_folding_by_default">7. SQLite Does Not Do Full Unicode Case Folding By Default</a></div>
 <div class="fancy-toc1"><a href="#double_quoted_string_literals_are_accepted">8. Double-quoted String Literals Are Accepted</a></div>
 <div class="fancy-toc1"><a href="#keywords_can_often_be_used_as_identifiers">9. Keywords Can Often Be Used As Identifiers</a></div>
 <div class="fancy-toc1"><a href="#dubious_sql_is_allowed_without_any_error_or_warning">10. Dubious SQL Is Allowed Without Any Error Or Warning</a></div>
 <div class="fancy-toc1"><a href="#autoincrement_does_not_work_the_same_as_mysql">11. AUTOINCREMENT Does Not Work The Same As MySQL</a></div>
 <div class="fancy-toc1"><a href="#nul_characters_are_allowed_in_text_strings">12. NUL Characters Are Allowed In Text Strings</a></div>
+<div class="fancy-toc1"><a href="#sqlite_distinguishes_between_integer_and_text_literals">13. SQLite Distinguishes Between Integer And Text Literals</a></div>
+<div class="fancy-toc1"><a href="#sqlite_gets_the_precedence_of_comma_joins_wrong">14. SQLite Gets The Precedence Of Comma-Joins Wrong</a></div>
 </div>
 </div>
 <script>
@@ -199,8 +201,8 @@ client/server is a feature, not a bug.
 
 </p><p>
 Client/server databases like MySQL, PostgreSQL, SQL Server, Oracle, and
-others are an important component of modern systems.  
-These systems solve an important problem.  
+others are an important component of modern systems.
+These systems solve an important problem.
 But SQLite solves a different problem.
 Both SQLite and client/server databases have their role.
 Developers who are comparing SQLite against other SQL database engines need
@@ -218,7 +220,7 @@ rather than mandatory.
 </p><p>
 Some commentators say that SQLite is "weakly typed" and that other
 SQL databases are "strongly typed".  We consider these terms to be
-inaccurate and even pejorative.  We prefer to say that SQLite is 
+inaccurate and even pejorative.  We prefer to say that SQLite is
 "flexibly typed" and that other SQL database engines are
 "rigidly typed".
 
@@ -248,8 +250,8 @@ Where this ends up causing problems is when developers do some initial
 coding work using SQLite and get their application working, but then try
 to convert to another database like PostgreSQL or SQL Server for deployment.
 If the application is initially taking advantage of SQLite's flexible typing,
-then it will fail when moved to another database that uses a more rigid
-and unforgiving type enforcement policy.
+then it will fail when moved to another database that is more judgmental
+about data types.
 
 </p><p>
 <a href="flextypegood.html">Flexible typing is a feature</a> of SQLite, not a bug.  Flexible typing
@@ -295,7 +297,7 @@ Instead, dates and times can be stored in any of these ways:
 </p><ul>
 <li> As a TEXT string in the ISO-8601 format.  Example: '2018-04-02 12:13:46'.
 </li><li> As an INTEGER number of seconds since 1970 (also known as "unix time").
-</li><li> As a REAL value that is the fractional 
+</li><li> As a REAL value that is the fractional
      <a href="https://en.wikipedia.org/wiki/Julian_day">Julian day number</a>.
 </li></ul>
 
@@ -334,19 +336,30 @@ be activated at compile-time using the
 </p><h1 id="primary_keys_can_sometimes_contain_nulls"><span>5. </span>PRIMARY KEYs Can Sometimes Contain NULLs</h1>
 
 <p>
-Usually (the exceptions are <a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> tables and
-<a href="withoutrowid.html">WITHOUT ROWID</a> tables) a PRIMARY KEY in an SQLite table is really
-the same as a UNIQUE constraint.  Due to an historical oversight,
-the column values of such a PRIMARY KEY are allowed to be NULL.
+A PRIMARY KEY in an SQLite table is usually just
+a UNIQUE constraint.  Due to an historical oversight,
+the column values of a PRIMARY KEY are allowed to be NULL.
 This is a bug, but by the time the problem was discovered there
 where so many databases in circulation that depended on the bug that
 the decision was made to support the buggy behavior moving forward.
+You can work around this problem by adding a NOT NULL constraint on
+each column of the PRIMARY KEY.
 </p><p>
-The value of an <a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> column must always be a 
-non-NULL integer.  The PRIMARY KEY columns of a <a href="withoutrowid.html">WITHOUT ROWID</a>
-table are also required to be non-NULL.
+Exceptions:
+</p><ul>
+<li><p>
+The value of an <a href="lang_createtable.html#rowid">INTEGER PRIMARY KEY</a> column must always be a
+non-NULL integer because the INTEGER PRIMARY KEY is an alias for
+the <a href="lang_createtable.html#rowid">ROWID</a>.  If you try to insert a NULL into an INTEGER PRIMARY
+KEY column, SQLite automatically convert the NULL into a unique integer.
 
-</p><h1 id="aggregate_queries_can_contain_non_aggregate_result_columns_that_are_not_in_the_group_by_clause"><span>6. </span>Aggregate Queries Can Contain Non-Aggregate Result Columns
+</p></li><li><p>
+The <a href="withoutrowid.html">WITHOUT ROWID</a> and <a href="stricttables.html">STRICT</a> features was added after this bug was
+discovered, and so WITHOUT ROWID and STRICT tables work correctly:
+They disallow NULLs in the PRIMARY KEY.
+</p></li></ul>
+
+<h1 id="aggregate_queries_can_contain_non_aggregate_result_columns_that_are_not_in_the_group_by_clause"><span>6. </span>Aggregate Queries Can Contain Non-Aggregate Result Columns
 That Are Not In The GROUP BY Clause</h1>
 
 <p>
@@ -388,7 +401,7 @@ one of the rows is chosen arbitrarily.  (SQLite supports DISTINCT but not
 DISTINCT ON, whose functionality is provided instead by GROUP BY.)
 </p></li></ol>
 
-<h1 id="does_not_do_full_unicode_case_folding_by_default"><span>7. </span>Does Not Do Full Unicode Case Folding By Default</h1>
+<h1 id="sqlite_does_not_do_full_unicode_case_folding_by_default"><span>7. </span>SQLite Does Not Do Full Unicode Case Folding By Default</h1>
 
 <p>
 SQLite does not know about the upper-case/lower-case distinction
@@ -396,17 +409,17 @@ for all unicode characters.  SQL functions like
 upper() and lower() only work on ASCII characters.  There are two
 reasons for this:
 </p><ol>
-<li> Though stable now, when SQLite was first designed, the rules for
+<li><p> Though stable now, when SQLite was first designed, the rules for
      unicode case folding were still in flux.  That means that the
      behavior might have changed with each new unicode release, disrupting
      applications and corrupting indexes in the process.
-</li><li> The tables necessary to do full and proper unicode case folding are
+</p></li><li><p> The tables necessary to do full and proper unicode case folding are
      larger than the whole SQLite library.
-</li></ol>
+</p></li></ol>
 <p>
 Full unicode case folding is supported in SQLite if it is compiled
 with the <a href="compile.html#enable_icu">-DSQLITE_ENABLE_ICU</a> option and linked against the
-<a href="http://site.icu-project.org/">International Components for Unicode</a>
+<a href="https://icu.unicode.org">International Components for Unicode</a>
 library.
 
 <a name="dblquote"></a>
@@ -461,6 +474,11 @@ sqlite3_db_config(db, SQLITE_DBCONFIG_DQS_DML, 0, (void*)0);
 to be selectively enabled for some historical database connections,
 that can be done using the same C-code as shown above except with the
 third parameter changed from 0 to 1.
+</p><p>
+As of SQLite 3.41.0 (2023-02-21) SQLITE_DBCONFIG_DQS_DDL and
+SQLITE_DBCONFIG_DQS_DML are disabled by default in the <a href="cli.html">CLI</a>.  Use
+the ".dbconfig" dot-command to reenable the legacy behavior if
+desired.
 
 </p><h1 id="keywords_can_often_be_used_as_identifiers"><span>9. </span>Keywords Can Often Be Used As Identifiers</h1>
 
@@ -530,5 +548,102 @@ in SQLite.
 <p>NUL characters (ASCII code 0x00 and Unicode \u0000) may appear in
 the middle of strings in SQLite.  This can lead to unexpected behavior.
 See the "<a href="nulinstr.html">NUL characters in strings</a>" document for further information.
-</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/quirks.in?m=d8c33568dd5491a25">2022-11-16 22:21:04</a> UTC </small></i></p>
+
+</p><h1 id="sqlite_distinguishes_between_integer_and_text_literals"><span>13. </span>SQLite Distinguishes Between Integer And Text Literals</h1>
+
+<p>SQLite says that the following query returns false:
+</p><div class="codeblock"><pre>SELECT 1='1';
+</pre></div>
+<p>It does this because an integer is not a string.  
+Every other major SQL database engine says this is true, for reasons
+that the creator of SQLite does not understand.
+
+</p><h1 id="sqlite_gets_the_precedence_of_comma_joins_wrong"><span>14. </span>SQLite Gets The Precedence Of Comma-Joins Wrong</h1>
+
+<p>SQLite gives all join operators equal precedence and processes them
+from left to right.  But this is not quite correct.  It should be that
+comma-joins have lower precedence than all others join operators.
+In other words, a FROM clause like this:
+
+</p><blockquote><p>
+... FROM a, b RIGHT JOIN c, d ...
+</p></blockquote>
+
+<p>Should be parsed as follows:
+
+</p><div class="imgcontainer">
+<div style="max-width:153px;"><svg xmlns='http://www.w3.org/2000/svg' class="pikchr" viewBox="0 0 153.328 245.544">
+<path d="M67,32L120,32L120,2L67,2Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="93" y="17" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">JOIN</text>
+<polygon points="53,72 58,61 65,67" style="fill:rgb(0,0,0)"/>
+<path d="M93,32L57,68"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="134,72 122,67 128,61" style="fill:rgb(0,0,0)"/>
+<path d="M93,32L129,68"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M27,102L80,102L80,72L27,72Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="53" y="87" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">JOIN</text>
+<path d="M121,102L146,102L146,72L121,72Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="134" y="87" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">D</text>
+<polygon points="13,142 18,131 24,137" style="fill:rgb(0,0,0)"/>
+<path d="M53,102L17,138"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="93,142 82,137 88,131" style="fill:rgb(0,0,0)"/>
+<path d="M53,102L89,138"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M36,173L151,173L151,142L36,142Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="93" y="157" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">RIGHT JOIN</text>
+<path d="M2,173L25,173L25,142L2,142Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="13" y="157" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">A</text>
+<polygon points="53,213 58,201 65,208" style="fill:rgb(0,0,0)"/>
+<path d="M93,173L57,209"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="134,213 122,208 128,201" style="fill:rgb(0,0,0)"/>
+<path d="M93,173L129,209"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M42,243L65,243L65,213L42,213Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="53" y="228" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">B</text>
+<path d="M121,243L146,243L146,213L121,213Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="134" y="228" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">C</text>
+</svg>
+</div>
+</div>
+
+<p>But SQLite instead parses the FROM clause like this:
+
+</p><div class="imgcontainer">
+<div style="max-width:188px;"><svg xmlns='http://www.w3.org/2000/svg' class="pikchr" viewBox="0 0 188.691 245.544">
+<path d="M107,32L160,32L160,2L107,2Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="134" y="17" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">JOIN</text>
+<polygon points="93,72 99,61 105,67" style="fill:rgb(0,0,0)"/>
+<path d="M134,32L98,68"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="174,72 162,67 169,61" style="fill:rgb(0,0,0)"/>
+<path d="M134,32L170,68"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M36,102L151,102L151,72L36,72Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="93" y="87" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">RIGHT JOIN</text>
+<path d="M161,102L186,102L186,72L161,72Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="174" y="87" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">D</text>
+<polygon points="53,142 58,131 65,137" style="fill:rgb(0,0,0)"/>
+<path d="M93,102L57,138"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="134,142 122,137 128,131" style="fill:rgb(0,0,0)"/>
+<path d="M93,102L129,138"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M27,173L80,173L80,142L27,142Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="53" y="157" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">JOIN</text>
+<path d="M121,173L146,173L146,142L121,142Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="134" y="157" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">C</text>
+<polygon points="13,213 18,201 24,208" style="fill:rgb(0,0,0)"/>
+<path d="M53,173L17,209"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<polygon points="93,213 82,208 88,201" style="fill:rgb(0,0,0)"/>
+<path d="M53,173L89,209"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<path d="M2,243L25,243L25,213L2,213Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="13" y="228" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">A</text>
+<path d="M82,243L105,243L105,213L82,213Z"  style="fill:none;stroke-width:2.16;stroke:rgb(0,0,0);" />
+<text x="93" y="228" text-anchor="middle" fill="rgb(0,0,0)" dominant-baseline="central">B</text>
+</svg>
+</div>
+</div>
+
+<p>The problem can only makes a difference in the result when using
+RIGHT OUTER JOIN or FULL OUTER JOIN in the same FROM clause with
+comma-joins, which rarely happens in practice.  And
+the problem can be easily overcome using parentheses in the FROM clause:
+
+</p><blockquote><p>
+... FROM a, (b RIGHT JOIN c), d ...
+</p></blockquote>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/quirks.in?m=4b8c32b617">2024-08-10 18:17:30</a> UTC </small></i></p>
 

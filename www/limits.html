@@ -472,17 +472,22 @@ the <a href="c3ref/limit.html">sqlite3_limit</a>(db,<a href="c3ref/c_limit_attac
 SQLite is able to limit the size of a database file to prevent
 the database file from growing too large and consuming too much
 disk space.
-The SQLITE_MAX_PAGE_COUNT parameter, which is normally set to
-1073741823, is the maximum number of pages allowed in a single
+The SQLITE_MAX_PAGE_COUNT parameter
+is the maximum number of pages allowed in a single
 database file.  An attempt to insert new data that would cause
 the database file to grow larger than this will return
 SQLITE_FULL.
 </p>
 
 <p>
-The largest possible setting for SQLITE_MAX_PAGE_COUNT is 4294967294.
-When used with the maximum page size of 65536, this gives a maximum
-SQLite database size of about 281 terabytes.</p>
+The largest possible setting for SQLITE_MAX_PAGE_COUNT is 4294967294
+(2<sup><small>32</small></sup>-2).
+Since version 3.45.0 (2024-01-15), 4294967294 is
+also the default value for SQLITE_MAX_PAGE_COUNT.
+When used with the default page size of 4096 bytes, this gives a
+maximum database size of about 17.5 terabytes.
+If the page size is increased to the maximum of 65536 bytes, then the
+database file can grow to be as large as about 281 terabytes.</p>
 
 <p>
 The <a href="pragma.html#pragma_max_page_count">
@@ -531,5 +536,5 @@ database connection startup time and initial memory usage
 is proportional to the size of the schema.
 </li>
 </ol>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/limits.in?m=896d3c205a3ca0d90">2022-01-20 21:38:08</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/limits.in?m=8837dabd25">2024-01-03 11:05:13</a> UTC </small></i></p>
 

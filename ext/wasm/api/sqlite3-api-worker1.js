@@ -1,4 +1,5 @@
-/*
+//#ifnot omit-oo1
+/**
   2022-07-22
 
   The author disclaims copyright to this source code.  In place of a
@@ -10,12 +11,12 @@
 
   ***********************************************************************
 
-  This file implements the initializer for the sqlite3 "Worker API
-  #1", a very basic DB access API intended to be scripted from a main
-  window thread via Worker-style messages. Because of limitations in
-  that type of communication, this API is minimalistic and only
-  capable of serving relatively basic DB requests (e.g. it cannot
-  process nested query loops concurrently).
+  This file implements the initializer for SQLite's "Worker API #1", a
+  very basic DB access API intended to be scripted from a main window
+  thread via Worker-style messages. Because of limitations in that
+  type of communication, this API is minimalistic and only capable of
+  serving relatively basic DB requests (e.g. it cannot process nested
+  query loops concurrently).
 
   This file requires that the core C-style sqlite3 API and OO API #1
   have been loaded.
@@ -62,7 +63,7 @@
 
   ```
   {
-    type: string, // one of: 'open', 'close', 'exec', 'config-get'
+    type: string, // one of: 'open', 'close', 'exec', 'export', 'config-get'
 
     messageId: OPTIONAL arbitrary value. The worker will copy it as-is
     into response messages to assist in client-side dispatching.
@@ -157,15 +158,6 @@
       version: sqlite3.version object
 
       bigIntEnabled: bool. True if BigInt support is enabled.
-
-      wasmfsOpfsDir: path prefix, if any, _intended_ for use with
-      WASMFS OPFS persistent storage.
-
-      wasmfsOpfsEnabled: true if persistent storage is enabled in the
-      current environment. Only files stored under wasmfsOpfsDir
-      will persist using that mechanism, however. It is legal to use
-      the non-WASMFS OPFS VFS to open a database via a URI-style
-      db filename.
 
       vfsList: result of sqlite3.capi.sqlite3_js_vfs_list()
    }
@@ -287,6 +279,19 @@
   The arguments are in the same form accepted by oo1.DB.exec(), with
   the exceptions noted below.
 
+  If the `countChanges` arguments property (added in version 3.43) is
+  truthy then the `result` property contained by the returned object
+  will have a `changeCount` property which holds the number of changes
+  made by the provided SQL. Because the SQL may contain an arbitrary
+  number of statements, the `changeCount` is calculated by calling
+  `sqlite3_total_changes()` before and after the SQL is evaluated. If
+  the value of `countChanges` is 64 then the `changeCount` property
+  will be returned as a 64-bit integer in the form of a BigInt (noting
+  that that will trigger an exception if used in a BigInt-incapable
+  build).  In the latter case, the number of changes is calculated by
+  calling `sqlite3_total_changes64()` before and after the SQL is
+  evaluated.
+
   A function-type args.callback property cannot cross
   the window/Worker boundary, so is not useful here. If
   args.callback is a string then it is assumed to be a
@@ -321,15 +326,46 @@
   passed only a string), noting that options.resultRows and
   options.columnNames may be populated by the call to db.exec().
 
+
+  ====================================================================
+  "export" the current db
+
+  To export the underlying database as a byte array...
+
+  Message format:
+
+  ```
+  {
+    type: "export",
+    messageId: ...as above...,
+    dbId: ...as above...
+  }
+  ```
+
+  Response:
+
+  ```
+  {
+    type: "export",
+    messageId: ...as above...,
+    dbId: ...as above...
+    result: {
+      byteArray: Uint8Array (as per sqlite3_js_db_export()),
+      filename: the db filename,
+      mimetype: "application/x-sqlite3"
+    }
+  }
+  ```
+
 */
-self.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
+globalThis.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
+const util = sqlite3.util;
 sqlite3.initWorker1API = function(){
   'use strict';
   const toss = (...args)=>{throw new Error(args.join(' '))};
-  if('function' !== typeof importScripts){
+  if(!(globalThis.WorkerGlobalScope instanceof Function)){
     toss("initWorker1API() must be run from a Worker thread.");
   }
-  const self = this.self;
   const sqlite3 = this.sqlite3 || toss("Missing this.sqlite3 object.");
   const DB = sqlite3.oo1.DB;
 
@@ -374,12 +410,12 @@ sqlite3.initWorker1API = function(){
       if(db){
         delete this.dbs[getDbId(db)];
         const filename = db.filename;
-        const pVfs = sqlite3.wasm.sqlite3_wasm_db_vfs(db.pointer, 0);
+        const pVfs = util.sqlite3__wasm_db_vfs(db.pointer, 0);
         db.close();
         const ddNdx = this.dbList.indexOf(db);
         if(ddNdx>=0) this.dbList.splice(ddNdx, 1);
         if(alsoUnlink && filename && pVfs){
-          sqlite3.wasm.sqlite3_wasm_vfs_unlink(pVfs, filename);
+          util.sqlite3__wasm_vfs_unlink(pVfs, filename);
         }
       }
     },
@@ -391,10 +427,10 @@ sqlite3.initWorker1API = function(){
     */
     post: function(msg,xferList){
       if(xferList && xferList.length){
-        self.postMessage( msg, Array.from(xferList) );
+        globalThis.postMessage( msg, Array.from(xferList) );
         xferList.length = 0;
       }else{
-        self.postMessage(msg);
+        globalThis.postMessage(msg);
       }
     },
     /** Map of DB IDs to DBs. */
@@ -423,11 +459,6 @@ sqlite3.initWorker1API = function(){
     return wState.dbList[0] && getDbId(wState.dbList[0]);
   };
 
-  const guessVfs = function(filename){
-    const m = /^file:.+(vfs=(\w+))/.exec(filename);
-    return sqlite3.capi.sqlite3_vfs_find(m ? m[2] : 0);
-  };
-
   const isSpecialDbFilename = (n)=>{
     return ""===n || ':'===n[0];
   };
@@ -449,41 +480,11 @@ sqlite3.initWorker1API = function(){
         toss("Throwing because of simulateError flag.");
       }
       const rc = Object.create(null);
-      const pDir = sqlite3.capi.sqlite3_wasmfs_opfs_dir();
-      let byteArray, pVfs;
       oargs.vfs = args.vfs;
-      if(isSpecialDbFilename(args.filename)){
-        oargs.filename = args.filename || "";
-      }else{
-        oargs.filename = args.filename;
-        byteArray = args.byteArray;
-        if(byteArray) pVfs = guessVfs(args.filename);
-      }
-      if(pVfs){
-        /* 2022-11-02: this feature is as-yet untested except that
-           sqlite3_wasm_vfs_create_file() has been tested from the
-           browser dev console. */
-        let pMem;
-        try{
-          pMem = sqlite3.wasm.allocFromTypedArray(byteArray);
-          const rc = sqlite3.wasm.sqlite3_wasm_vfs_create_file(
-            pVfs, oargs.filename, pMem, byteArray.byteLength
-          );
-          if(rc) sqlite3.SQLite3Error.toss(rc);
-        }catch(e){
-          throw new sqlite3.SQLite3Error(
-            e.name+' creating '+args.filename+": "+e.message, {
-              cause: e
-            }
-          );                           
-        }finally{
-          if(pMem) sqlite3.wasm.dealloc(pMem);
-        }
-      }
+      oargs.filename = args.filename || "";
       const db = wState.open(oargs);
       rc.filename = db.filename;
-      rc.persistent = (!!pDir && db.filename.startsWith(pDir+'/'))
-        || !!sqlite3.capi.sqlite3_js_db_uses_vfs(db.pointer, "opfs");
+      rc.persistent = !!sqlite3.capi.sqlite3_js_db_uses_vfs(db.pointer, "opfs");
       rc.dbId = getDbId(db);
       rc.vfs = db.dbVfsName();
       return rc;
@@ -534,7 +535,13 @@ sqlite3.initWorker1API = function(){
         }
       }
       try {
+        const changeCount = !!rc.countChanges
+              ? db.changes(true,(64===rc.countChanges))
+              : undefined;
         db.exec(rc);
+        if(undefined !== changeCount){
+          rc.changeCount = db.changes(true,64===rc.countChanges) - changeCount;
+        }
         if(rc.callback instanceof Function){
           rc.callback = theCallback;
           /* Post a sentinel message to tell the client that the end
@@ -558,11 +565,10 @@ sqlite3.initWorker1API = function(){
     'config-get': function(){
       const rc = Object.create(null), src = sqlite3.config;
       [
-        'wasmfsOpfsDir', 'bigIntEnabled'
+        'bigIntEnabled'
       ].forEach(function(k){
         if(Object.getOwnPropertyDescriptor(src, k)) rc[k] = src[k];
       });
-      rc.wasmfsOpfsEnabled = !!sqlite3.capi.sqlite3_wasmfs_opfs_dir();
       rc.version = sqlite3.version;
       rc.vfsList = sqlite3.capi.sqlite3_js_vfs_list();
       rc.opfsEnabled = !!sqlite3.opfs;
@@ -601,7 +607,7 @@ sqlite3.initWorker1API = function(){
     }
   }/*wMsgHandler*/;
 
-  self.onmessage = async function(ev){
+  globalThis.onmessage = async function(ev){
     ev = ev.data;
     let result, dbId = ev.dbId, evType = ev.type;
     const arrivalTime = performance.now();
@@ -624,8 +630,8 @@ sqlite3.initWorker1API = function(){
         result.stack = ('string'===typeof err.stack)
           ? err.stack.split(/\n\s*/) : err.stack;
       }
-      if(0) console.warn("Worker is propagating an exception to main thread.",
-                         "Reporting it _here_ for the stack trace:",err,result);
+      if(0) sqlite3.config.warn("Worker is propagating an exception to main thread.",
+                                "Reporting it _here_ for the stack trace:",err,result);
     }
     if(!dbId){
       dbId = result.dbId/*from 'open' cmd*/
@@ -649,6 +655,9 @@ sqlite3.initWorker1API = function(){
       result: result
     }, wState.xfer);
   };
-  self.postMessage({type:'sqlite3-api',result:'worker1-ready'});
-}.bind({self, sqlite3});
+  globalThis.postMessage({type:'sqlite3-api',result:'worker1-ready'});
+}.bind({sqlite3});
 });
+//#else
+/* Built with the omit-oo1 flag. */
+//#endif ifnot omit-oo1
