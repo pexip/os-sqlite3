@@ -2,7 +2,7 @@ Index: sqlite3/Makefile.in
 ===================================================================
 --- sqlite3.orig/Makefile.in
 +++ sqlite3/Makefile.in
-@@ -799,10 +799,20 @@ sqlite3.lo:	sqlite3.c
+@@ -829,10 +829,20 @@ sqlite3.lo:	sqlite3.c
  
  # Rules to build the LEMON compiler generator
  #
@@ -24,7 +24,7 @@ Index: sqlite3/Makefile.in
  # Rules to build the program that generates the source-id
  #
  mksourceid$(BEXE):	$(TOP)/tool/mksourceid.c
-@@ -1087,9 +1087,9 @@ opcodes.h:	parse.h $(TOP)/src/vdbe.c $(T
+@@ -1117,9 +1127,9 @@ opcodes.h:	parse.h $(TOP)/src/vdbe.c $(T
  #
  parse.h:	parse.c
  
@@ -34,9 +34,9 @@ Index: sqlite3/Makefile.in
 -	./lemon$(BEXE) $(OPT_FEATURE_FLAGS) $(OPTS) -S parse.y
 +	./$(LEMON_FOR_BUILD) $(OPT_FEATURE_FLAGS) $(OPTS) -S parse.y
  
- sqlite3.h:	$(TOP)/src/sqlite.h.in $(TOP)/manifest mksourceid$(BEXE) $(TOP)/VERSION
+ sqlite3.h:	$(TOP)/src/sqlite.h.in $(TOP)/manifest mksourceid$(BEXE) $(TOP)/VERSION has_tclsh84
  	$(TCLSH_CMD) $(TOP)/tool/mksqlite3h.tcl $(TOP) >sqlite3.h
-@@ -1225,10 +1225,10 @@ FTS5_SRC = \
+@@ -1241,10 +1251,10 @@ FTS5_SRC = \
     $(TOP)/ext/fts5/fts5_varint.c \
     $(TOP)/ext/fts5/fts5_vocab.c  \
  
@@ -49,7 +49,7 @@ Index: sqlite3/Makefile.in
  
  fts5parse.h: fts5parse.c
  
-@@ -1496,7 +1496,10 @@ clean:
+@@ -1541,7 +1551,10 @@ clean:
  	rm -f *.lo *.la *.o sqlite3$(TEXE) libsqlite3.la
  	rm -f sqlite3.h opcodes.*
  	rm -rf .libs .deps

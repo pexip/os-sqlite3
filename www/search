@@ -1230,7 +1230,7 @@ proc searchresults {} {
   if {$q==""} {return ""}
 
   # Count the '"' characters in $::A(q). If there is an odd number of
-  # occurences, add a " to the end of the query so that fts5 can parse
+  # occurrences, add a " to the end of the query so that fts5 can parse
   # it without error.
   if {[regexp -all \x22 $q] % 2} { append q \x22 }
 

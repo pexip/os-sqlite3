@@ -2,7 +2,7 @@ Index: sqlite3/src/expr.c
 ==================================================================
 --- sqlite3/src/expr.c
 +++ sqlite3/src/expr.c
-@@ -5279,15 +5279,15 @@
+@@ -5735,15 +5735,15 @@
      case TK_ISNULL:
      case TK_NOTNULL: {
        assert( TK_ISNULL==OP_IsNull );   testcase( op==TK_ISNULL );
@@ -20,7 +20,7 @@ Index: sqlite3/src/expr.c
      case TK_BETWEEN: {
        testcase( jumpIfNull==0 );
        exprCodeBetween(pParse, pExpr, dest, sqlite3ExprIfTrue, jumpIfNull);
-@@ -5454,15 +5454,15 @@
+@@ -5910,15 +5910,15 @@
        break;
      }
      case TK_ISNULL:
@@ -43,7 +43,7 @@ Index: sqlite3/src/vdbe.c
 ==================================================================
 --- sqlite3/src/vdbe.c
 +++ sqlite3/src/vdbe.c
-@@ -3545,10 +3545,11 @@
+@@ -3679,10 +3679,11 @@
        }
      }else{
        zHdr += sqlite3PutVarint(zHdr, serial_type);

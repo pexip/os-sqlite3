@@ -30,7 +30,13 @@
 /* Forward references */
 static char *fuzz_invariant_sql(sqlite3_stmt*, int);
 static int sameValue(sqlite3_stmt*,int,sqlite3_stmt*,int,sqlite3_stmt*);
-static void reportInvariantFailed(sqlite3_stmt*,sqlite3_stmt*,int);
+static void reportInvariantFailed(
+  sqlite3_stmt *pOrig,   /* The original query */
+  sqlite3_stmt *pTest,   /* The alternative test query with a missing row */
+  int iRow,              /* Row number in pOrig */
+  unsigned int dbOpt,    /* Optimization flags on pOrig */
+  int noOpt              /* True if opt flags inverted for pTest */
+);
 
 /*
 ** Do an invariant check on pStmt.  iCnt determines which invariant check to
@@ -68,7 +74,8 @@ int fuzz_invariant(
   int iRow,               /* Current row number */
   int nRow,               /* Number of output rows from pStmt */
   int *pbCorrupt,         /* IN/OUT: Flag indicating a corrupt database file */
-  int eVerbosity          /* How much debugging output */
+  int eVerbosity,         /* How much debugging output */
+  unsigned int dbOpt      /* Default optimization flags */
 ){
   char *zTest;
   sqlite3_stmt *pTestStmt = 0;
@@ -76,13 +83,20 @@ int fuzz_invariant(
   int i;
   int nCol;
   int nParam;
+  int noOpt = (iCnt%3)==0;
 
   if( *pbCorrupt ) return SQLITE_DONE;
   nParam = sqlite3_bind_parameter_count(pStmt);
   if( nParam>100 ) return SQLITE_DONE;
   zTest = fuzz_invariant_sql(pStmt, iCnt);
   if( zTest==0 ) return SQLITE_DONE;
+  if( noOpt ){
+    sqlite3_test_control(SQLITE_TESTCTRL_OPTIMIZATIONS, db, ~dbOpt);
+  }
   rc = sqlite3_prepare_v2(db, zTest, -1, &pTestStmt, 0);
+  if( noOpt ){
+    sqlite3_test_control(SQLITE_TESTCTRL_OPTIMIZATIONS, db, dbOpt);
+  }
   if( rc ){
     if( eVerbosity ){
       printf("invariant compile failed: %s\n%s\n",
@@ -103,7 +117,7 @@ int fuzz_invariant(
   }
   if( eVerbosity>=2 ){
     char *zSql = sqlite3_expanded_sql(pTestStmt);
-    printf("invariant-sql #%d:\n%s\n", iCnt, zSql);
+    printf("invariant-sql row=%d #%d:\n%s\n", iRow, iCnt, zSql);
     sqlite3_free(zSql);
   }
   while( (rc = sqlite3_step(pTestStmt))==SQLITE_ROW ){
@@ -115,6 +129,8 @@ int fuzz_invariant(
   if( rc==SQLITE_DONE ){
     /* No matching output row found */
     sqlite3_stmt *pCk = 0;
+    int iOrigRSO;
+
 
     /* This is not a fault if the database file is corrupt, because anything
     ** can happen with a corrupt database file */
@@ -124,6 +140,12 @@ int fuzz_invariant(
       sqlite3_finalize(pTestStmt);
       return rc;
     }
+    if( eVerbosity>=2 ){
+      char *zSql = sqlite3_expanded_sql(pCk);
+      printf("invariant-validity-check #1:\n%s\n", zSql);
+      sqlite3_free(zSql);
+    }
+
     rc = sqlite3_step(pCk);
     if( rc!=SQLITE_ROW
      || sqlite3_column_text(pCk, 0)==0
@@ -136,33 +158,29 @@ int fuzz_invariant(
     }
     sqlite3_finalize(pCk);
 
-    if( sqlite3_strlike("%group%by%order%by%desc%",sqlite3_sql(pStmt),0)==0 ){
-      /* dbsqlfuzz crash-647c162051c9b23ce091b7bbbe5125ce5f00e922
-      ** Original statement is:
-      **
-      **    SELECT a,c,d,b,'' FROM t1 GROUP BY 1 HAVING d<>345 ORDER BY a DESC;
-      **
-      ** The values of c, d, and b are indeterminate and change when the
-      ** enclosed in the test query because the DESC is dropped.
-      **
-      **    SELECT * FROM (...) WHERE "a"==0
-      */
-      goto not_a_fault;
+    /*
+    ** If inverting the scan order also results in a miss, assume that the
+    ** query is ambiguous and do not report a fault.
+    */
+    sqlite3_db_config(db, SQLITE_DBCONFIG_REVERSE_SCANORDER, -1, &iOrigRSO);
+    sqlite3_db_config(db, SQLITE_DBCONFIG_REVERSE_SCANORDER, !iOrigRSO, 0);
+    sqlite3_prepare_v2(db, sqlite3_sql(pStmt), -1, &pCk, 0);
+    sqlite3_db_config(db, SQLITE_DBCONFIG_REVERSE_SCANORDER, iOrigRSO, 0);
+    if( eVerbosity>=2 ){
+      char *zSql = sqlite3_expanded_sql(pCk);
+      printf("invariant-validity-check #2:\n%s\n", zSql);
+      sqlite3_free(zSql);
     }
-
-    if( sqlite3_strlike("%limit%)%order%by%", sqlite3_sql(pTestStmt),0)==0 ){
-      /* crash-89bd6a6f8c6166e9a4c5f47b3e70b225f69b76c6
-      ** Original statement is:
-      **
-      **    SELECT a,b,c* FROM t1 LIMIT 1%5<4
-      **
-      ** When running:
-      **
-      **    SELECT * FROM (...) ORDER BY 1
-      **
-      ** A different subset of the rows come out
-      */
-      goto not_a_fault;
+    while( (rc = sqlite3_step(pCk))==SQLITE_ROW ){
+      for(i=0; i<nCol; i++){
+        if( !sameValue(pStmt, i, pTestStmt, i, 0) ) break;
+      }
+      if( i>=nCol ) break;
+    }
+    sqlite3_finalize(pCk);
+    if( rc==SQLITE_DONE ){
+      sqlite3_finalize(pTestStmt);
+      return SQLITE_DONE;
     }
 
     /* The original sameValue() comparison assumed a collating sequence
@@ -174,6 +192,12 @@ int fuzz_invariant(
        "SELECT ?1=?2 OR ?1=?2 COLLATE nocase OR ?1=?2 COLLATE rtrim",
        -1, &pCk, 0);
     if( rc==SQLITE_OK ){
+      if( eVerbosity>=2 ){
+        char *zSql = sqlite3_expanded_sql(pCk);
+        printf("invariant-validity-check #3:\n%s\n", zSql);
+        sqlite3_free(zSql);
+      }
+
       sqlite3_reset(pTestStmt);
       while( (rc = sqlite3_step(pTestStmt))==SQLITE_ROW ){
         for(i=0; i<nCol; i++){
@@ -192,12 +216,17 @@ int fuzz_invariant(
     rc = sqlite3_prepare_v2(db, 
             "SELECT 1 FROM bytecode(?1) WHERE opcode='VOpen'", -1, &pCk, 0);
     if( rc==SQLITE_OK ){
+      if( eVerbosity>=2 ){
+        char *zSql = sqlite3_expanded_sql(pCk);
+        printf("invariant-validity-check #4:\n%s\n", zSql);
+        sqlite3_free(zSql);
+      }
       sqlite3_bind_pointer(pCk, 1, pStmt, "stmt-pointer", 0);
       rc = sqlite3_step(pCk);
     }
     sqlite3_finalize(pCk);
     if( rc==SQLITE_DONE ){
-      reportInvariantFailed(pStmt, pTestStmt, iRow);
+      reportInvariantFailed(pStmt, pTestStmt, iRow, dbOpt, noOpt);
       return SQLITE_INTERNAL;
     }else if( eVerbosity>0 ){
       printf("invariant-error ignored due to the use of virtual tables\n");
@@ -207,7 +236,6 @@ not_a_fault:
   sqlite3_finalize(pTestStmt);
   return SQLITE_OK;
 }
-
 
 /*
 ** Generate SQL used to test a statement invariant.
@@ -236,7 +264,7 @@ static char *fuzz_invariant_sql(sqlite3_stmt *pStmt, int iCnt){
   const char *zIn;
   size_t nIn;
   const char *zAnd = "WHERE";
-  int i;
+  int i, j;
   sqlite3_str *pTest;
   sqlite3_stmt *pBase = 0;
   sqlite3 *db = sqlite3_db_handle(pStmt);
@@ -279,6 +307,14 @@ static char *fuzz_invariant_sql(sqlite3_stmt *pStmt, int iCnt){
     ){
       /* This is a randomized column name and so cannot be used in the
       ** WHERE clause. */
+      continue;
+    }
+    for(j=0; j<i; j++){
+      const char *zPrior = sqlite3_column_name(pBase, j);
+      if( sqlite3_stricmp(zPrior, zColName)==0 ) break;
+    }
+    if( j<i ){
+      /* Duplicate column name */
       continue;
     }
     if( iCnt==0 ) continue;
@@ -466,13 +502,17 @@ static void printRow(sqlite3_stmt *pStmt, int iRow){
 static void reportInvariantFailed(
   sqlite3_stmt *pOrig,   /* The original query */
   sqlite3_stmt *pTest,   /* The alternative test query with a missing row */
-  int iRow               /* Row number in pOrig */
+  int iRow,              /* Row number in pOrig */
+  unsigned int dbOpt,    /* Optimization flags on pOrig */
+  int noOpt              /* True if opt flags inverted for pTest */
 ){
   int iTestRow = 0;
   printf("Invariant check failed on row %d.\n", iRow);
-  printf("Original query --------------------------------------------------\n");
+  printf("Original query (opt-flags: 0x%08x) --------------------------\n",
+         dbOpt);
   printf("%s\n", sqlite3_expanded_sql(pOrig));
-  printf("Alternative query -----------------------------------------------\n");
+  printf("Alternative query (opt-flags: 0x%08x) -----------------------\n",
+         noOpt ? ~dbOpt : dbOpt);
   printf("%s\n", sqlite3_expanded_sql(pTest));
   printf("Result row that is missing from the alternative -----------------\n");
   printRow(pOrig, iRow);

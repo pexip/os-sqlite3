@@ -187,14 +187,10 @@ a rollback journal.  Advantages include:</p>
 <p>But there are also disadvantages:</p>
 
 <ol>
-<li>WAL normally requires that the <a href="vfs.html">VFS</a> 
-    support shared-memory primitives.
-    (Exception: <a href="wal.html#noshm">WAL without shared memory</a>)
-    The built-in unix and windows VFSes
-    support this but third-party extension VFSes for custom operating
-    systems might not.
-</li><li>All processes using a database must be on the same host computer;
-    WAL does not work over a network filesystem.
+<li>All processes using a database must be on the same host computer;
+    WAL does not work over a network filesystem.  This is because WAL requires
+    all processes to share a small amount of memory and processes on
+    separate host machines obviously cannot share memory with each other.
 </li><li>Transactions that involve changes against multiple <a href="lang_attach.html">ATTACHed</a>
     databases are atomic for each individual database, but are not
     atomic across all databases as a set.
@@ -706,14 +702,12 @@ database files in exclusive locking mode, so attempts to read Chrome or
 Firefox databases while the applications are running will run into this
 problem, for example.
 
-</p></li><li><p>
-When the last connection to a particular database is closing, that
-connection will acquire an exclusive lock for a short time while it
-cleans up the WAL and shared-memory files.  If a second database tries
-to open and query the database while the first connection
-is still in the middle
-of its cleanup process, the second connection might get an <a href="rescode.html#busy">SQLITE_BUSY</a>
-error.
+</p></li><li><p> When the last connection to a particular database is closing,
+that connection will acquire an exclusive lock for a short time while
+it cleans up the WAL and shared-memory files.  If a separate attempt
+is made to open and query the database while the first connection is
+still in the middle of its cleanup process, the second connection
+might get an <a href="rescode.html#busy">SQLITE_BUSY</a> error.
 
 </p></li><li><p>
 If the last connection to a database crashed, then the first new
@@ -752,5 +746,5 @@ PRAGMA journal_mode=DELETE;
 <p>Deliberately changing out of WAL mode changes the database file format
 version numbers back to 1 so that older versions of SQLite can once again 
 access the database file.</p>
-<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/wal.in?m=9b1dbf50c3fb0831f">2018-11-26 12:01:01</a> UTC </small></i></p>
+<p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/wal.in?m=9082744b12">2024-07-14 23:07:20</a> UTC </small></i></p>
 

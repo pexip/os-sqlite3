@@ -640,6 +640,7 @@ static void fts3DeclareVtab(int *pRc, Fts3Table *p){
 
     zLanguageid = (p->zLanguageid ? p->zLanguageid : "__langid");
     sqlite3_vtab_config(p->db, SQLITE_VTAB_CONSTRAINT_SUPPORT, 1);
+    sqlite3_vtab_config(p->db, SQLITE_VTAB_INNOCUOUS);
 
     /* Create a list of user columns for the virtual table */
     zCols = sqlite3_mprintf("%Q, ", p->azColumn[0]);
@@ -3889,6 +3890,8 @@ static int fts3RenameMethod(
     rc = sqlite3Fts3PendingTermsFlush(p);
   }
 
+  p->bIgnoreSavepoint = 1;
+
   if( p->zContentTbl==0 ){
     fts3DbExec(&rc, db,
       "ALTER TABLE %Q.'%q_content'  RENAME TO '%q_content';",
@@ -3916,6 +3919,8 @@ static int fts3RenameMethod(
     "ALTER TABLE %Q.'%q_segdir'   RENAME TO '%q_segdir';",
     p->zDb, p->zName, zName
   );
+
+  p->bIgnoreSavepoint = 0;
   return rc;
 }
 
@@ -3926,12 +3931,28 @@ static int fts3RenameMethod(
 */
 static int fts3SavepointMethod(sqlite3_vtab *pVtab, int iSavepoint){
   int rc = SQLITE_OK;
-  UNUSED_PARAMETER(iSavepoint);
-  assert( ((Fts3Table *)pVtab)->inTransaction );
-  assert( ((Fts3Table *)pVtab)->mxSavepoint <= iSavepoint );
-  TESTONLY( ((Fts3Table *)pVtab)->mxSavepoint = iSavepoint );
-  if( ((Fts3Table *)pVtab)->bIgnoreSavepoint==0 ){
-    rc = fts3SyncMethod(pVtab);
+  Fts3Table *pTab = (Fts3Table*)pVtab;
+  assert( pTab->inTransaction );
+  assert( pTab->mxSavepoint<=iSavepoint );
+  TESTONLY( pTab->mxSavepoint = iSavepoint );
+
+  if( pTab->bIgnoreSavepoint==0 ){
+    if( fts3HashCount(&pTab->aIndex[0].hPending)>0 ){
+      char *zSql = sqlite3_mprintf("INSERT INTO %Q.%Q(%Q) VALUES('flush')",
+          pTab->zDb, pTab->zName, pTab->zName
+          );
+      if( zSql ){
+        pTab->bIgnoreSavepoint = 1;
+        rc = sqlite3_exec(pTab->db, zSql, 0, 0, 0);
+        pTab->bIgnoreSavepoint = 0;
+        sqlite3_free(zSql);
+      }else{
+        rc = SQLITE_NOMEM;
+      }
+    }
+    if( rc==SQLITE_OK ){
+      pTab->iSavepoint = iSavepoint+1;
+    }
   }
   return rc;
 }
@@ -3942,12 +3963,11 @@ static int fts3SavepointMethod(sqlite3_vtab *pVtab, int iSavepoint){
 ** This is a no-op.
 */
 static int fts3ReleaseMethod(sqlite3_vtab *pVtab, int iSavepoint){
-  TESTONLY( Fts3Table *p = (Fts3Table*)pVtab );
-  UNUSED_PARAMETER(iSavepoint);
-  UNUSED_PARAMETER(pVtab);
-  assert( p->inTransaction );
-  assert( p->mxSavepoint >= iSavepoint );
-  TESTONLY( p->mxSavepoint = iSavepoint-1 );
+  Fts3Table *pTab = (Fts3Table*)pVtab;
+  assert( pTab->inTransaction );
+  assert( pTab->mxSavepoint >= iSavepoint );
+  TESTONLY( pTab->mxSavepoint = iSavepoint-1 );
+  pTab->iSavepoint = iSavepoint;
   return SQLITE_OK;
 }
 
@@ -3957,11 +3977,13 @@ static int fts3ReleaseMethod(sqlite3_vtab *pVtab, int iSavepoint){
 ** Discard the contents of the pending terms table.
 */
 static int fts3RollbackToMethod(sqlite3_vtab *pVtab, int iSavepoint){
-  Fts3Table *p = (Fts3Table*)pVtab;
+  Fts3Table *pTab = (Fts3Table*)pVtab;
   UNUSED_PARAMETER(iSavepoint);
-  assert( p->inTransaction );
-  TESTONLY( p->mxSavepoint = iSavepoint );
-  sqlite3Fts3PendingTermsClear(p);
+  assert( pTab->inTransaction );
+  TESTONLY( pTab->mxSavepoint = iSavepoint );
+  if( (iSavepoint+1)<=pTab->iSavepoint ){
+    sqlite3Fts3PendingTermsClear(pTab);
+  }
   return SQLITE_OK;
 }
 
@@ -3980,8 +4002,42 @@ static int fts3ShadowName(const char *zName){
   return 0;
 }
 
+/*
+** Implementation of the xIntegrity() method on the FTS3/FTS4 virtual
+** table.
+*/
+static int fts3IntegrityMethod(
+  sqlite3_vtab *pVtab,      /* The virtual table to be checked */
+  const char *zSchema,      /* Name of schema in which pVtab lives */
+  const char *zTabname,     /* Name of the pVTab table */
+  int isQuick,              /* True if this is a quick_check */
+  char **pzErr              /* Write error message here */
+){
+  Fts3Table *p = (Fts3Table*)pVtab;
+  int rc = SQLITE_OK;
+  int bOk = 0;
+
+  UNUSED_PARAMETER(isQuick);
+  rc = sqlite3Fts3IntegrityCheck(p, &bOk);
+  assert( rc!=SQLITE_CORRUPT_VTAB );
+  if( rc==SQLITE_ERROR || (rc&0xFF)==SQLITE_CORRUPT ){
+    *pzErr = sqlite3_mprintf("unable to validate the inverted index for"
+                             " FTS%d table %s.%s: %s",
+                p->bFts4 ? 4 : 3, zSchema, zTabname, sqlite3_errstr(rc));
+    if( *pzErr ) rc = SQLITE_OK;
+  }else if( rc==SQLITE_OK && bOk==0 ){
+    *pzErr = sqlite3_mprintf("malformed inverted index for FTS%d table %s.%s",
+                p->bFts4 ? 4 : 3, zSchema, zTabname);
+    if( *pzErr==0 ) rc = SQLITE_NOMEM;
+  }
+  sqlite3Fts3SegmentsClose(p);
+  return rc;
+}
+
+
+
 static const sqlite3_module fts3Module = {
-  /* iVersion      */ 3,
+  /* iVersion      */ 4,
   /* xCreate       */ fts3CreateMethod,
   /* xConnect      */ fts3ConnectMethod,
   /* xBestIndex    */ fts3BestIndexMethod,
@@ -4005,6 +4061,7 @@ static const sqlite3_module fts3Module = {
   /* xRelease      */ fts3ReleaseMethod,
   /* xRollbackTo   */ fts3RollbackToMethod,
   /* xShadowName   */ fts3ShadowName,
+  /* xIntegrity    */ fts3IntegrityMethod,
 };
 
 /*
@@ -5287,9 +5344,8 @@ static void fts3EvalNextRow(
   Fts3Expr *pExpr,                /* Expr. to advance to next matching row */
   int *pRc                        /* IN/OUT: Error code */
 ){
-  if( *pRc==SQLITE_OK ){
+  if( *pRc==SQLITE_OK && pExpr->bEof==0 ){
     int bDescDoclist = pCsr->bDesc;         /* Used by DOCID_CMP() macro */
-    assert( pExpr->bEof==0 );
     pExpr->bStart = 1;
 
     switch( pExpr->eType ){
@@ -5766,6 +5822,22 @@ static void fts3EvalUpdateCounts(Fts3Expr *pExpr, int nCol){
 }
 
 /*
+** This is an sqlite3Fts3ExprIterate() callback. If the Fts3Expr.aMI[] array
+** has not yet been allocated, allocate and zero it. Otherwise, just zero
+** it.
+*/
+static int fts3AllocateMSI(Fts3Expr *pExpr, int iPhrase, void *pCtx){
+  Fts3Table *pTab = (Fts3Table*)pCtx;
+  UNUSED_PARAMETER(iPhrase);
+  if( pExpr->aMI==0 ){
+    pExpr->aMI = (u32 *)sqlite3_malloc64(pTab->nColumn * 3 * sizeof(u32));
+    if( pExpr->aMI==0 ) return SQLITE_NOMEM;
+  }
+  memset(pExpr->aMI, 0, pTab->nColumn * 3 * sizeof(u32));
+  return SQLITE_OK;
+}
+
+/*
 ** Expression pExpr must be of type FTSQUERY_PHRASE.
 **
 ** If it is not already allocated and populated, this function allocates and
@@ -5786,7 +5858,6 @@ static int fts3EvalGatherStats(
   if( pExpr->aMI==0 ){
     Fts3Table *pTab = (Fts3Table *)pCsr->base.pVtab;
     Fts3Expr *pRoot;                /* Root of NEAR expression */
-    Fts3Expr *p;                    /* Iterator used for several purposes */
 
     sqlite3_int64 iPrevId = pCsr->iPrevId;
     sqlite3_int64 iDocid;
@@ -5794,7 +5865,9 @@ static int fts3EvalGatherStats(
 
     /* Find the root of the NEAR expression */
     pRoot = pExpr;
-    while( pRoot->pParent && pRoot->pParent->eType==FTSQUERY_NEAR ){
+    while( pRoot->pParent 
+        && (pRoot->pParent->eType==FTSQUERY_NEAR || pRoot->bDeferred) 
+    ){
       pRoot = pRoot->pParent;
     }
     iDocid = pRoot->iDocid;
@@ -5802,14 +5875,8 @@ static int fts3EvalGatherStats(
     assert( pRoot->bStart );
 
     /* Allocate space for the aMSI[] array of each FTSQUERY_PHRASE node */
-    for(p=pRoot; p; p=p->pLeft){
-      Fts3Expr *pE = (p->eType==FTSQUERY_PHRASE?p:p->pRight);
-      assert( pE->aMI==0 );
-      pE->aMI = (u32 *)sqlite3_malloc64(pTab->nColumn * 3 * sizeof(u32));
-      if( !pE->aMI ) return SQLITE_NOMEM;
-      memset(pE->aMI, 0, pTab->nColumn * 3 * sizeof(u32));
-    }
-
+    rc = sqlite3Fts3ExprIterate(pRoot, fts3AllocateMSI, (void*)pTab);
+    if( rc!=SQLITE_OK ) return rc;
     fts3EvalRestart(pCsr, pRoot, &rc);
 
     while( pCsr->isEof==0 && rc==SQLITE_OK ){
@@ -5965,6 +6032,7 @@ int sqlite3Fts3EvalPhrasePoslist(
     u8 bTreeEof = 0;
     Fts3Expr *p;                  /* Used to iterate from pExpr to root */
     Fts3Expr *pNear;              /* Most senior NEAR ancestor (or pExpr) */
+    Fts3Expr *pRun;               /* Closest non-deferred ancestor of pNear */
     int bMatch;
 
     /* Check if this phrase descends from an OR expression node. If not, 
@@ -5979,25 +6047,30 @@ int sqlite3Fts3EvalPhrasePoslist(
       if( p->bEof ) bTreeEof = 1;
     }
     if( bOr==0 ) return SQLITE_OK;
+    pRun = pNear;
+    while( pRun->bDeferred ){
+      assert( pRun->pParent );
+      pRun = pRun->pParent;
+    }
 
     /* This is the descendent of an OR node. In this case we cannot use
     ** an incremental phrase. Load the entire doclist for the phrase
     ** into memory in this case.  */
     if( pPhrase->bIncr ){
-      int bEofSave = pNear->bEof;
-      fts3EvalRestart(pCsr, pNear, &rc);
-      while( rc==SQLITE_OK && !pNear->bEof ){
-        fts3EvalNextRow(pCsr, pNear, &rc);
-        if( bEofSave==0 && pNear->iDocid==iDocid ) break;
+      int bEofSave = pRun->bEof;
+      fts3EvalRestart(pCsr, pRun, &rc);
+      while( rc==SQLITE_OK && !pRun->bEof ){
+        fts3EvalNextRow(pCsr, pRun, &rc);
+        if( bEofSave==0 && pRun->iDocid==iDocid ) break;
       }
       assert( rc!=SQLITE_OK || pPhrase->bIncr==0 );
-      if( rc==SQLITE_OK && pNear->bEof!=bEofSave ){
+      if( rc==SQLITE_OK && pRun->bEof!=bEofSave ){
         rc = FTS_CORRUPT_VTAB;
       }
     }
     if( bTreeEof ){
-      while( rc==SQLITE_OK && !pNear->bEof ){
-        fts3EvalNextRow(pCsr, pNear, &rc);
+      while( rc==SQLITE_OK && !pRun->bEof ){
+        fts3EvalNextRow(pCsr, pRun, &rc);
       }
     }
     if( rc!=SQLITE_OK ) return rc;

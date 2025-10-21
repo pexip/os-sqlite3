@@ -14,7 +14,7 @@
  # See whether we can run specific tclsh versions known to work well;
  # if not, then we fall back to plain tclsh.
  # TODO: try other versions before falling back?
-@@ -606,6 +613,20 @@
+@@ -633,6 +640,20 @@
  fi
  AC_SUBST(USE_AMALGAMATION)
  

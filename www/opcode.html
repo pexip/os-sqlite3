@@ -172,6 +172,9 @@ about the bytecode engine change from one release of SQLite to the next.
 Applications that use SQLite should not depend on any of the details
 found in this document.
 
+</p><p>See the document "<a href="whybytecode.html">Why SQLite Uses Bytecode</a>" for some reasons why
+SQLite prefers to use bytecode to implement SQL.
+
 
 
 </p><h1 id="introduction"><span>2. </span>Introduction</h1>
@@ -199,14 +202,14 @@ This article also uses the terms "bytecode program" and
 
 </p><h2 id="vdbe_source_code"><span>2.1. </span>VDBE Source Code</h2>
 
-<p>The source code to the bytecode engine is in the 
-<a href="http://www.sqlite.org/src/file/src/vdbe.c">vdbe.c</a> source
+<p>The source code to the bytecode engine is in the
+<a href="https://www.sqlite.org/src/file/src/vdbe.c">vdbe.c</a> source
 file.  The <a href="opcode.html#codes">opcode definitions</a> in this document are derived
-from comments in that source file. The 
+from comments in that source file. The
 source code comments are the canonical source of information
 about the bytecode engine.  When in doubt, refer to the source code.</p>
 
-<p>In addition to the primary vdbe.c source code file, there are 
+<p>In addition to the primary vdbe.c source code file, there are
 other helper code files in the source tree, all of whose names
 begin with "vdbe" - short for "Virtual DataBase Engine".
 
@@ -217,8 +220,8 @@ output from SQLite, you should reference the version of this document
 that corresponds to the version of SQLite that ran the <a href="lang_explain.html">EXPLAIN</a>.
 Otherwise, the description of the opcodes may not be accurate.
 This document is derived from SQLite
- version 3.40.1 check-in
-<a href='https://www.sqlite.org/src/timeline?c=df5c253c0b3dd'>df5c253c0b3dd</a> dated 2022-12-28.
+ version 3.46.1 check-in
+<a href='https://www.sqlite.org/src/timeline?c=c9c2ab54ba1f5'>c9c2ab54ba1f5</a> dated 2024-08-13.
 
 
 
@@ -228,8 +231,8 @@ This document is derived from SQLite
 
 <p>A bytecoded program in SQLite consists of one or more instructions.
 Each instruction has an opcode and
-five operands named P1, P2  P3, P4, and P5.  The P1, P2, and P3 
-operands are 32-bit signed integers.  These operands often refer to 
+five operands named P1, P2  P3, P4, and P5.  The P1, P2, and P3
+operands are 32-bit signed integers.  These operands often refer to
 registers.  For instructions that operate on b-tree cursors,
 the P1 operand is usually the cursor number.
 For jump instructions, P2 is usually the jump destination.
@@ -237,9 +240,9 @@ P4 may be a 32-bit signed integer, a 64-bit signed integer, a
 64-bit floating point value, a string literal, a Blob literal,
 a pointer to a collating sequence comparison function, or a
 pointer to the implementation of an application-defined SQL
-function, or various other things.  P5 is an 16-bit unsigned integer
+function, or various other things.  P5 is a 16-bit unsigned integer
 normally used to hold flags.  Bits of the P5 flag can sometimes affect
-the opcode in subtle ways.  For example, if the 
+the opcode in subtle ways.  For example, if the
 SQLITE_NULLEQ (0x0080) bit of the P5 operand
 is set on the <a href="opcode.html#Eq">Eq</a> opcode, then the NULL values compare
 equal to one another.  Otherwise NULL values compare different
@@ -283,7 +286,7 @@ registers.  A single register can hold a variety of objects:
 <li> A NULL value
 <li> A signed 64-bit integer
 <li> An IEEE double-precision (64-bit) floating point number
-<li> An arbitrary length strings
+<li> An arbitrary length string
 <li> An arbitrary length BLOB
 <li> A RowSet object (See the <a href="opcode.html#RowSetAdd">RowSetAdd</a>, <a href="opcode.html#RowSetRead">RowSetRead</a>, and
                       <a href="opcode.html#RowSetTest">RowSetTest</a> opcodes)
@@ -415,7 +418,7 @@ addr&nbsp;&nbsp;opcode&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p1&n
 14&nbsp;&nbsp;&nbsp;&nbsp;Integer&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;20&nbsp;&nbsp;&nbsp;&nbsp;3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00&nbsp;&nbsp;r[3]=20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 15&nbsp;&nbsp;&nbsp;&nbsp;Goto&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00</pre></blockquote>
 
-<p>Any application can run an <a href="lang_explain.html">EXPLAIN</a> query to get output similar to 
+<p>Any application can run an <a href="lang_explain.html">EXPLAIN</a> query to get output similar to
 the above.
 However, indentation to show the loop structure is not generated
 by the SQLite core.  The <a href="cli.html">command-line shell</a> contains extra logic
@@ -441,20 +444,20 @@ pragmas include:
 
 <h1 id="the_opcodes"><span>4. </span>The Opcodes</h1>
 
-<p>There are currently 186
+<p>There are currently 189
 opcodes defined by the virtual machine.
 All currently defined opcodes are described in the table below.
 This table was generated automatically by scanning the source code
 from the file
-<a href="http://www.sqlite.org/src/artifact/0c7cb1b934ad8611e14e7efaf2c3a95df7dd3f7964d63ea07fef42a23df86131">vdbe.c</a>.
+<a href="https://www.sqlite.org/src/artifact/3b1793c5d2235ae89b01ef051a33d7d2ad3704c71799653b112686735ad401ff">vdbe.c</a>.
 
 
 </p><p>Remember: The VDBE opcodes are <u>not</u> part of the interface 
 definition for SQLite.  The number of opcodes and their names and meanings
 change from one release of SQLite to the next.
 The opcodes shown in the table below are valid for SQLite
- version 3.40.1 check-in
-<a href='https://www.sqlite.org/src/timeline?c=df5c253c0b3dd'>df5c253c0b3dd</a> dated 2022-12-28.
+ version 3.46.1 check-in
+<a href='https://www.sqlite.org/src/timeline?c=c9c2ab54ba1f5'>c9c2ab54ba1f5</a> dated 2024-08-13.
 
 <a name="codes"></a>
 
@@ -629,8 +632,8 @@ mem&#91;P3+2&#93; are initialized to -1.</td></tr>
 in the database file is given by P1.  But, unlike <a href="opcode.html#Destroy">Destroy</a>, do not
 remove the table or index from the database file.</p>
 
-<p>The table being clear is in the main database file if P2==0.  If
-P2==1 then the table to be clear is in the auxiliary database file
+<p>The table being cleared is in the main database file if P2==0.  If
+P2==1 then the table to be cleared is in the auxiliary database file
 that is used to store tables create using CREATE TEMPORARY TABLE.</p>
 
 <p>If the P3 value is non-zero, then the row change count is incremented
@@ -794,13 +797,18 @@ OPFLAG_SAVEPOSITION bit of P5 is clear, then the cursor will be
 left in an undefined state.</p>
 
 <p>If the OPFLAG_AUXDELETE bit is set on P5, that indicates that this
-delete one of several associated with deleting a table row and all its
-associated index entries.  Exactly one of those deletes is the "primary"
-delete.  The others are all on OPFLAG_FORDELETE cursors or else are
-marked with the AUXDELETE flag.</p>
+delete is one of several associated with deleting a table row and
+all its associated index entries.  Exactly one of those deletes is
+the "primary" delete.  The others are all on OPFLAG_FORDELETE
+cursors or else are marked with the AUXDELETE flag.</p>
 
-<p>If the OPFLAG_NCHANGE flag of P2 (NB: P2 not P5) is set, then the row
-change count is incremented (otherwise not).</p>
+<p>If the OPFLAG_NCHANGE (0x01) flag of P2 (NB: P2 not P5) is set, then
+the row change count is incremented (otherwise not).</p>
+
+<p>If the OPFLAG_ISNOOP (0x40) flag of P2 (not P5!) is set, then the
+pre-update-hook for deletes is run, but the btree is otherwise unchanged.
+This happens when the <a href="opcode.html#Delete">Delete</a> is to be shortly followed by an <a href="opcode.html#Insert">Insert</a>
+with the same key, causing the btree entry to be overwritten.</p>
 
 <p>P1 must not be pseudo-table.  It has to be a real table with
 multiple rows.</p>
@@ -821,7 +829,7 @@ be set to by the update.</td></tr>
 file is given by P1.</p>
 
 <p>The table being destroyed is in the main database file if P3==0.  If
-P3==1 then the table to be clear is in the auxiliary database file
+P3==1 then the table to be destroyed is in the auxiliary database file
 that is used to store tables create using CREATE TEMPORARY TABLE.</p>
 
 <p>If AUTOVACUUM is enabled then it is possible that another root page
@@ -875,15 +883,17 @@ can be zero or more OP_ReleaseReg opcodes intervening, but no other
 opcodes are allowed to occur between this instruction and the previous
 <a href="opcode.html#Lt">Lt</a> or <a href="opcode.html#Gt">Gt</a>.</p>
 
-<p>If result of an <a href="opcode.html#Eq">Eq</a> comparison on the same two operands as the
-prior <a href="opcode.html#Lt">Lt</a> or <a href="opcode.html#Gt">Gt</a> would have been true, then jump to P2.
-If the result of an <a href="opcode.html#Eq">Eq</a> comparison on the two previous
-operands would have been false or NULL, then fall through.</td></tr>
+<p>If the result of an <a href="opcode.html#Eq">Eq</a> comparison on the same two operands as
+the prior <a href="opcode.html#Lt">Lt</a> or <a href="opcode.html#Gt">Gt</a> would have been true, then jump to P2.  If
+the result of an <a href="opcode.html#Eq">Eq</a> comparison on the two previous operands
+would have been false or NULL, then fall through.</td></tr>
 <tr><td valign="top" align="center">
 <a name="EndCoroutine"></a>EndCoroutine
 <td>The instruction at the address in register P1 is a <a href="opcode.html#Yield">Yield</a>.
 <a href="opcode.html#Jump">Jump</a> to the P2 parameter of that <a href="opcode.html#Yield">Yield</a>.
-After the jump, register P1 becomes undefined.</p>
+After the jump, the value register P1 is left with a value
+such that subsequent OP_Yields go back to the this same
+<a href="opcode.html#EndCoroutine">EndCoroutine</a> instruction.</p>
 
 <p>See also: <a href="opcode.html#InitCoroutine">InitCoroutine</a></td></tr>
 <tr><td valign="top" align="center">
@@ -1017,6 +1027,10 @@ invocation of this opcode.</p>
 the content of register P3 is greater than or equal to the content of
 register P1.  See the Lt opcode for additional information.</td></tr>
 <tr><td valign="top" align="center">
+<a name="GetSubtype"></a>GetSubtype
+<td>Extract the subtype value from register P1 and write that subtype
+into register P2.  If P1 has no subtype, then P1 gets a NULL.</td></tr>
+<tr><td valign="top" align="center">
 <a name="Gosub"></a>Gosub
 <td>Write the current address onto register P1
 and then jump to address P2.</td></tr>
@@ -1054,7 +1068,7 @@ VDBE, but do not rollback the transaction.</p>
 <p>P5 is a value between 0 and 4, inclusive, that modifies the P4 string.</p>
 
 <p>0:  (no change)
-1:  NOT NULL contraint failed: P4
+1:  NOT NULL constraint failed: P4
 2:  UNIQUE constraint failed: P4
 3:  CHECK constraint failed: P4
 4:  FOREIGN KEY constraint failed: P4</p>
@@ -1166,13 +1180,13 @@ In other words, the operands to this opcode are the same as the
 operands to <a href="opcode.html#NotFound">NotFound</a> and <a href="opcode.html#IdxGT">IdxGT</a>.</p>
 
 <p>This opcode is an optimization attempt only.  If this opcode always
-falls through, the correct answer is still obtained, but extra works
+falls through, the correct answer is still obtained, but extra work
 is performed.</p>
 
 <p>A value of N in the seekHit flag of cursor P1 means that there exists
 a key P3:N that will match some record in the index.  We want to know
 if it is possible for a record P3:P4 to match some record in the
-index.  If it is not possible, we can skips some work.  So if seekHit
+index.  If it is not possible, we can skip some work.  So if seekHit
 is less than P4, attempt to find out if a match is possible by running
 <a href="opcode.html#NotFound">NotFound</a>.</p>
 
@@ -1219,9 +1233,12 @@ value in P1 and jump to P2.</p>
 <p>If the initial value of register P1 is less than 1, then the
 value is unchanged and control passes through to the next instruction.</td></tr>
 <tr><td valign="top" align="center">
-<a name="IfSmaller"></a>IfSmaller
-<td>Estimate the number of rows in the table P1.  <a href="opcode.html#Jump">Jump</a> to P2 if that
-estimate is less than approximately 2**(0.1*P3).</td></tr>
+<a name="IfSizeBetween"></a>IfSizeBetween
+<td>Let N be the approximate number of rows in the table or index
+with cursor P1 and let X be 10*log2(N) if N is positive or -1
+if N is zero.</p>
+
+<p>Jump to P2 if X is in between P3 and P4, inclusive.</td></tr>
 <tr><td valign="top" align="center">
 <a name="IncrVacuum"></a>IncrVacuum
 <td>Perform a single step of the incremental vacuum procedure on
@@ -1304,11 +1321,11 @@ values.</td></tr>
 <tr><td valign="top" align="center">
 <a name="IntegrityCk"></a>IntegrityCk
 <td>Do an analysis of the currently open database.  Store in
-register P1 the text of an error message describing any problems.
-If no problems are found, store a NULL in register P1.</p>
+register (P1+1) the text of an error message describing any problems.
+If no problems are found, store a NULL in register (P1+1).</p>
 
-<p>The register P3 contains one less than the maximum number of allowed errors.
-At most reg(P3) errors will be reported.
+<p>The register (P1) contains one less than the maximum number of allowed
+errors.  At most reg(P1) errors will be reported.
 In other words, the analysis stops as soon as reg(P1) errors are
 seen.  Reg(P1) is updated with the number of errors remaining.</p>
 
@@ -1359,6 +1376,12 @@ from the value in that register.</p>
 (0x01) bit. SQLITE_FLOAT is the 0x02 bit. SQLITE_TEXT is 0x04.
 SQLITE_BLOB is 0x08.  SQLITE_NULL is 0x10.</p>
 
+<p>WARNING: This opcode does not reliably distinguish between NULL and REAL
+when P1&gt;=0.  If the database contains a NaN value, this opcode will think
+that the datatype is REAL when it should be NULL.  When P1&lt;0 and the value
+is already stored in register P3, then this opcode does reliably
+distinguish between NULL and REAL.  The problem only arises then P1&gt;=0.</p>
+
 <p>Take the jump to address P2 if and only if the datatype of the
 value determined by P1 and P3 corresponds to one of the bits in the
 P5 bitmask.</p></td></tr>
@@ -1375,7 +1398,7 @@ operation. No IO is required.</p>
 <tr><td valign="top" align="center">
 <a name="Jump"></a>Jump
 <td>Jump to the instruction at address P1, P2, or P3 depending on whether
-in the most recent <a href="opcode.html#Compare">Compare</a> instruction the P1 vector was less than
+in the most recent <a href="opcode.html#Compare">Compare</a> instruction the P1 vector was less than,
 equal to, or greater than the P2 vector, respectively.</p>
 
 <p>This opcode must immediately follow an <a href="opcode.html#Compare">Compare</a> opcode.</td></tr>
@@ -1712,7 +1735,8 @@ individual columns using the <a href="opcode.html#Column">Column</a> opcode.  Th
 is the only cursor opcode that works with a pseudo-table.</p>
 
 <p>P3 is the number of fields in the records that will be stored by
-the pseudo-table.</td></tr>
+the pseudo-table.  If P2 is 0 or negative then the pseudo-cursor
+will return NULL for every column.</td></tr>
 <tr><td valign="top" align="center">
 <a name="OpenRead"></a>OpenRead
 <td>Open a read-only cursor for the database table whose root page is
@@ -1839,7 +1863,9 @@ number P5-1 in the prepared statement is incremented.</td></tr>
 <p>P1 contains the address of the memory cell that contains the first memory
 cell in an array of values used as arguments to the sub-program. P2
 contains the address to jump to if the sub-program throws an IGNORE
-exception using the RAISE() function. Register P3 contains the address
+exception using the RAISE() function. P2 might be zero, if there is
+no possibility that an IGNORE exception will be raised.
+Register P3 contains the address
 of a memory cell in this (the parent) VM that is used to allocate the
 memory required by the sub-vdbe at runtime.</p>
 
@@ -1865,7 +1891,7 @@ invocation of this opcode.</p>
 <p>This opcode works exactly like <a href="opcode.html#Function">Function</a>.  The only difference is in
 its name.  This opcode is used in places where the function must be
 purely non-deterministic.  Some built-in date/time functions can be
-either determinitic of non-deterministic, depending on their arguments.
+either deterministic of non-deterministic, depending on their arguments.
 When those function are used in a non-deterministic way, they will check
 to see if they were called using <a href="opcode.html#PureFunc">PureFunc</a> instead of <a href="opcode.html#Function">Function</a>, and
 if they were, they throw an error.</p>
@@ -1996,6 +2022,9 @@ will refer to the first entry in the database table or index.
 If the table or index is empty, jump immediately to P2.
 If the table or index is not empty, fall through to the following
 instruction.</p>
+
+<p>If P2 is zero, that is an assertion that the P1 table is never
+empty and hence the jump will never be taken.</p>
 
 <p>This opcode leaves the cursor configured to move in forward order,
 from the beginning toward the end.  In other words, the cursor is
@@ -2256,7 +2285,7 @@ cursor ends up pointing at a valid row that is past the target
 row.  If This.P5 is false (0) then a jump is made to <a href="opcode.html#SeekGE">SeekGE</a>.P2.  If
 This.P5 is true (non-zero) then a jump is made to This.P2.  The P5==0
 case occurs when there are no inequality constraints to the right of
-the IN constraing.  The jump to <a href="opcode.html#SeekGE">SeekGE</a>.P2 ends the loop.  The P5!=0 case
+the IN constraint.  The jump to <a href="opcode.html#SeekGE">SeekGE</a>.P2 ends the loop.  The P5!=0 case
 occurs when there are inequality constraints to the right of the IN
 operator.  In that case, the This.P2 will point either directly to or
 to setup code prior to the <a href="opcode.html#IdxGT">IdxGT</a> or <a href="opcode.html#IdxGE">IdxGE</a> opcode that checks for
@@ -2264,7 +2293,7 @@ loop terminate.</p>
 
 <p>Possible outcomes from this opcode:<ol></p>
 
-<p><li> If the cursor is initally not pointed to any valid row, then
+<p><li> If the cursor is initially not pointed to any valid row, then
 fall through into the subsequent <a href="opcode.html#SeekGE">SeekGE</a> opcode.</p>
 
 <p><li> If the cursor is left pointing to a row that is before the target
@@ -2310,6 +2339,10 @@ database file used to store temporary tables.</p>
 schema version is set to P3-P5.  The "PRAGMA schema_version=N" statement
 has P5 set to 1, so that the internal schema version will be different
 from the database schema version, resulting in a schema reset.</td></tr>
+<tr><td valign="top" align="center">
+<a name="SetSubtype"></a>SetSubtype
+<td>Set the subtype value of register P2 to the integer from register P1.
+If P1 is NULL, clear the subtype from p2.</td></tr>
 <tr><td valign="top" align="center">
 <a name="ShiftLeft"></a>ShiftLeft
 <td>Shift the integer value in register P2 to the left by the
@@ -2357,7 +2390,7 @@ each other.  <a href="opcode.html#Jump">Jump</a> to P2 if they are different.</t
 <td>Write into register P2 the current sorter data for sorter cursor P1.
 Then clear the column header cache on cursor P3.</p>
 
-<p>This opcode is normally use to move a record out of the sorter and into
+<p>This opcode is normally used to move a record out of the sorter and into
 a register that is the source for a pseudo-table cursor created using
 <a href="opcode.html#OpenPseudo">OpenPseudo</a>.  That pseudo-table cursor is the one that is identified by
 parameter P3.  Clearing the P3 column cache as part of this opcode saves
@@ -2392,7 +2425,15 @@ identified by P1, invoke this opcode to actually do the sorting.
 for Sorter objects.</td></tr>
 <tr><td valign="top" align="center">
 <a name="SqlExec"></a>SqlExec
-<td>Run the SQL statement or statements specified in the P4 string.</td></tr>
+<td>Run the SQL statement or statements specified in the P4 string.</p>
+
+<p>The P1 parameter is a bitmask of options:</p>
+
+<p>0x0001     Disable Auth and <a href="opcode.html#Trace">Trace</a> callbacks while the statements
+in P4 are running.</p>
+
+<p>0x0002     Set db-&gt;nAnalysisLimit to P2 while the statements in
+P4 are running.</p></td></tr>
 <tr><td valign="top" align="center">
 <a name="String"></a>String
 <td>The string value P4 of length P1 (bytes) is stored in register P2.</p>
@@ -2501,10 +2542,7 @@ the file into which the result of vacuum should be written.  When
 P2 is zero, the vacuum overwrites the original database.</td></tr>
 <tr><td valign="top" align="center">
 <a name="Variable"></a>Variable
-<td>Transfer the values of bound parameter P1 into register P2</p>
-
-<p>If the parameter is named, then its name appears in P4.
-The P4 value is used by sqlite3_bind_parameter_name().</td></tr>
+<td>Transfer the values of bound parameter P1 into register P2</td></tr>
 <tr><td valign="top" align="center">
 <a name="VBegin"></a>VBegin
 <td>P4 may be a pointer to an sqlite3_vtab structure. If so, call the
@@ -2513,6 +2551,14 @@ xBegin method for that table.</p>
 <p>Also, whether or not P4 is set, check that this is not being called from
 within a callback to a virtual table xSync() method. If it is, the error
 code will be set to SQLITE_LOCKED.</td></tr>
+<tr><td valign="top" align="center">
+<a name="VCheck"></a>VCheck
+<td>P4 is a pointer to a Table object that is a virtual table in schema P1
+that supports the xIntegrity() method.  This opcode runs the xIntegrity()
+method for that virtual table, using P3 as the integer argument.  If
+an error is reported back, the table name is prepended to the error
+message and that message is stored in P2.  If no errors are seen,
+register P2 is set to NULL.</td></tr>
 <tr><td valign="top" align="center">
 <a name="VColumn"></a>VColumn
 <td>Store in register P3 the value of the P2-th column of
@@ -2612,12 +2658,12 @@ next instruction.</p>
 <p>See also: <a href="opcode.html#InitCoroutine">InitCoroutine</a></td></tr>
 <tr><td valign="top" align="center">
 <a name="ZeroOrNull"></a>ZeroOrNull
-<td>If all both registers P1 and P3 are NOT NULL, then store a zero in
+<td>If both registers P1 and P3 are NOT NULL, then store a zero in
 register P2.  If either registers P1 or P3 are NULL then put
 a NULL in register P2.</td></tr>
 
   </table></blockquote>
   </div>
 
-</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/opcode.in?m=c96f076c3fd941bcc">2022-08-10 18:45:48</a> UTC </small></i></p>
+</p>
 

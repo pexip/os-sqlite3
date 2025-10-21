@@ -130,12 +130,14 @@ Table Of Contents
 <div class="fancy-toc2"><a href="#index_term_usage_examples">2.1. Index Term Usage Examples</a></div>
 <div class="fancy-toc1"><a href="#the_between_optimization">3. The BETWEEN Optimization</a></div>
 <div class="fancy-toc1"><a href="#or_optimizations">4. OR Optimizations</a></div>
+<div class="fancy-toc2"><a href="#converting_or_connected_constraint_into_an_in_operator">4.1. Converting OR-connected constraint into an IN operator</a></div>
+<div class="fancy-toc2"><a href="#evaluating_or_constraints_separately_and_taking_the_union_of_the_result">4.2. Evaluating OR constraints separately and taking the UNION of the result</a></div>
 <div class="fancy-toc1"><a href="#the_like_optimization">5. The LIKE Optimization</a></div>
 <div class="fancy-toc1"><a href="#the_skip_scan_optimization">6. The Skip-Scan Optimization</a></div>
 <div class="fancy-toc1"><a href="#joins">7. Joins</a></div>
-<div class="fancy-toc2"><a href="#order_of_tables_in_a_join">7.1. Order of Tables in a Join</a></div>
-<div class="fancy-toc2"><a href="#manual_control_of_query_plans_using_sqlite_stat_tables">7.2. Manual Control Of Query Plans Using SQLITE_STAT Tables</a></div>
-<div class="fancy-toc2"><a href="#manual_control_of_query_plans_using_cross_join">7.3. Manual Control of Query Plans using CROSS JOIN</a></div>
+<div class="fancy-toc2"><a href="#manual_control_of_join_order">7.1. Manual Control Of Join Order</a></div>
+<div class="fancy-toc3"><a href="#manual_control_of_query_plans_using_sqlite_stat_tables">7.1.1. Manual Control Of Query Plans Using SQLITE_STAT Tables</a></div>
+<div class="fancy-toc3"><a href="#manual_control_of_query_plans_using_cross_join">7.1.2. Manual Control of Query Plans using CROSS JOIN</a></div>
 <div class="fancy-toc1"><a href="#choosing_between_multiple_indexes">8. Choosing Between Multiple Indexes</a></div>
 <div class="fancy-toc2"><a href="#disqualifying_where_clause_terms_using_unary_">8.1. Disqualifying WHERE Clause Terms using Unary-"+"</a></div>
 <div class="fancy-toc2"><a href="#range_queries">8.2. Range Queries</a></div>
@@ -146,11 +148,11 @@ Table Of Contents
 <div class="fancy-toc1"><a href="#subquery_co_routines">12. Subquery Co-routines</a></div>
 <div class="fancy-toc2"><a href="#using_co_routines_to_defer_work_until_after_the_sorting">12.1. Using Co-routines to Defer Work until after the Sorting</a></div>
 <div class="fancy-toc1"><a href="#the_min_max_optimization">13. The MIN/MAX Optimization</a></div>
-<div class="fancy-toc1"><a href="#automatic_indexes">14. Automatic Indexes</a></div>
+<div class="fancy-toc1"><a href="#automatic_query_time_indexes">14. Automatic Query-Time Indexes</a></div>
 <div class="fancy-toc2"><a href="#hash_joins">14.1. Hash Joins</a></div>
-<div class="fancy-toc1"><a href="#the_push_down_optimization">15. The Push-Down Optimization</a></div>
-<div class="fancy-toc1"><a href="#the_left_join_strength_reduction_optimization">16. The LEFT JOIN Strength Reduction Optimization</a></div>
-<div class="fancy-toc1"><a href="#the_omit_left_join_optimization">17. The Omit LEFT JOIN Optimization</a></div>
+<div class="fancy-toc1"><a href="#the_predicate_push_down_optimization">15. The Predicate Push-Down Optimization</a></div>
+<div class="fancy-toc1"><a href="#the_outer_join_strength_reduction_optimization">16. The OUTER JOIN Strength Reduction Optimization</a></div>
+<div class="fancy-toc1"><a href="#the_omit_outer_join_optimization">17. The Omit OUTER JOIN Optimization</a></div>
 <div class="fancy-toc1"><a href="#the_constant_propagation_optimization">18. The Constant Propagation Optimization</a></div>
 </div>
 </div>
@@ -190,17 +192,8 @@ mk.innerHTML = "&#x25ba;";
 </p><p>
   Additional background information is available in the
   <a href="queryplanner.html">indexing tutorial</a> document.
-
-
-</p><p>
-  With release 3.8.0 (2013-08-26),
-  the SQLite query planner was reimplemented as the
-  <a href="queryplanner-ng.html">Next Generation Query Planner</a> or "NGQP".  All of the features, techniques,
-  and algorithms described in this document are applicable to both the
-  pre-3.8.0 legacy query planner and to the NGQP.  For further information on
-  how the NGQP differs from the legacy query planner, see the 
-  <a href="queryplanner-ng.html">detailed description of the NGQP</a>.
-
+  The <a href="queryplanner-ng.html">Next Generation Query Planner</a> document provides more detail on
+  how the <a href="optoverview.html#joins">join order</a> is chosen.
 
 
 
@@ -209,10 +202,39 @@ mk.innerHTML = "&#x25ba;";
 </p><h1 id="where_clause_analysis"><span>2. </span>WHERE Clause Analysis</h1>
 
 <p>
-  The WHERE clause on a query is broken up into "terms" where each term
-  is separated from the others by an AND operator.
+  Prior to analysis, the following transformations are made
+  to shift all join constraints into the WHERE clause:
+
+</p><p>
+</p><ul>
+<li>All NATURAL joins are converted into joins with a USING clause.
+</li><li>All USING clauses (including ones created by the previous step)
+    are converted into equivalent ON clauses.
+</li><li>All ON clauses (include ones created by the previous step)
+    are added as new conjuncts (AND-connected terms) in the WHERE clause.
+</li></ul>
+
+
+<p>
+  SQLite makes no distinction between join constraints that occur in the
+  WHERE clause and constraints in the ON clause of an inner join, since that
+  distinction does not affect the outcome.  However, there is
+  a difference between ON clause constraints and WHERE clause constraints for
+  outer joins.  Therefore, when SQLite moves an ON clause constraint from an
+  outer join over to the WHERE clause it adds special tags to the Abstract
+  Syntax Tree (AST) to indicate that the constraint came from an outer join
+  and from which outer join it came. There is no way to add those tags in
+  pure SQL text.  Hence, the SQL input must use ON clauses on outer joins.
+  But in the internal AST, all constraints are part of the WHERE clause,
+  because having everything in one place simplifies processing.
+
+</p><p>
+  After all constraints have been shifted into the WHERE clause,
+  The WHERE clause is broken up into conjuncts (hereafter called
+  "terms").  In other words, the WHERE clause is broken up into pieces
+  separated from the others by an AND operator.
   If the WHERE clause is composed of constraints separated by the OR
-  operator then the entire clause is considered to be a single "term"
+  operator (disjuncts) then the entire clause is considered to be a single "term"
   to which the <a href="#or_opt">OR-clause optimization</a> is applied.
 
 </p><p>
@@ -229,6 +251,7 @@ mk.innerHTML = "&#x25ba;";
   </b><i>column</i><b> &lt; </b><i>expression</i><b>
   </b><i>column</i><b> &lt;= </b><i>expression</i><b>
   </b><i>expression</i><b> = </b><i>column</i><b>
+  </b><i>expression</i><b> IS </b><i>column</i><b>
   </b><i>expression</i><b> &gt; </b><i>column</i><b>
   </b><i>expression</i><b> &gt;= </b><i>column</i><b>
   </b><i>expression</i><b> &lt; </b><i>column</i><b>
@@ -369,6 +392,10 @@ mk.innerHTML = "&#x25ba;";
 <p>
   WHERE clause constraints that are connected by OR instead of AND can
   be handled in two different ways.
+
+</p><h2 id="converting_or_connected_constraint_into_an_in_operator"><span>4.1. </span>Converting OR-connected constraint into an IN operator</h2>
+
+<p>
   If a term consists of multiple subterms containing a common column
   name and separated by OR, like this:
 
@@ -388,7 +415,9 @@ mk.innerHTML = "&#x25ba;";
   although the column can occur on either the left or the right side of
   the <b>=</b> operator.
 
-</p><p>
+</p><h2 id="evaluating_or_constraints_separately_and_taking_the_union_of_the_result"><span>4.2. </span>Evaluating OR constraints separately and taking the UNION of the result</h2>
+
+<p>
   If and only if the previously described conversion of OR to an IN operator
   does not work, the second OR-clause optimization is attempted.
   Suppose the OR clause consists of multiple subterms as follows:
@@ -700,41 +729,7 @@ SELECT name FROM people WHERE role='student' AND height>=180;
 </p><h1 id="joins"><span>7. </span>Joins</h1>
 
 <p>
-  The ON and USING clauses of an inner join are converted into additional
-  terms of the WHERE clause prior to WHERE clause analysis described
-  <a href="#where_clause">above in paragraph 2.0</a>.
-  Thus with SQLite, there is no computational
-  advantage to use the newer SQL92 join syntax
-  over the older SQL89 comma-join syntax.  They both end up accomplishing
-  exactly the same thing on inner joins.
-
-</p><p>
-  For an OUTER JOIN the situation is more complex.  The following
-  two queries are not equivalent:
-
-</p><div class="codeblock"><pre>SELECT * FROM tab1 LEFT JOIN tab2 ON tab1.x=tab2.y;
-SELECT * FROM tab1 LEFT JOIN tab2 WHERE tab1.x=tab2.y;
-</pre></div>
-<p>
-  For an inner join, the two queries above would be identical.  However,
-  special processing applies to the ON and USING clauses of an OUTER join:
-  specifically, the constraints in an ON or USING clause do not apply if
-  the right table of the join is on a null row, but the constraints do apply
-  in the WHERE clause.  The net effect is that putting the ON or USING
-  clause expressions for a LEFT JOIN in the WHERE clause effectively converts
-  the query to an
-  ordinary INNER JOIN - albeit an inner join that runs more slowly.
-
-<a name="table_order"></a>
-
-</p><h2 id="order_of_tables_in_a_join"><span>7.1. </span>Order of Tables in a Join</h2>
-
-<p>
-  The current implementation of 
-  SQLite uses only loop joins.  That is to say, joins are implemented as
-  nested loops.
-
-</p><p>
+  SQLite implements joins as nested loops.
   The default order of the nested loops in a join is for the left-most
   table in the FROM clause to form the outer loop and the right-most
   table to form the inner loop.
@@ -742,10 +737,10 @@ SELECT * FROM tab1 LEFT JOIN tab2 WHERE tab1.x=tab2.y;
   will help it to select better indexes.
 
 </p><p>
-  Inner joins can be freely reordered.  However a left outer join is
+  Inner joins can be freely reordered.  However outer joins are
   neither commutative nor associative and hence will not be reordered.
-  Inner joins to the left and right of the outer join might be reordered
-  if the optimizer thinks that is advantageous but the outer joins are
+  Inner joins to the left and right of an outer join might be reordered
+  if the optimizer thinks that is advantageous but outer joins are
   always evaluated in the order in which they occur.
 
 </p><p>
@@ -757,7 +752,8 @@ SELECT * FROM tab1 LEFT JOIN tab2 WHERE tab1.x=tab2.y;
 
 </p><p>
   When selecting the order of tables in a join, SQLite uses an efficient
-  polynomial-time algorithm.  Because of this,
+  polynomial-time algorithm graph algorithm described in
+  the <a href="queryplanner-ng.html">Next Generation Query Planner</a> document.  Because of this,
   SQLite is able to plan queries with 50- or 60-way joins in a matter of
   microseconds
 
@@ -868,20 +864,40 @@ end
   a different choice might be made if the statistics indicate that the
   alternative is likely to run faster.
 
+</p><h2 id="manual_control_of_join_order"><span>7.1. </span>Manual Control Of Join Order</h2>
+
+<p>
+  SQLite almost always picks the best join order automatically.  It is
+  very rare that a developer needs to intervene to give the query planner
+  hints about the best join order.  The best policy is to make use
+  of <a href="pragma.html#pragma_optimize">PRAGMA optimize</a> to ensure that the query planner has access to
+  up-to-date statistics on the shape of the data in the database.
+
+</p><p>
+  This section describes techniques by which developers can control the
+  join order in SQLite, to work around any performance problems that may
+  arise.  However, the use of these techniques is not recommended, except
+  as a last resort.
+
+</p><p>
+  If you do encounter a situation where SQLite is picking a suboptimal
+  join order even after running <a href="pragma.html#pragma_optimize">PRAGMA optimize</a>, please report your
+  situation on the <a href="https://sqlite.org/forum">SQLite Community Forum</a> so
+  that the SQLite maintainers can make new refinements to the query planner
+  such that manual intervention is not required.
+
 <a name="manctrl"></a>
 
-</p><h2 id="manual_control_of_query_plans_using_sqlite_stat_tables"><span>7.2. </span>Manual Control Of Query Plans Using SQLITE_STAT Tables</h2>
+</p><h3 id="manual_control_of_query_plans_using_sqlite_stat_tables"><span>7.1.1. </span>Manual Control Of Query Plans Using SQLITE_STAT Tables</h3>
 
 <p>
   SQLite provides the ability for advanced programmers to exercise control
   over the query plan chosen by the optimizer. One method for doing this
-  is to fudge the <a href="lang_analyze.html">ANALYZE</a> results in the <a href="fileformat2.html#stat1tab">sqlite_stat1</a>, 
-  <a href="fileformat2.html#stat3tab">sqlite_stat3</a>, and/or <a href="fileformat2.html#stat4tab">sqlite_stat4</a> tables.  This is not
-  recommended for most situations.
+  is to fudge the <a href="lang_analyze.html">ANALYZE</a> results in the <a href="fileformat2.html#stat1tab">sqlite_stat1</a> table.
 
 <a name="crossjoin"></a>
 
-</p><h2 id="manual_control_of_query_plans_using_cross_join"><span>7.3. </span>Manual Control of Query Plans using CROSS JOIN</h2>
+</p><h3 id="manual_control_of_query_plans_using_cross_join"><span>7.1.2. </span>Manual Control of Query Plans using CROSS JOIN</h3>
 
 <p>
   Programmers can force SQLite to use a particular loop nesting order
@@ -991,6 +1007,15 @@ SELECT z FROM ex2 WHERE x=5 AND y=6;
 </p><h2 id="disqualifying_where_clause_terms_using_unary_"><span>8.1. </span>Disqualifying WHERE Clause Terms using Unary-"+"</h2>
 
 <p>
+  <i>Note: Disqualifying WHERE clause terms this way is not recommended.
+  This is a work-around.
+  Only do this as a last resort to get the performance you need.  If you
+  find a situation where this work-around is necessary, please report the
+  situation on the <a href="https://sqlite.org/forum">SQLite Community Forum</a> so
+  that the SQLite maintainers can try to improve the query planner such
+  that the work-around is no longer required for your situation.</i>
+
+</p><p>
   Terms of the WHERE clause can be manually disqualified for use with
   indexes by prepending a unary <b>+</b> operator to the column name.  The
   unary <b>+</b> is a no-op and will not generate any byte code in the prepared
@@ -1126,7 +1151,7 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
   outputs in the current row corresponding to the first two terms of 
   the ORDER BY are compared against the previous row.  If they have
   changed, the current sort is finished and output and a new sort is
-  started.  This results in a slightly faster sort.  Event bigger
+  started.  This results in a slightly faster sort.  Even bigger
   advantages are that many fewer rows need to be held in memory,
   reducing memory requirements, and outputs can begin to appear before
   the core query has run to completion.
@@ -1140,8 +1165,10 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
   behavior is to evaluate the subquery into a transient table, then run
   the outer SELECT against the transient table.  Such a plan
   can be suboptimal since the transient table will not have any indexes
-  and the outer query (which is likely a join) will be forced to do a
-  full table scan on the transient table.
+  and the outer query (which is likely a join) will be forced to either
+  do full table scan on the transient table or else construct a
+  <a href="optoverview.html#autoindex">query-time index</a> on the transient table, neither or which is likely
+  to be particularly fast.
 
 </p><p>
   To overcome this problem, SQLite attempts to flatten subqueries in
@@ -1166,56 +1193,36 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
 
 </p><p>
   Casual readers are not expected to understand all of these rules.
-  A key take-away from this section is that the rules for determining
-  if query flatting is safe or unsafe are subtle and
-  complex.  There have been multiple bugs over the years caused by
+  The point here is that flattening rules are subtle and complex.
+  There have been multiple bugs over the years caused by
   over-aggressive query flattening.  On the other hand, performance
   of complex queries and/or queries involving views tends to suffer
   if query flattening is more conservative.
 
 </p><p>
   </p><ol>
-  <li value="1">  <i>(Obsolete.  Query flattening is no longer
-                      attempted for aggregate subqueries.)</i>
-
-  </li><li value="2">  <i>(Obsolete.  Query flattening is no longer
-                      attempted for aggregate subqueries.)</i>
-
+  <li value="1">  <i>(Obsolete)</i>
+  </li><li value="2">  <i>(Obsolete)</i>
   </li><li value="3">
   If the subquery is the right operand of a LEFT JOIN then
    <ol type="a"><li> the subquery may not be a join, and
    </li><li> the FROM clause of the subquery may
-   not contain a virtual table, and
-   </li><li> the outer query may not be an aggregate.</li></ol></li>
-
-  <li value="4">  The subquery is not DISTINCT.
-
-  </li><li value="5"> <i>(Subsumed into constraint 4)</i>
-
-  </li><li value="6"> <i>(Obsolete.  Query flattening is no longer
-                      attempted for aggregate subqueries.)</i>
-
-  </li><li value="7">
-  The subquery has a FROM clause.
-
-  </li><li value="8">
-  The subquery does not use LIMIT or the outer query is not a join.
-
-  </li><li value="9">
-  The subquery does not use LIMIT or the outer query does not use
-  aggregates.
-
-  </li><li value="10"> <i>(Restriction relaxed in 2005)</i>
-
+        not contain a virtual table, and
+   </li><li> the outer query may not be DISTINCT.</li></ol>
+  </li><li value="4">  The subquery is not DISTINCT.
+  </li><li value="5"> <i>(Obsolete - subsumed into constraint 4)</i>
+  </li><li value="6"> <i>(Obsolete)</i>
+  </li><li value="7"> The subquery has a FROM clause.
+  </li><li value="8"> The subquery does not use LIMIT or the outer query is
+                  not a join.
+  </li><li value="9"> The subquery does not use LIMIT or the outer query
+                  does not use aggregates.
+  </li><li value="10"> <i>(Obsolete)</i>
   </li><li value="11">
   The subquery and the outer query do not both have ORDER BY clauses.
-
-  </li><li value="12"> <i>(Subsumed into constraint 3)</i>
-
+  </li><li value="12"> <i>(Obsolete - subsumed into constraint 3)</i>
   </li><li value="13">  The subquery and outer query do not both use LIMIT.
-
   </li><li value="14">  The subquery does not use OFFSET.
-
   </li><li value="15">
   If the outer query is part of a compound select, then the
   subquery may not have a LIMIT clause.
@@ -1231,7 +1238,13 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
   </li><li> no terms with the subquery compound may be aggregate
        or DISTINCT, and
   </li><li> every term within the subquery must have a FROM clause, and
-  </li><li> the outer query may not be an aggregate, DISTINCT query, or join.
+  </li><li> the outer query may not be an aggregateor DISTINCT query.
+  </li><li> the subquery may not contain window functions.
+  </li><li> the subquery must not be the right-hand side of a LEFT JOIN.
+  </li><li> either the subquery is the first element of the outer query
+       or there are not RIGHT or FULL JOINs in any arm of the subquery.
+  </li><li> the corresponding result set expressions in all arms of the
+       compound subquery must have the same <a href="datatype3.html#affinity">affinity</a>.
   </li></ol>
 
   The parent and sub-query may contain WHERE clauses. Subject to
@@ -1257,10 +1270,24 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
 
   </li><li value="22"> The subquery may not be a recursive CTE.
 
-  </li><li value="23"> <i>(Subsumed into constraint 17d.)</i>
+  </li><li value="23"> If the outer query is a recursive CTE, then the sub-query
+                  may not be a compound query.
 
-  </li><li value="24"> <i>(Obsolete. Query flattening is no longer
-                      attempted for aggregate subqueries.)</i>
+  </li><li value="24"> <i>(Obsolete)</i>
+
+  </li><li value="25"> Neither the subquery nor the outer query may contain
+      a <a href="windowfunctions.html">window function</a> in the result set nor the ORDER BY clause.
+
+  </li><li value="26"> The subquery may not be the right operand of a RIGHT
+                  or FULL OUTER JOIN.
+  </li><li value="27"> The subquery may not contain a FULL or RIGHT JOIN unless it
+        is the first element of the parent query.  Two subcases:
+        <ol type="a">
+        <li> the subquery is not a compound query.
+        </li><li> the subquery is a compound query and the RIGHT JOIN occurs
+                in any arm of the compound query.  (See also (17g)).
+         </li></ol>
+  </li><li value="28"> The subquery is not a MATERIALIZED CTE.
   </li></ol>
 
 
@@ -1273,15 +1300,19 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
 </p><h1 id="subquery_co_routines"><span>12. </span>Subquery Co-routines</h1>
 
 <p>
-  Prior to SQLite 3.7.15 (2012-12-12),
-  a subquery in the FROM clause would be
-  either flattened into the outer query, or else the subquery would be run
-  to completion
-  before the outer query started, the result set from the subquery
-  would be stored in a transient table,
-  and then the transient table would be used in the outer query.  Newer
-  versions of SQLite have a third option, which is to implement the subquery
-  using a co-routine.
+  SQLite implements FROM-clause subqueries in one of three ways:
+  </p><ol>
+  <li> <a href="optoverview.html#flattening">Flatten</a> the subquery into its outer query
+  </li><li> Evaluate the subquery into a transient table that exists for
+       the duration of the one SQL statement that is being evaluated,
+       then run the outer query against that transient table.
+  </li><li> Evaluate the subquery in a co-routine that runs in parallel with
+       the outer query, providing rows to the outer query as needed.
+  </li></ol>
+
+<p>
+  This section describes the third technique: implementing the subquery
+  as a co-routine.
 
 </p><p>
   A co-routine is like a subroutine in that it runs in the same thread
@@ -1305,7 +1336,8 @@ SELECT z FROM ex3 WHERE w=5 AND x BETWEEN 1 AND 100 AND y BETWEEN 1 AND 100;
   the result must be stored for a transient table.  Also, because the
   co-routine does not need to run to completion before the outer query
   begins its work, the first rows of output can appear much sooner, and if
-  the overall query is aborted, less work is done overall.
+  the overall query is abandoned before it has finished, less work is done
+  overall.
 
 </p><p>
   On the other hand, if the result of the subquery must be scanned multiple
@@ -1373,13 +1405,14 @@ SELECT MAX(x)+1 FROM table;
 
 <a name="autoindex"></a>
 
-<h1 id="automatic_indexes"><span>14. </span>Automatic Indexes</h1>
+<h1 id="automatic_query_time_indexes"><span>14. </span>Automatic Query-Time Indexes</h1>
 
 <p>
   When no indexes are available to aid the evaluation of a query, SQLite
   might create an automatic index that lasts only for the duration
   of a single SQL statement.
-  Since the cost of constructing the automatic index is
+  Automatic indexes are also sometimes called "Query-time indexes".
+  Since the cost of constructing the automatic or query-time index is
   O(NlogN) (where N is the number of entries in the table) and the cost of
   doing a full table scan is only O(N), an automatic index will
   only be created if SQLite expects that the lookup will be run more than
@@ -1400,7 +1433,7 @@ SELECT * FROM t1, t2 WHERE a=c;
   be the cheaper approach.
 
 </p><p>
-  An automatic index might also be used for a subquery:
+  An automatic query-time index might also be used for a subquery:
 
 </p><div class="codeblock"><pre>CREATE TABLE t1(a,b);
 CREATE TABLE t2(c,d);
@@ -1446,7 +1479,7 @@ SELECT a, (SELECT d FROM t2 WHERE c=b) FROM t1;
 </p><h2 id="hash_joins"><span>14.1. </span>Hash Joins</h2>
 
 <p>
- An automatic index is about the same thing as a
+ An automatic index is almost the same thing as a
  <a href="https://en.wikipedia.org/wiki/Hash_join">hash join</a>.  The only difference
  is that a B-Tree is used instead of a hash table.  If you are willing to
  say that the transient B-Tree constructed for an automatic index is
@@ -1454,7 +1487,7 @@ SELECT a, (SELECT d FROM t2 WHERE c=b) FROM t1;
  index is just a hash join.
 
 </p><p>
- SQLite constructs an transient index instead of a hash table in this
+ SQLite constructs a transient index instead of a hash table in this
  instance because it already has a robust and high performance B-Tree
  implementation at hand, whereas a hash-table would need to be added.
  Adding a separate hash table implementation to handle this one case
@@ -1466,8 +1499,7 @@ SELECT a, (SELECT d FROM t2 WHERE c=b) FROM t1;
 
 <a name="pushdown"></a>
 
-</p><h1 id="the_push_down_optimization"><span>15. </span>The Push-Down Optimization</h1>
-
+</p><h1 id="the_predicate_push_down_optimization"><span>15. </span>The Predicate Push-Down Optimization</h1>
 <p>
   If a subquery cannot be <a href="optoverview.html#flattening">flattened</a> into the outer query, it might
   still be possible to enhance performance by "pushing down" WHERE clause
@@ -1498,32 +1530,46 @@ SELECT x, y, b
 </pre></div>
 
 <p>
-  The push-down optimization cannot always be used.  For example,
+  The WHERE-clause push-down optimization cannot always be used.  For example,
   if the subquery contains a LIMIT, then pushing down any part of
   the WHERE clause from the outer query could change the result of
   the inner query.  There are other restrictions, explained in a
   comment in the source code on the pushDownWhereTerms() routine
   that implements this optimization.
 
+</p><p>
+  Do not confuse this optimization with the optimization by a similar name
+  in MySQL.  The MySQL push-down optimization changes the order of evaluation
+  of WHERE-clause constraints such that those that can be evaluated using
+  only the index and without having to find the corresponding table row are
+  evaluated first, thus avoiding an unnecessary table row lookup if the
+  constraint fails.  For disambiguation, SQLite calls this the
+  "MySQL push-down optimization".   SQLite does do the MySQL push-down
+  optimization too, in addition to the WHERE-clause push-down optimization.
+  But the focus of this section is the WHERE-clause push-down optimization.
+
 <a name="leftjoinreduction"></a>
 
-</p><h1 id="the_left_join_strength_reduction_optimization"><span>16. </span>The LEFT JOIN Strength Reduction Optimization</h1>
+</p><h1 id="the_outer_join_strength_reduction_optimization"><span>16. </span>The OUTER JOIN Strength Reduction Optimization</h1>
 
 <p>
-  A LEFT JOIN can sometimes be converted into an ordinary JOIN
-  if there are terms in the WHERE clause that guarantee that the
-  two joins will give identical results.  In particular, if any
+  An OUTER JOIN (either a LEFT JOIN, a RIGHT JOIN, or a FULL JOIN)
+  can sometimes be simplified.  A LEFT or RIGHT JOIN can be converted
+  into an ordinary (INNER) JOIN, or a FULL JOIN might be converted into
+  either a LEFT or a RIGHT JOIN.  This can happen if there are terms
+  in the WHERE clause that guarantee the same result after simplification.
+  For example, if any
   column in the right-hand table of the LEFT JOIN must be non-NULL
   in order for the WHERE clause to be true, then the LEFT JOIN is
   demoted to an ordinary JOIN.
 
 </p><p>
-  The prover that determines whether any column of the right-hand
-  table of a LEFT JOIN must be non-NULL in the WHERE clause is
+  The theorem prover that determines whether a join can be simplified is
   imperfect.  It sometimes returns a false negative.  In other words,
-  it sometimes fails to reduce the strength of a LEFT JOIN when doing
-  so was in fact possible.  For example, the prover does not know
-  the <a href="lang_datefunc.html">datetime() SQL function</a> will always return NULL if its first
+  it sometimes fails to prove that reducing the strength of an OUTER JOIN
+  is safe when in fact it is safe.
+  For example, the prover does not know
+  the <a href="lang_datefunc.html#dttm">datetime() SQL function</a> will always return NULL if its first
   argument is NULL, and so it will not recognize that the LEFT JOIN
   in the following query could be strength-reduced:
 
@@ -1548,13 +1594,12 @@ SELECT x, y, b
   course, the prover will never be able to reason about
   <a href="appfunc.html">application-defined SQL functions</a>.
 
-
 <a name="omitnoopjoin"></a>
 
-</p><h1 id="the_omit_left_join_optimization"><span>17. </span>The Omit LEFT JOIN Optimization</h1>
+</p><h1 id="the_omit_outer_join_optimization"><span>17. </span>The Omit OUTER JOIN Optimization</h1>
 
 <p>
-  Sometimes a LEFT JOIN can be completely omitted from a query without
+  Sometimes a LEFT or RIGHT JOIN can be completely omitted from a query without
   changing the result.  This can happen if all of the following are
   true:
 
@@ -1562,17 +1607,18 @@ SELECT x, y, b
   </p><ol>
   <li> The query is not an aggregate
   </li><li> Either the query is DISTINCT or else the ON or USING clause
-       on the LEFT JOIN constrains the join such that it matches
+       on the OUTER JOIN constrains the join such that it matches
        only a single row
-  </li><li> The right-hand table of the LEFT JOIN is not be used anywhere
+  </li><li> The right-hand table of the LEFT JOIN or the left-hand table of
+       a RIGHT JOIN is not be used anywhere
        in the query outside of its own USING or ON clause.
   </li></ol>
 
 <p>
-  LEFT JOIN elimination often comes up when LEFT JOINs are used
+  OUTER JOIN elimination often comes up when OUTER JOINs are used
   inside of views, and then the view is used in such as way that
-  none of the columns of the right-hand table of the LEFT JOIN are
-  referenced.
+  none of the columns on the right-hand table of the LEFT JOIN or
+  on the left-hand table of a RIGHT JOIN are referenced.
 
 </p><p>
   Here is a simple example of omitting a LEFT JOIN:
@@ -1594,10 +1640,16 @@ SELECT v1, v3 FROM t1
   LEFT JOIN t3 ON (t1.ipk=t3.ipk)
 </pre></div>
 
+<p>
+  As of this writing, only LEFT JOINs are eliminated.  This optimize
+  has not yet been generalized to work with RIGHT JOINs as RIGHT JOIN
+  is a relatively new addition to SQLite.  That asymmetry will probably
+  be corrected in a future release.
+
 
 <a name="constprop"></a>
 
-<h1 id="the_constant_propagation_optimization"><span>18. </span>The Constant Propagation Optimization</h1>
+</p><h1 id="the_constant_propagation_optimization"><span>18. </span>The Constant Propagation Optimization</h1>
 
 <p>
   When a WHERE clause contains two or more equality constraints connected
@@ -1619,5 +1671,5 @@ SELECT * FROM t1 WHERE a=b AND b=5;
   if those two constraints are true, then it must also be the case
   that "a=5" is true.  This means that the desired row can be looked up
   quickly using a value of 5 for the INTEGER PRIMARY KEY.
-</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/optoverview.in?m=f697eab2d82b4d002">2022-09-19 12:27:16</a> UTC </small></i></p>
+</p><p align="center"><small><i>This page last modified on  <a href="https://sqlite.org/docsrc/honeypot" id="mtimelink"  data-href="https://sqlite.org/docsrc/finfo/pages/optoverview.in?m=f3bc76d394">2024-07-24 12:16:13</a> UTC </small></i></p>
 

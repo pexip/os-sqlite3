@@ -959,6 +959,10 @@ static void page_usage_freelist(u32 pgno){
     a = fileRead((pgno-1)*g.pagesize, g.pagesize);
     iNext = decodeInt32(a);
     n = decodeInt32(a+4);
+    if( n>(g.pagesize - 8)/4 ){
+      printf("ERROR: page %d too many freelist entries (%d)\n", pgno, n);
+      n = (g.pagesize - 8)/4;
+    }
     for(i=0; i<n; i++){
       int child = decodeInt32(a + (i*4+8));
       page_usage_msg(child, "freelist leaf, child %d of trunk page %d",
@@ -1097,6 +1101,18 @@ static void ptrmap_coverage_report(const char *zDbName){
 }
 
 /*
+** Check the range validity for a page number.  Print an error and
+** exit if the page is out of range.
+*/
+static void checkPageValidity(int iPage){
+  if( iPage<1 || iPage>g.mxPage ){
+    fprintf(stderr, "Invalid page number %d:  valid range is 1..%d\n",
+            iPage, g.mxPage);
+    exit(1);
+  }
+}
+
+/*
 ** Print a usage comment
 */
 static void usage(const char *argv0){
@@ -1184,10 +1200,12 @@ int main(int argc, char **argv){
         continue;
       }
       iStart = strtoul(azArg[i], &zLeft, 0);
+      checkPageValidity(iStart);
       if( zLeft && strcmp(zLeft,"..end")==0 ){
         iEnd = g.mxPage;
       }else if( zLeft && zLeft[0]=='.' && zLeft[1]=='.' ){
         iEnd = strtol(&zLeft[2], 0, 0);
+        checkPageValidity(iEnd);
       }else if( zLeft && zLeft[0]=='b' ){
         int ofst, nByte, hdrSize;
         unsigned char *a;

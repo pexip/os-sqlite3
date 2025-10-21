@@ -117,7 +117,7 @@ antiRobotDefense();
 </script>
 <!-- keywords: sqlite3_autovacuum_pages -->
 <div class=nosearch>
-<a href="intro.html"><h2>SQLite C Interface</h2></a>
+<a href="../c3ref/intro.html"><h2>SQLite C Interface</h2></a>
 <h2>Autovacuum Compaction Amount Callback</h2>
 </div>
 <blockquote><pre>
@@ -159,7 +159,7 @@ is overwritten by another invocation of sqlite3_autovacuum_pages().</p>
 Each call to the sqlite3_autovacuum_pages() interface overrides all
 previous invocations for that database connection.  If the callback
 argument (C) to sqlite3_autovacuum_pages(D,C,P,X) is a NULL pointer,
-then the autovacuum steps callback is cancelled.  The return value
+then the autovacuum steps callback is canceled.  The return value
 from sqlite3_autovacuum_pages() is normally SQLITE_OK, but might
 be some other error code if something goes wrong.  The current
 implementation will only return SQLITE_OK or SQLITE_MISUSE, but other
@@ -183,7 +183,7 @@ were something like this:</p>
 &nbsp;   }
 </pre></blockquote>
 </p><p>See also lists of
-  <a href="objlist.html">Objects</a>,
-  <a href="constlist.html">Constants</a>, and
-  <a href="funclist.html">Functions</a>.</p>
+  <a href="../c3ref/objlist.html">Objects</a>,
+  <a href="../c3ref/constlist.html">Constants</a>, and
+  <a href="../c3ref/funclist.html">Functions</a>.</p>
 
