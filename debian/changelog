@@ -1,3 +1,12 @@
+sqlite3 (3.46.1-7+deb13u1) trixie; urgency=medium
+
+  * Backport upstream security fix for CVE-2025-7709: integer overflow in the
+    FTS5 extension (closes: #1114609).
+  * Add pkgconf build dependency to fix link problem with ICU extension
+    (closes: #1099724).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 22 Jan 2026 19:19:00 +0100
+
 sqlite3 (3.46.1-7) unstable; urgency=high
 
   * Backport upstream security fix for CVE-2025-6965: the number of aggregate
