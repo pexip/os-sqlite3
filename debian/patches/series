@@ -11,4 +11,7 @@
 50-CVE-2025-29087.patch
 51-CVE-2025-29088.patch
 52-CVE-2025-6965.patch
-51-fix-robust-open.patch
+53-CVE-2025-7709.patch
+
+
+pexip-fix-robust-open.patch
