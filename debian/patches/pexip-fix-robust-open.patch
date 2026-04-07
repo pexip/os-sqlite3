@@ -1,3 +1,5 @@
+Fix robust_open to reliably find a usable FD
+
 --- sqlite3.orig/src/os_unix.c
 +++ sqlite3/src/os_unix.c
 @@ -699,6 +699,54 @@ static const char *unixNextSystemCall(sq
